@@ -1,0 +1,34 @@
+import type { PropsWithChildren } from 'react';
+import { useServerDocumentContext } from 'expo-router/html';
+import { paylasimGorseli } from '../src/tasarim/seo';
+
+export default function Html({ children }: PropsWithChildren) {
+  const { htmlAttributes, bodyAttributes, headNodes, bodyNodes } = useServerDocumentContext();
+
+  return (
+    <html {...htmlAttributes} lang="tr">
+      <head>
+        <meta charSet="utf-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+        />
+        <meta name="theme-color" content="#ffd12f" />
+        <meta property="og:image" content={paylasimGorseli} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:alt" content="Kaçakçıdan. Mal burada, pazarlık sende." />
+        <meta name="twitter:image" content={paylasimGorseli} />
+        <meta name="twitter:image:alt" content="Kaçakçıdan. Mal burada, pazarlık sende." />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        {headNodes}
+      </head>
+      <body {...bodyAttributes}>
+        {children}
+        {bodyNodes}
+      </body>
+    </html>
+  );
+}

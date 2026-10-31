@@ -1,0 +1,72 @@
+[data-hareket-giris] {
+  animation: kacakcidan-giris 260ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+[data-favori-nabiz='true'] {
+  animation: kacakcidan-favori 260ms ease-out;
+}
+[data-kategori-simgesi] {
+  transition: transform 180ms ease-out;
+}
+[data-kategori-simgesi] > svg {
+  transition: fill 180ms ease-out;
+}
+[data-arama-dugmesi] {
+  transition:
+    background-color 180ms ease-out,
+    transform 180ms ease-out;
+}
+[data-vurgu]:focus-visible {
+  background-color: #ffd12f !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-vurgu='kategori']:hover {
+    background-color: #ffd12f !important;
+    border-color: #ffd12f !important;
+  }
+  [data-vurgu='kategori']:hover [data-kategori-simgesi] {
+    transform: rotate(-4deg) scale(1.08);
+  }
+  [data-vurgu='dugme']:hover {
+    background-color: #f5c51e !important;
+  }
+  [data-arama-dugmesi]:hover {
+    transform: scale(1.02);
+  }
+}
+@keyframes kacakcidan-giris {
+  from {
+    opacity: 0.72;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes kacakcidan-favori {
+  0% {
+    transform: scale(1);
+  }
+  38% {
+    transform: scale(1.16);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-hareketli-bas] {
+    transform: none !important;
+    transition: none !important;
+  }
+  [data-kategori-simgesi],
+  [data-kategori-simgesi] > svg,
+  [data-arama-dugmesi] {
+    transform: none !important;
+    transition: none !important;
+  }
+  [data-hareket-giris],
+  [data-favori-nabiz] {
+    animation: none !important;
+  }
+}

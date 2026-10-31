@@ -1,0 +1,6 @@
+node_modules/
+.expo/
+dist/
+public/
+package-lock.json
+*_onizleme.html

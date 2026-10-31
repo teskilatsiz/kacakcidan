@@ -1,0 +1,139 @@
+.pazar-pencere {
+  position: fixed;
+  inset: var(--pencere-ust, 0px) var(--pencere-sag, 0px) var(--pencere-alt, 0px) var(--pencere-sol, 0px);
+  width: min(480px, calc(var(--pencere-genisligi, 100vw) - 40px));
+  max-width: none;
+  max-height: min(calc(var(--pencere-yuksekligi, 100dvh) - 32px), 900px);
+  box-sizing: border-box;
+  margin: auto;
+  padding: 0;
+  border: 1px solid #e6e6e6;
+  border-radius: 18px;
+  background: #fff;
+  color: #17191b;
+  overflow: hidden;
+  font-family: 'DM Sans', Arial, sans-serif;
+}
+.pazar-pencere[data-genis] {
+  width: min(760px, calc(var(--pencere-genisligi, 100vw) - 40px));
+}
+.pazar-pencere::backdrop {
+  background: #111111a6;
+}
+.pazar-pencere[open] {
+  animation: pencere-acilisi 160ms ease-out;
+}
+.pazar-pencere-ic {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+}
+.pazar-pencere-tutamak {
+  display: none;
+}
+.pazar-pencere-baslik {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 12px;
+  flex-shrink: 0;
+}
+.pazar-pencere-baslik h2 {
+  margin: 0;
+  min-width: 0;
+  font-size: 23px;
+  line-height: 31px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+}
+.pazar-pencere-baslik button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+}
+.pazar-pencere-icerik {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  gap: 20px;
+  padding: 8px 24px 26px;
+  scroll-padding-block: 12px;
+}
+.pazar-pencere-icerik input,
+.pazar-pencere-icerik textarea,
+.pazar-pencere-icerik select {
+  scroll-margin-block: 12px;
+}
+.pazar-pencere-icerik textarea {
+  max-height: max(44px, calc(var(--pencere-yuksekligi, 100dvh) - 190px));
+}
+.pazar-pencere[data-altlik] .pazar-pencere-icerik {
+  padding-bottom: 20px;
+}
+.pazar-pencere-altlik {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #eeeeee;
+  background: #fff;
+}
+@keyframes pencere-acilisi {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 699px) {
+  .pazar-pencere,
+  .pazar-pencere[data-genis] {
+    width: var(--pencere-genisligi, 100vw);
+    max-height: calc(var(--pencere-yuksekligi, 100dvh) - max(16px, env(safe-area-inset-top)));
+    margin: auto 0 0;
+    border-bottom: 0;
+    border-radius: 20px 20px 0 0;
+  }
+  .pazar-pencere-tutamak {
+    display: block;
+    width: 34px;
+    height: 4px;
+    margin: 10px auto 0;
+    border-radius: 4px;
+    background: #d3d3d3;
+    flex-shrink: 0;
+  }
+  .pazar-pencere-baslik {
+    padding: 8px 20px 10px;
+  }
+  .pazar-pencere-baslik h2 {
+    font-size: 21px;
+    line-height: 29px;
+  }
+  .pazar-pencere-icerik {
+    padding: 8px 20px max(24px, env(safe-area-inset-bottom));
+  }
+  .pazar-pencere-altlik {
+    padding: 14px 20px max(16px, env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pazar-pencere[open] {
+    animation: none;
+  }
+}

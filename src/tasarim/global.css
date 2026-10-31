@@ -1,0 +1,236 @@
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/dm-sans-400.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/dm-sans-500.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/dm-sans-600.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/dm-sans-700.ttf') format('truetype');
+  font-weight: 700 900;
+  font-display: swap;
+}
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+  background: #fff;
+}
+html.pazar-klavye-acik [data-ust-menu] {
+  position: relative;
+}
+html.pazar-klavye-acik [data-mobil-menu],
+html.pazar-klavye-acik [data-alt-menu-boslugu] {
+  display: none !important;
+}
+[data-form-girdisi] {
+  scroll-margin-block: 16px;
+}
+[data-mesaj-odagi='true'] {
+  position: fixed !important;
+  top: var(--pazar-gorunur-ust, 0px);
+  left: var(--pazar-gorunur-sol, 0px);
+  width: var(--pazar-gorunur-genislik, 100%);
+  height: var(--pazar-gorunur-yukseklik, 100dvh);
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  z-index: 110;
+  background: #fff;
+  overflow: hidden;
+}
+[data-mesaj-odagi='true'] [data-mesajlar-duzeni] {
+  height: 100% !important;
+  min-height: 0;
+}
+body {
+  font-family: 'DM Sans', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+* {
+  box-sizing: border-box;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button,
+input,
+textarea {
+  font: inherit;
+}
+input::placeholder,
+textarea::placeholder {
+  opacity: 1;
+}
+::selection {
+  background: #ffe475;
+  color: #17191b;
+}
+:focus-visible {
+  outline: 2px solid #9c7c00 !important;
+  outline-offset: 4px !important;
+  border-radius: 5px;
+}
+[data-sayfa-odagi]:focus {
+  outline: none !important;
+}
+[data-uygulama] {
+  min-height: 100vh;
+}
+[data-hero-perde] {
+  background: linear-gradient(90deg, #17191b 0%, #17191bee 25%, #17191b85 45%, transparent 70%);
+}
+[data-ust-menu] {
+  position: sticky;
+  top: 0;
+}
+[data-ilan-izgarasi] {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px !important;
+}
+[data-ilan-izgarasi='sik'] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+[data-ilan-izgarasi='liste'] {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+[data-ilan-hucresi] {
+  width: auto !important;
+  min-width: 0;
+}
+[data-ilan-karti] {
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+[data-ana-icerik] {
+  animation: sayfa-girisi 0.2s ease-out both;
+}
+@media (hover: hover) {
+  [data-ilan-karti]:hover {
+    border-color: #cecece;
+    box-shadow: 0 7px 18px #17191b0a;
+  }
+  a:hover {
+    color: inherit;
+  }
+}
+@media (max-width: 1249px) {
+  [data-ilan-izgarasi='normal'] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 999px) {
+  [data-ilan-izgarasi='normal'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 699px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  [data-ilan-izgarasi] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+  [data-hero-perde] {
+    background: linear-gradient(90deg, #17191bcc, #17191b55);
+  }
+  [data-mobil-menu] {
+    position: fixed !important;
+    bottom: 0;
+    height: calc(64px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+  [data-alt-menu-boslugu] {
+    height: calc(64px + env(safe-area-inset-bottom)) !important;
+  }
+  [data-ust-menu] {
+    position: sticky;
+    top: 0;
+  }
+}
+@keyframes sayfa-girisi {
+  from {
+    opacity: 0.88;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+[data-ust-menu] {
+  z-index: 100;
+  overflow: visible;
+}
+[data-ust-arama] {
+  overflow: visible;
+}
+[data-bildirim] {
+  position: fixed !important;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+[data-arama-girdisi]:focus-visible {
+  outline: none !important;
+}
+input,
+textarea {
+  appearance: none;
+}
+input:focus,
+textarea:focus,
+input:focus-visible,
+textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+[data-form-girdisi]:focus-visible,
+[data-girdi-kapsayici]:focus-within {
+  border-color: #9c7c00 !important;
+}
+[data-secim-alani]:focus-visible {
+  outline: none !important;
+  box-shadow: none;
+}
+@media (max-width: 699px) {
+  [data-bildirim] {
+    bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+  }
+  [data-urun-bildirimi='true'] {
+    bottom: calc(150px + env(safe-area-inset-bottom)) !important;
+  }
+  [data-ilan-eylemleri] {
+    position: fixed !important;
+    bottom: calc(64px + env(safe-area-inset-bottom)) !important;
+  }
+}

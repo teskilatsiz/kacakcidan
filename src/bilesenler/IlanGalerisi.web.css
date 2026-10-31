@@ -1,0 +1,45 @@
+.ilan-galeri-ana {
+  height: 320px;
+}
+.ilan-galeri button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.ilan-galeri button:hover {
+  border-color: #a89135;
+}
+.ilan-goruntuleyici {
+  width: min(1120px, calc(100vw - 32px));
+  height: min(820px, calc(100dvh - 32px));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  border: 1px solid #ffffff24;
+  padding: 0;
+  border-radius: 16px;
+  background: #17191b;
+  color: #fff;
+  overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+}
+.ilan-goruntuleyici::backdrop {
+  background: #090b0de8;
+}
+.ilan-goruntuleyici button {
+  color: #fff;
+}
+.ilan-goruntuleyici button:hover {
+  background: #ffffff20;
+}
+@media (max-width: 699px) {
+  .ilan-galeri-ana {
+    height: 260px;
+  }
+  .ilan-goruntuleyici {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+}
