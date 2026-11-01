@@ -178,11 +178,13 @@ export function aramaOnerileri(
         ? 100
         : baslik.includes(duz)
           ? 80
-          : tumSozcukler(yol, sozcukler)
-            ? 70
-            : tumSozcukler(metin, sozcukler)
-              ? 40
-              : 0;
+          : tumSozcukler(baslik, sozcukler)
+            ? 75
+            : tumSozcukler(yol, sozcukler)
+              ? 70
+              : tumSozcukler(metin, sozcukler)
+                ? 40
+                : 0;
       return puan ? [{ ilan, puan, sira }] : [];
     })
     .sort((a, b) => b.puan - a.puan || a.sira - b.sira);

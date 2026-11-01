@@ -1,13 +1,12 @@
 import { useId, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import ArrowRight from 'lucide-react-native/icons/arrow-right';
 import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right';
 import LayoutGrid from 'lucide-react-native/icons/layout-grid';
 import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
 import { usePazar } from '../durum/Pazar';
-import { font, renk } from '../tasarim/tema';
+import { font, useTema, temaStilleri } from '../tasarim/tema';
 import { aramaOnerileri, type AramaOnerisi, type AramaKutusuProps } from '../veri/arama';
 import { kategoriAgaci } from '../veri/kategoriler';
 import { ilanYolu, kategoriler, para } from '../veri/ilanlar';
@@ -22,6 +21,9 @@ export function AraKutusu({
   inline = false,
   secildi,
 }: AramaKutusuProps) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { tumIlanlar } = usePazar();
   const kimlik = useId();
   const router = useRouter();
@@ -88,7 +90,7 @@ export function AraKutusu({
             }}
             style={s.temizle}
           >
-            <X size={17} />
+            <X color={renk.murekkep} size={17} />
           </Pressable>
         )}
         <HareketliBas
@@ -99,7 +101,7 @@ export function AraKutusu({
           style={s.ara}
         >
           <Text style={s.araYazi}>Ara</Text>
-          <ArrowRight size={17} color={renk.murekkep} />
+          <Search size={17} color={renk.vurguYazi} />
         </HareketliBas>
       </View>
       {acik && (sorgu.length > 0 || oneriler.length > 0) && (
@@ -163,74 +165,76 @@ export function AraKutusu({
   );
 }
 
-const s = StyleSheet.create({
-  cubuk: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    minHeight: 52,
-    paddingLeft: 14,
-    paddingRight: 5,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 10,
-    backgroundColor: '#f5f5f5',
-  },
-  buyuk: { minHeight: 58, backgroundColor: '#fff', borderRadius: 12 },
-  girdi: {
-    flex: 1,
-    minWidth: 0,
-    height: 46,
-    padding: 0,
-    fontFamily: font,
-    fontSize: 14,
-    color: renk.murekkep,
-  },
-  ara: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    minHeight: 44,
-    paddingHorizontal: 14,
-    backgroundColor: renk.sari,
-    borderRadius: 7,
-  },
-  araYazi: { fontFamily: font, fontSize: 13, fontWeight: '700', color: renk.murekkep },
-  temizle: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  panel: {
-    position: 'absolute',
-    top: '100%',
-    marginTop: 6,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    boxShadow: '0 12px 32px #17191b1a',
-    overflow: 'hidden',
-  },
-  inline: { position: 'relative', top: 0, marginTop: 8, boxShadow: 'none' },
-  ipucu: {
-    fontFamily: font,
-    fontSize: 11,
-    lineHeight: 17,
-    color: renk.gri,
-    paddingVertical: 11,
-    paddingHorizontal: 14,
-  },
-  satir: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    minHeight: 50,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  kategori: { borderTopWidth: 1, borderTopColor: '#eeeeee' },
-  resim: { width: 38, height: 38, borderRadius: 6, backgroundColor: renk.zemin },
-  simge: { width: 38, alignItems: 'center', justifyContent: 'center' },
-  baslik: { fontFamily: font, fontSize: 13, lineHeight: 19, fontWeight: '500', color: renk.murekkep },
-  aciklama: { fontFamily: font, fontSize: 11, lineHeight: 17, color: renk.gri },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    cubuk: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      minHeight: 52,
+      paddingLeft: 14,
+      paddingRight: 5,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 10,
+      backgroundColor: renk.acik,
+    },
+    buyuk: { minHeight: 58, backgroundColor: renk.beyaz, borderRadius: 12 },
+    girdi: {
+      flex: 1,
+      minWidth: 0,
+      height: 46,
+      padding: 0,
+      fontFamily: font,
+      fontSize: 14,
+      color: renk.murekkep,
+    },
+    ara: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      minHeight: 44,
+      paddingHorizontal: 14,
+      backgroundColor: renk.sari,
+      borderRadius: 7,
+    },
+    araYazi: { fontFamily: font, fontSize: 13, fontWeight: '700', color: renk.vurguYazi },
+    temizle: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+    panel: {
+      position: 'absolute',
+      top: '100%',
+      marginTop: 6,
+      left: 0,
+      right: 0,
+      backgroundColor: renk.beyaz,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      boxShadow: '0 12px 32px #17191b1a',
+      overflow: 'hidden',
+    },
+    inline: { position: 'relative', top: 0, marginTop: 8, boxShadow: 'none' },
+    ipucu: {
+      fontFamily: font,
+      fontSize: 11,
+      lineHeight: 17,
+      color: renk.gri,
+      paddingVertical: 11,
+      paddingHorizontal: 14,
+    },
+    satir: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 11,
+      minHeight: 50,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+    },
+    kategori: { borderTopWidth: 1, borderTopColor: renk.cizgi },
+    resim: { width: 38, height: 38, borderRadius: 6, backgroundColor: renk.zemin },
+    simge: { width: 38, alignItems: 'center', justifyContent: 'center' },
+    baslik: { fontFamily: font, fontSize: 13, lineHeight: 19, fontWeight: '500', color: renk.murekkep },
+    aciklama: { fontFamily: font, fontSize: 11, lineHeight: 17, color: renk.gri },
+  }),
+);

@@ -1,4 +1,6 @@
 import type { Kategori } from './ilanlar.ts';
+import { ekOzellikAlanlari } from './ekOzellikler.ts';
+import { kategoriAgaci } from './kategoriler.ts';
 
 export type OzellikAlani = {
   ad: string;
@@ -8,7 +10,7 @@ export type OzellikAlani = {
   birim?: string;
   enCok?: number;
 };
-type UrunSecimi = { kategori: Kategori; altKategori?: string; marka?: string; model?: string };
+export type UrunSecimi = { kategori: Kategori; altKategori?: string; marka?: string; model?: string };
 const alan = (ad: string, secenekler: string[]): OzellikAlani => ({ ad, secenekler });
 const sayisalAlan = (
   ad: string,
@@ -52,6 +54,11 @@ const renkler = [
   'Diğer',
 ];
 const telefonKapasiteleri: Record<string, string[]> = {
+  'iphone-16': ['128 GB', '256 GB', '512 GB'],
+  'iphone-16-plus': ['128 GB', '256 GB', '512 GB'],
+  'iphone-16-pro': ['128 GB', '256 GB', '512 GB', '1 TB'],
+  'iphone-16-pro-max': ['256 GB', '512 GB', '1 TB'],
+  'iphone-se-3': ['64 GB', '128 GB', '256 GB'],
   'iphone-15': ['128 GB', '256 GB', '512 GB'],
   'iphone-15-pro': ['128 GB', '256 GB', '512 GB', '1 TB'],
   'iphone-15-pro-max': ['256 GB', '512 GB', '1 TB'],
@@ -77,8 +84,36 @@ const telefonKapasiteleri: Record<string, string[]> = {
   'phone-1': ['128 GB', '256 GB'],
   'phone-2': ['128 GB', '256 GB', '512 GB'],
   'phone-2a': ['128 GB', '256 GB'],
+  'galaxy-s24-ultra': ['256 GB', '512 GB', '1 TB'],
+  'galaxy-s24-plus': ['256 GB', '512 GB'],
+  'galaxy-z-fold-5': ['256 GB', '512 GB', '1 TB'],
+  'galaxy-z-flip-5': ['256 GB', '512 GB'],
+  'galaxy-a55': ['128 GB', '256 GB'],
+  'galaxy-a34': ['128 GB', '256 GB'],
+  'p30-pro': ['128 GB', '256 GB', '512 GB'],
+  'p40-pro': ['256 GB'],
+  'nova-11': ['128 GB', '256 GB', '512 GB'],
+  'reno-10': ['128 GB', '256 GB'],
+  'reno-11-f': ['256 GB'],
+  a78: ['128 GB', '256 GB'],
+  'realme-11-pro': ['128 GB', '256 GB', '512 GB'],
+  'realme-c55': ['64 GB', '128 GB', '256 GB'],
+  'honor-90': ['256 GB', '512 GB'],
+  'magic-6-pro': ['256 GB', '512 GB', '1 TB'],
+  'nokia-g22': ['64 GB', '128 GB'],
+  'gm-24-pro': ['256 GB'],
+  'gm-23': ['128 GB'],
+  'camon-20': ['256 GB'],
+  'spark-20': ['128 GB', '256 GB'],
+  v29: ['128 GB', '256 GB', '512 GB'],
+  y36: ['128 GB', '256 GB', '512 GB'],
 };
 const telefonRenkleri: Record<string, string[]> = {
+  'iphone-16': ['Siyah', 'Beyaz', 'Pembe', 'Deniz mavisi', 'Laciverttaş'],
+  'iphone-16-plus': ['Siyah', 'Beyaz', 'Pembe', 'Deniz mavisi', 'Laciverttaş'],
+  'iphone-16-pro': ['Siyah titanyum', 'Beyaz titanyum', 'Doğal titanyum', 'Çöl titanyum'],
+  'iphone-16-pro-max': ['Siyah titanyum', 'Beyaz titanyum', 'Doğal titanyum', 'Çöl titanyum'],
+  'iphone-se-3': ['Gece yarısı', 'Yıldız ışığı', 'Kırmızı'],
   'iphone-15': ['Siyah', 'Mavi', 'Yeşil', 'Sarı', 'Pembe'],
   'iphone-15-pro': ['Doğal titanyum', 'Mavi titanyum', 'Beyaz titanyum', 'Siyah titanyum'],
   'iphone-15-pro-max': ['Doğal titanyum', 'Mavi titanyum', 'Beyaz titanyum', 'Siyah titanyum'],
@@ -113,6 +148,39 @@ const telefonRenkleri: Record<string, string[]> = {
   'phone-1': ['Siyah', 'Beyaz'],
   'phone-2': ['Beyaz', 'Koyu gri'],
   'phone-2a': ['Siyah', 'Beyaz', 'Süt beyazı', 'Mavi', 'Özel seri'],
+  'galaxy-s24-ultra': [
+    'Titanyum gri',
+    'Titanyum siyah',
+    'Titanyum mor',
+    'Titanyum sarı',
+    'Titanyum mavi',
+    'Titanyum yeşil',
+    'Titanyum turuncu',
+  ],
+  'galaxy-s24-plus': ['Siyah', 'Gri', 'Mor', 'Sarı', 'Yeşil', 'Mavi', 'Turuncu'],
+  'galaxy-z-fold-5': ['Buz mavisi', 'Krem', 'Siyah', 'Gri', 'Mavi'],
+  'galaxy-z-flip-5': ['Nane yeşili', 'Grafit', 'Krem', 'Lavanta', 'Gri', 'Mavi', 'Yeşil', 'Sarı'],
+  'galaxy-a55': ['Lacivert', 'Buz mavisi', 'Lila', 'Limon sarısı'],
+  'galaxy-a34': ['Gümüş', 'Grafit', 'Mor', 'Limon yeşili'],
+  'p30-pro': ['Siyah', 'Sedef beyazı', 'Aurora', 'Kristal', 'Turuncu', 'Mavi', 'Lavanta'],
+  'p40-pro': ['Gümüş', 'Siyah', 'Beyaz', 'Mavi', 'Altın'],
+  'nova-11': ['Yeşil', 'Siyah', 'Beyaz', 'Altın'],
+  'reno-10': ['Gümüş', 'Mavi', 'Gri'],
+  'reno-11-f': ['Yeşil', 'Mavi', 'Mor'],
+  a78: ['Siyah', 'Mavi', 'Yeşil'],
+  'realme-11-pro': ['Siyah', 'Bej', 'Yeşil'],
+  'realme-c55': ['Siyah', 'Altın', 'Yeşil'],
+  'honor-90': ['Yeşil', 'Gümüş', 'Siyah', 'Mavi'],
+  'magic-6-pro': ['Siyah', 'Yeşil', 'Mor', 'Mavi', 'Beyaz'],
+  'nokia-3310': ['Siyah', 'Lacivert', 'Gri', 'Kırmızı', 'Sarı'],
+  'nokia-105': ['Siyah', 'Mavi', 'Kırmızı', 'Pembe'],
+  'nokia-g22': ['Gri', 'Mavi', 'Şeftali'],
+  'gm-24-pro': ['Gri', 'Beyaz'],
+  'gm-23': ['Siyah', 'Mavi', 'Beyaz'],
+  'camon-20': ['Siyah', 'Mavi', 'Beyaz'],
+  'spark-20': ['Siyah', 'Beyaz', 'Mavi', 'Altın'],
+  v29: ['Siyah', 'Mavi', 'Pembe', 'Kırmızı'],
+  y36: ['Siyah', 'Altın', 'Yeşil'],
 };
 const macbookDonanimi: Record<
   string,
@@ -138,6 +206,20 @@ const macbookDonanimi: Record<
     depolama: ['256 GB SSD', '512 GB SSD', '1 TB SSD', '2 TB SSD'],
     ekran: ['13,3 inç'],
     renk: ['Gümüş', 'Uzay grisi'],
+  },
+  'macbook-air-m3': {
+    islemci: ['Apple M3'],
+    bellek: ['8 GB', '16 GB', '24 GB'],
+    depolama: ['256 GB SSD', '512 GB SSD', '1 TB SSD', '2 TB SSD'],
+    ekran: ['13,6 inç', '15,3 inç'],
+    renk: ['Gümüş', 'Yıldız ışığı', 'Uzay grisi', 'Gece yarısı'],
+  },
+  'macbook-pro-m3': {
+    islemci: ['Apple M3', 'Apple M3 Pro', 'Apple M3 Max'],
+    bellek: ['8 GB', '16 GB', '18 GB', '24 GB', '32 GB', '36 GB', '48 GB', '64 GB', '96 GB', '128 GB'],
+    depolama: ['512 GB SSD', '1 TB SSD', '2 TB SSD', '4 TB SSD', '8 TB SSD'],
+    ekran: ['14,2 inç', '16,2 inç'],
+    renk: ['Gümüş', 'Uzay grisi', 'Uzay siyahı'],
   },
 };
 const tabletKapasiteleri: Record<string, string[]> = {
@@ -368,7 +450,7 @@ function telefonAlanlari({ altKategori, marka, model = '' }: UrunSecimi): Ozelli
       alan('Telefon tipi', ['Tuşlu', 'Kapaklı']),
       alan('SIM', ['Tek SIM', 'Çift SIM']),
       alan('Şebeke', ['2G', '3G', '4G']),
-      renk,
+      alan('Renk', telefonRenkleri[model] ?? renkler),
       ...elektronikBelgeleri,
     ];
   const alanlar = [
@@ -378,6 +460,9 @@ function telefonAlanlari({ altKategori, marka, model = '' }: UrunSecimi): Ozelli
     ),
     alan('Renk', telefonRenkleri[model] ?? renkler),
     alan('SIM', ['Fiziksel SIM', 'Fiziksel SIM + eSIM', 'Çift fiziksel SIM', 'eSIM']),
+    alan('Kayıt durumu', ['Türkiye kayıtlı', 'Yurt dışı kayıtlı', 'Kayıtsız', 'Bilinmiyor']),
+    alan('Ekran durumu', ['Çiziksiz', 'İnce çizikler var', 'Çatlak / kırık', 'Değişmiş']),
+    alan('Değişen parça', ['Yok', 'Yetkili serviste değişmiş', 'Özel serviste değişmiş', 'Bilinmiyor']),
     ...elektronikBelgeleri,
   ];
   if (marka === 'apple')
@@ -1907,6 +1992,8 @@ function koleksiyonAlanlari({ altKategori, model = '' }: UrunSecimi): OzellikAla
 
 /** İlan formu ve arama aynı tanımları kullanır; alt ürün seçildikçe yalnızca ilgili alanlar döner. */
 export function ozellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
+  if (!secim.altKategori || !kategoriAgaci[secim.kategori]?.some((dal) => dal.id === secim.altKategori))
+    return [];
   switch (secim.kategori) {
     case 'telefon':
       return telefonAlanlari(secim);
@@ -1924,7 +2011,43 @@ export function ozellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
       return evAlanlari(secim);
     case 'koleksiyon':
       return koleksiyonAlanlari(secim);
+    default:
+      return ekOzellikAlanlari(secim);
   }
+}
+
+/** Tür seçilmeden yalnızca o dalın bütün ürünlerinde anlamlı olan filtreler gösterilir. */
+export function ozellikFiltreAlanlari(secim: UrunSecimi): OzellikAlani[] {
+  if (secim.model) return ozellikAlanlari(secim);
+  const dal = kategoriAgaci[secim.kategori]?.find((dal) => dal.id === secim.altKategori);
+  if (!dal) return [];
+  const gruplar = dal.markalar.filter((marka) => !secim.marka || marka.id === secim.marka);
+  const tanimlar = gruplar.flatMap((marka) =>
+    marka.modeller.length
+      ? marka.modeller.map((model) => ozellikAlanlari({ ...secim, marka: marka.id, model: model.id }))
+      : [ozellikAlanlari({ ...secim, marka: marka.id })],
+  );
+  if (!tanimlar.length) return ozellikAlanlari(secim);
+  return (tanimlar[0] ?? [])
+    .filter((alan) => tanimlar.every((tanim) => tanim.some((aday) => aday.ad === alan.ad)))
+    .map((alan) => {
+      const ayniAlanlar = tanimlar.flatMap((tanim) => tanim.filter((aday) => aday.ad === alan.ad));
+      return {
+        ...alan,
+        secenekler: [...new Set(ayniAlanlar.flatMap((aday) => aday.secenekler))],
+        ...(alan.filtreSecenekleri
+          ? {
+              filtreSecenekleri: [
+                ...new Map(
+                  ayniAlanlar
+                    .flatMap((aday) => aday.filtreSecenekleri ?? [])
+                    .map((secenek) => [secenek.id, secenek]),
+                ).values(),
+              ],
+            }
+          : {}),
+      };
+    });
 }
 
 /** Kategori veya model değiştiğinde artık geçerli olmayan teknik bilgiler silinir. */

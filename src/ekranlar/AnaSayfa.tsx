@@ -15,7 +15,7 @@ import { IkonluKategoriler } from '../bilesenler/IkonluKategoriler';
 import { usePazar } from '../durum/Pazar';
 import { gorselKaynagi } from '../veri/gorseller';
 import { konumEslesir } from '../veri/konumlar';
-import { kalin, ortak, renk, useEkran } from '../tasarim/tema';
+import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
 const vitrinSirasi = [
   'iphone-15-pro',
@@ -29,6 +29,9 @@ const vitrinSirasi = [
 ];
 
 export default function AnaSayfa() {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { mobil, bosluk } = useEkran();
   const { tumIlanlar, konum, konumSec } = usePazar();
   const konumdakiler = useMemo(
@@ -55,7 +58,7 @@ export default function AnaSayfa() {
           borderWidth: 1,
           borderColor: renk.cizgi,
           borderRadius: 8,
-          backgroundColor: '#fff',
+          backgroundColor: renk.beyaz,
           flexDirection: 'row',
           gap: 6,
           alignItems: 'center',
@@ -103,7 +106,7 @@ export default function AnaSayfa() {
             <IlanIzgarasi ilanlar={vitrin} oncelikli />
           ) : (
             <BosDurum
-              simge={<Search size={28} />}
+              simge={<Search color={renk.murekkep} size={28} />}
               baslik="Bu filtrelerde ilan yok."
               aciklama="Bir filtreyi kaldırabilir ya da başka bir kategoriye bakabilirsin."
               eylem={<Buton onPress={sifirla}>Tüm ilanları göster</Buton>}
@@ -115,8 +118,8 @@ export default function AnaSayfa() {
                 style={{
                   minHeight: 46,
                   borderWidth: 1,
-                  borderColor: '#dedede',
-                  backgroundColor: '#fff',
+                  borderColor: renk.cizgi,
+                  backgroundColor: renk.beyaz,
                   borderRadius: 9,
                   paddingHorizontal: 22,
                   flexDirection: 'row',
@@ -125,7 +128,7 @@ export default function AnaSayfa() {
                 }}
               >
                 <Yazi style={{ fontSize: 13, fontWeight: '600' }}>İlanların tümünü gör</Yazi>
-                <ArrowRight size={17} />
+                <ArrowRight color={renk.murekkep} size={17} />
               </HareketliBas>
             </Link>
           </View>
@@ -148,8 +151,10 @@ export default function AnaSayfa() {
             </Paragraf>
             <Link href="/ilan-ver" asChild>
               <HareketliBas style={s.cagriButonu} vurgu="dugme">
-                <Plus size={19} color={renk.murekkep} />
-                <Yazi style={{ fontWeight: '700', fontSize: 14 }}>Ücretsiz ilan ver</Yazi>
+                <Plus size={19} color={renk.vurguYazi} />
+                <Yazi style={{ fontWeight: '700', fontSize: 14, color: renk.vurguYazi }}>
+                  Ücretsiz ilan ver
+                </Yazi>
               </HareketliBas>
             </Link>
           </View>
@@ -167,40 +172,42 @@ export default function AnaSayfa() {
     </Kabuk>
   );
 }
-const s = StyleSheet.create({
-  ilanCagrisi: {
-    flexDirection: 'row',
-    overflow: 'hidden',
-    borderRadius: 12,
-    backgroundColor: renk.murekkep,
-    minHeight: 252,
-  },
-  ilanCagrisiMobil: { flexDirection: 'column-reverse', minHeight: 0 },
-  cagriMetni: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, gap: 12, justifyContent: 'center' },
-  cagriMetniMobil: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
-  cagriBaslik: {
-    fontFamily: kalin,
-    fontWeight: '700',
-    color: '#fff',
-    fontSize: 32,
-    lineHeight: 40,
-    letterSpacing: -0.8,
-    maxWidth: 470,
-  },
-  cagriAciklama: { color: '#d5d5d6', fontSize: 14, lineHeight: 23, maxWidth: 450 },
-  cagriButonu: {
-    alignSelf: 'flex-start',
-    minHeight: 46,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: 18,
-    marginTop: 5,
-    borderRadius: 8,
-    backgroundColor: renk.sari,
-  },
-  cagriGorseli: { width: '43%', minHeight: 252, overflow: 'hidden', backgroundColor: '#25221d' },
-  cagriGorseliMobil: { width: '100%', minHeight: 0, height: 156 },
-  cagriFotografi: { position: 'absolute', top: 0, right: 0, width: '150%', height: '100%' },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    ilanCagrisi: {
+      flexDirection: 'row',
+      overflow: 'hidden',
+      borderRadius: 12,
+      backgroundColor: renk.sabitKoyu,
+      minHeight: 252,
+    },
+    ilanCagrisiMobil: { flexDirection: 'column-reverse', minHeight: 0 },
+    cagriMetni: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, gap: 12, justifyContent: 'center' },
+    cagriMetniMobil: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
+    cagriBaslik: {
+      fontFamily: kalin,
+      fontWeight: '700',
+      color: '#fff',
+      fontSize: 32,
+      lineHeight: 40,
+      letterSpacing: -0.8,
+      maxWidth: 470,
+    },
+    cagriAciklama: { color: '#d5d5d6', fontSize: 14, lineHeight: 23, maxWidth: 450 },
+    cagriButonu: {
+      alignSelf: 'flex-start',
+      minHeight: 46,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingHorizontal: 18,
+      marginTop: 5,
+      borderRadius: 8,
+      backgroundColor: renk.sari,
+    },
+    cagriGorseli: { width: '43%', minHeight: 252, overflow: 'hidden', backgroundColor: '#25221d' },
+    cagriGorseliMobil: { width: '100%', minHeight: 0, height: 156 },
+    cagriFotografi: { position: 'absolute', top: 0, right: 0, width: '150%', height: '100%' },
+  }),
+);

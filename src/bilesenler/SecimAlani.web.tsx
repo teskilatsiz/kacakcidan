@@ -5,7 +5,7 @@ import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import type { SecimAlaniProps } from './SecimAlani';
 import { Alan, Pencere, Yazi } from './Temel';
 import { HareketliBas } from './Hareketli';
-import { kalin, renk } from '../tasarim/tema';
+import { kalin, useTema, temaStilleri } from '../tasarim/tema';
 
 export function SecimAlani({
   etiket,
@@ -17,6 +17,9 @@ export function SecimAlani({
   disabled = false,
   gerekli = false,
 }: SecimAlaniProps) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const [acik, setAcik] = useState(false);
   const [arama, setArama] = useState('');
   const secili = secenekler.find((secenek) => secenek.id === deger);
@@ -146,32 +149,34 @@ export function SecimAlani({
   );
 }
 
-const s = StyleSheet.create({
-  etiket: { fontFamily: kalin, fontWeight: '700', fontSize: 13 },
-  kutu: {
-    minHeight: 50,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#fff',
-  },
-  hataSiniri: { borderColor: '#b64432' },
-  devreDisi: { opacity: 0.45 },
-  liste: { gap: 2 },
-  satir: {
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 12,
-    borderRadius: 8,
-  },
-  seciliSatir: { backgroundColor: renk.sariSoluk },
-  hata: { color: '#a63327', fontSize: 12 },
-  bosSonuc: { padding: 12, color: renk.gri },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    etiket: { fontFamily: kalin, fontWeight: '700', fontSize: 13 },
+    kutu: {
+      minHeight: 50,
+      paddingHorizontal: 14,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: renk.beyaz,
+    },
+    hataSiniri: { borderColor: renk.hataCizgi },
+    devreDisi: { opacity: 0.45 },
+    liste: { gap: 2 },
+    satir: {
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      gap: 12,
+      borderRadius: 8,
+    },
+    seciliSatir: { backgroundColor: renk.sariSoluk },
+    hata: { color: renk.hata, fontSize: 12 },
+    bosSonuc: { padding: 12, color: renk.gri },
+  }),
+);

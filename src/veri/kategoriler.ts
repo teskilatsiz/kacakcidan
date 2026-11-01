@@ -1,8 +1,9 @@
 import { kategoriler, type Ilan, type Kategori } from './ilanlar.ts';
+import { ekKategoriler } from './ekKategoriler.ts';
 
 export type KategoriSecenegi = { id: string; ad: string };
 type Marka = KategoriSecenegi & { modeller: KategoriSecenegi[] };
-type AltKategori = KategoriSecenegi & {
+export type AltKategori = KategoriSecenegi & {
   markalar: Marka[];
   markaBasligi?: string;
   modelBasligi?: string;
@@ -41,9 +42,52 @@ const kategoriBasliklari: Record<
     markaBasligi: 'Marka / dönem',
     modelBasligi: 'Seri / parça',
   },
+  spor: { altKategoriBasligi: 'Spor dalları', markaBasligi: 'Ürün grupları', modelBasligi: 'Ürün türleri' },
+  'anne-bebek': {
+    altKategoriBasligi: 'Alt kategoriler',
+    markaBasligi: 'Ürün grupları',
+    modelBasligi: 'Ürün türleri',
+  },
+  muzik: {
+    altKategoriBasligi: 'Alt kategoriler',
+    markaBasligi: 'Ürün grupları',
+    modelBasligi: 'Ürün türleri',
+  },
+  kitap: { altKategoriBasligi: 'Alt kategoriler', markaBasligi: 'Türler', modelBasligi: 'Alt türler' },
+  hobi: {
+    altKategoriBasligi: 'Alt kategoriler',
+    markaBasligi: 'Ürün grupları',
+    modelBasligi: 'Ürün türleri',
+  },
+  bahce: {
+    altKategoriBasligi: 'Alt kategoriler',
+    markaBasligi: 'Ürün grupları',
+    modelBasligi: 'Ürün türleri',
+  },
+  'kisisel-bakim': {
+    altKategoriBasligi: 'Alt kategoriler',
+    markaBasligi: 'Ürün grupları',
+    modelBasligi: 'Ürün türleri',
+  },
+  'teknik-elektronik': {
+    altKategoriBasligi: 'Alt kategoriler',
+    markaBasligi: 'Ürün grupları',
+    modelBasligi: 'Ürün türleri',
+  },
+  ofis: {
+    altKategoriBasligi: 'Alt kategoriler',
+    markaBasligi: 'Ürün grupları',
+    modelBasligi: 'Ürün türleri',
+  },
+  antika: {
+    altKategoriBasligi: 'Alt kategoriler',
+    markaBasligi: 'Ürün grupları',
+    modelBasligi: 'Ürün türleri',
+  },
 };
 
 export const kategoriAgaci: KategoriAgaci = {
+  ...ekKategoriler,
   telefon: [
     {
       id: 'cep-telefonu',
@@ -1963,13 +2007,17 @@ export function kategoriYapisi(kategori: Kategori, altKategori?: string) {
     modelBasligi: 'Modeller',
   };
   const seciliDal = dallar.length === 1 ? dallar[0] : undefined;
+  const markaBasligi = seciliDal?.markaBasligi ?? basliklar.markaBasligi;
+  const modelBasligi = seciliDal?.modelBasligi ?? basliklar.modelBasligi;
   return {
     altKategoriler: altKategoriler.map(({ id, ad }) => ({ id, ad })),
     markalar: markalar.map(({ id, ad }) => ({ id, ad })),
     modeller: Object.fromEntries(markalar.map((m) => [m.id, m.modeller])),
     ...basliklar,
-    markaBasligi: seciliDal?.markaBasligi ?? basliklar.markaBasligi,
-    modelBasligi: seciliDal?.modelBasligi ?? basliklar.modelBasligi,
+    markaBasligi,
+    modelBasligi,
+    markaGirisi: markaBasligi.toLocaleLowerCase('tr-TR').includes('marka'),
+    modelGirisi: /model|seri/i.test(modelBasligi),
   };
 }
 
@@ -1978,12 +2026,18 @@ export const bosSecim: KesifSecimi = { kategori: '', altKategori: '', marka: '',
 
 /** Marka veya model bağlantılarında önce katalogdaki, sonra ilandaki tekil ebeveyn bulunur. */
 export function kesifSeciminiTamamla(liste: Ilan[], secim: KesifSecimi): KesifSecimi {
-  if (!secim.kategori || (!secim.marka && !secim.model)) return secim;
   const dallar = kategoriAgaci[secim.kategori as Kategori] ?? [];
+  if (!dallar.length) return { ...bosSecim };
+  if (secim.altKategori && !dallar.some((dal) => dal.id === secim.altKategori))
+    return { ...bosSecim, kategori: secim.kategori };
+  if (!secim.marka && !secim.model) return secim;
   const eslesenDallar = dallar.filter((dal) => {
     if (secim.altKategori && dal.id !== secim.altKategori) return false;
-    const marka = dal.markalar.find((aday) => aday.id === secim.marka);
-    return secim.model ? Boolean(marka?.modeller.some((aday) => aday.id === secim.model)) : Boolean(marka);
+    return dal.markalar.some(
+      (marka) =>
+        (!secim.marka || marka.id === secim.marka) &&
+        (!secim.model || marka.modeller.some((model) => model.id === secim.model)),
+    );
   });
   const kapsam = liste.filter(
     (ilan) =>
@@ -1998,11 +2052,21 @@ export function kesifSeciminiTamamla(liste: Ilan[], secim: KesifSecimi): KesifSe
     ];
     return degerler.length === 1 ? (degerler[0] ?? '') : '';
   };
+  const markaAdaylari = [
+    ...new Set(
+      eslesenDallar
+        .flatMap((dal) => dal.markalar)
+        .filter((marka) => !secim.model || marka.modeller.some((model) => model.id === secim.model))
+        .map((marka) => marka.id),
+    ),
+  ];
+  if (!eslesenDallar.length && !kapsam.length) return { ...secim, marka: '', model: '' };
   return {
     ...secim,
     altKategori:
       secim.altKategori || (eslesenDallar.length === 1 ? (eslesenDallar[0]?.id ?? '') : tek('altKategori')),
-    marka: secim.marka || (secim.model ? tek('marka') : ''),
+    marka:
+      secim.marka || (secim.model ? (markaAdaylari.length === 1 ? markaAdaylari[0]! : tek('marka')) : ''),
   };
 }
 
@@ -2024,7 +2088,14 @@ export function kesifSecenekleri(liste: Ilan[], secim: KesifSecimi) {
   const adlandir = (deger: string, secenekler: KategoriSecenegi[]) =>
     secenekler.find((s) => s.id === deger)?.ad ?? deger;
   const say = (alan: 'altKategori' | 'marka' | 'model', ilanlar: Ilan[], secenekler: KategoriSecenegi[]) =>
-    secenekler.map(({ id, ad }) => ({
+    [
+      ...new Map([
+        ...secenekler.map((secenek) => [secenek.id, secenek] as const),
+        ...ilanlar
+          .filter((ilan) => ilan[alan] && !secenekler.some((secenek) => secenek.id === ilan[alan]))
+          .map((ilan) => [ilan[alan]!, { id: ilan[alan]!, ad: ilan[alan]! }] as const),
+      ]).values(),
+    ].map(({ id }) => ({
       id,
       ad: adlandir(id, secenekler),
       sayi: ilanlar.filter((ilan) => ilan[alan] === id).length,

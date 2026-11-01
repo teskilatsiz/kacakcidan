@@ -4,7 +4,7 @@ import Check from 'lucide-react-native/icons/check';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import { Alan, Pencere, Yazi } from './Temel';
 import { HareketliBas } from './Hareketli';
-import { kalin, renk } from '../tasarim/tema';
+import { kalin, useTema, temaStilleri } from '../tasarim/tema';
 
 export type SecimAlaniProps = {
   etiket: string;
@@ -27,6 +27,9 @@ export function SecimAlani({
   disabled = false,
   gerekli = false,
 }: SecimAlaniProps) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const [acik, setAcik] = useState(false);
   const [arama, setArama] = useState('');
   const secili = secenekler.find((s) => s.id === deger);
@@ -52,7 +55,7 @@ export function SecimAlani({
         accessibilityState={{ disabled, expanded: acik }}
         disabled={disabled}
         onPress={() => setAcik(true)}
-        style={[s.kutu, hata ? { borderColor: '#b64432' } : {}, disabled && { opacity: 0.45 }]}
+        style={[s.kutu, hata ? { borderColor: renk.hataCizgi } : {}, disabled && { opacity: 0.45 }]}
       >
         <Yazi numberOfLines={1} style={{ flex: 1, color: secili ? renk.murekkep : renk.gri }}>
           {secili?.ad ?? ipucu}
@@ -90,7 +93,7 @@ export function SecimAlani({
               style={s.satir}
             >
               <Yazi style={{ flex: 1, color: renk.gri }}>{ipucu}</Yazi>
-              {!deger ? <Check size={18} /> : null}
+              {!deger ? <Check color={renk.murekkep} size={18} /> : null}
             </HareketliBas>
           ) : null}
           {sonuc.map((secenek) => (
@@ -102,7 +105,7 @@ export function SecimAlani({
               style={[s.satir, deger === secenek.id && { backgroundColor: renk.sariSoluk }]}
             >
               <Yazi style={{ flex: 1, fontWeight: deger === secenek.id ? '700' : '400' }}>{secenek.ad}</Yazi>
-              {deger === secenek.id ? <Check size={18} /> : null}
+              {deger === secenek.id ? <Check color={renk.murekkep} size={18} /> : null}
             </HareketliBas>
           ))}
           {!sonuc.length ? (
@@ -114,27 +117,29 @@ export function SecimAlani({
   );
 }
 
-const s = StyleSheet.create({
-  etiket: { fontFamily: kalin, fontWeight: '700', fontSize: 13 },
-  kutu: {
-    minHeight: 50,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#fff',
-  },
-  satir: {
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 12,
-    borderRadius: 8,
-  },
-  hata: { color: '#a63327', fontSize: 12 },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    etiket: { fontFamily: kalin, fontWeight: '700', fontSize: 13 },
+    kutu: {
+      minHeight: 50,
+      paddingHorizontal: 14,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: renk.beyaz,
+    },
+    satir: {
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      gap: 12,
+      borderRadius: 8,
+    },
+    hata: { color: renk.hata, fontSize: 12 },
+  }),
+);

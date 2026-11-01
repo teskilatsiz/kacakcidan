@@ -1,13 +1,12 @@
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { useRouter } from 'expo-router';
-import ArrowRight from 'lucide-react-native/icons/arrow-right';
 import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right';
 import LayoutGrid from 'lucide-react-native/icons/layout-grid';
 import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
 import { usePazar } from '../durum/Pazar';
 import { useMedyaAdresi } from '../durum/medyaDeposu';
-import { renk } from '../tasarim/tema';
+import { useTema, temaStilleri } from '../tasarim/tema';
 import { aramaOnerileri, type AramaOnerisi, type AramaKutusuProps } from '../veri/arama';
 import { kategoriAgaci } from '../veri/kategoriler';
 import { ilanYolu, kategoriler, para } from '../veri/ilanlar';
@@ -15,6 +14,8 @@ import { ilanYolu, kategoriler, para } from '../veri/ilanlar';
 type Satir = AramaOnerisi | { id: 'tum-sonuclar'; tur: 'tum'; baslik: string; sorgu: string };
 
 function OneriResmi({ kaynak }: { kaynak: string }) {
+  const s = useStiller();
+
   const adres = useMedyaAdresi(kaynak);
   return <img src={adres} alt="" width={38} height={38} loading="eager" decoding="async" style={s.resim} />;
 }
@@ -27,6 +28,9 @@ export function AraKutusu({
   inline = false,
   secildi,
 }: AramaKutusuProps) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { tumIlanlar } = usePazar();
   const router = useRouter();
   const kimlik = useId();
@@ -186,7 +190,7 @@ export function AraKutusu({
           onClick={() => tamamla()}
         >
           <span>Ara</span>
-          <ArrowRight size={17} color={renk.murekkep} aria-hidden />
+          <Search size={17} color={renk.vurguYazi} aria-hidden />
         </button>
       </div>
       {gorunur && (
@@ -236,7 +240,7 @@ export function AraKutusu({
                   </span>
                   {satir.tur === 'ilan' && (
                     <span style={s.aciklama}>
-                      {para(satir.ilan.fiyat)} <span style={{ color: '#6b6b6b' }}>· {satir.ilan.konum}</span>
+                      {para(satir.ilan.fiyat)} <span style={{ color: renk.gri }}>· {satir.ilan.konum}</span>
                     </span>
                   )}
                   {satir.tur === 'kategori' && (
@@ -259,7 +263,7 @@ export function AraKutusu({
   );
 }
 
-const s: Record<string, CSSProperties> = {
+const useStiller = temaStilleri((renk): Record<string, CSSProperties> => ({
   kok: {
     width: '100%',
     position: 'relative',
@@ -275,12 +279,12 @@ const s: Record<string, CSSProperties> = {
     padding: '3px 4px 3px 12px',
     borderWidth: 1,
     borderStyle: 'solid',
-    borderColor: '#e6e6e6',
+    borderColor: renk.cizgi,
     borderRadius: 10,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: renk.acik,
     boxSizing: 'border-box',
   },
-  buyuk: { minHeight: 58, backgroundColor: '#fff', borderColor: '#dadada', borderRadius: 12 },
+  buyuk: { minHeight: 58, backgroundColor: renk.beyaz, borderColor: renk.cizgi, borderRadius: 12 },
   odak: { borderColor: renk.murekkep },
   girdi: {
     width: 0,
@@ -310,7 +314,7 @@ const s: Record<string, CSSProperties> = {
     font: 'inherit',
     fontSize: 13,
     fontWeight: 700,
-    color: renk.murekkep,
+    color: renk.vurguYazi,
     cursor: 'pointer',
     flexShrink: 0,
   },
@@ -332,8 +336,8 @@ const s: Record<string, CSSProperties> = {
     left: 0,
     right: 0,
     borderRadius: 12,
-    border: '1px solid #e6e6e6',
-    backgroundColor: '#fff',
+    border: `1px solid ${renk.cizgi}`,
+    backgroundColor: renk.beyaz,
     boxShadow: '0 12px 32px #17191b1a',
     overflow: 'hidden',
     textAlign: 'left',
@@ -357,7 +361,7 @@ const s: Record<string, CSSProperties> = {
     cursor: 'pointer',
     boxSizing: 'border-box',
   },
-  kategori: { borderTop: '1px solid #eeeeee', borderRadius: 0 },
+  kategori: { borderTop: `1px solid ${renk.cizgi}`, borderRadius: 0 },
   resim: {
     display: 'block',
     width: 38,
@@ -394,4 +398,4 @@ const s: Record<string, CSSProperties> = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
-};
+}));

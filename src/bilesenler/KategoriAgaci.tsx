@@ -7,7 +7,7 @@ import { Alan, Yazi } from './Temel';
 import { aramaIcinDuzelt } from '../veri/arama';
 import { type Ilan } from '../veri/ilanlar';
 import { kategoriGezintisi, type KesifSecimi } from '../veri/kategoriler';
-import { kalin, renk } from '../tasarim/tema';
+import { kalin, useTema, temaStilleri } from '../tasarim/tema';
 
 /** Ebeveynler sabit kalır; kaydırılan bölüm yalnız bir sonraki seviyeyi içerir. */
 export function KategoriAgaci({
@@ -21,6 +21,9 @@ export function KategoriAgaci({
   sec: (alan: keyof KesifSecimi, deger: string) => void;
   gorunum?: 'yan' | 'mobil';
 }) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const gezinti = useMemo(
     () => kategoriGezintisi(ilanlar, secim),
     [ilanlar, secim.kategori, secim.altKategori, secim.marka, secim.model],
@@ -34,10 +37,26 @@ export function KategoriAgaci({
       : gezinti.secenekler;
 
   if (gorunum === 'mobil') {
-    if (!gezinti.alan || !gezinti.secenekler.length) return null;
+    const ustDal = gezinti.yol.at(-2);
+    const seciliDal = gezinti.yol.at(-1);
     return (
       <View style={s.mobilKutu} dataSet={{ 'mobil-kategoriler': 'true' }}>
-        <Yazi style={s.baslik}>{gezinti.baslik}</Yazi>
+        {seciliDal ? (
+          <HareketliBas
+            accessibilityLabel={ustDal ? `${ustDal.ad} seçeneklerine dön` : 'Tüm kategorilere dön'}
+            onPress={() => (ustDal ? sec(ustDal.alan, ustDal.id) : sec('kategori', ''))}
+            style={{ flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: 8 }}
+          >
+            <ArrowLeft size={17} color={renk.murekkep} />
+            <Yazi style={{ flex: 1, fontSize: 13, fontWeight: '600' }}>{seciliDal.ad}</Yazi>
+            <Yazi style={s.sayac}>{seciliDal.sayi} ilan</Yazi>
+          </HareketliBas>
+        ) : null}
+        {gezinti.alan ? (
+          <Yazi style={s.baslik}>{gezinti.baslik}</Yazi>
+        ) : (
+          <Yazi style={s.altBaslik}>Üst kategoriye dönerek diğer ürünlere bakabilirsin.</Yazi>
+        )}
         {aramaVar && (
           <Alan
             accessibilityLabel={`${gezinti.baslik} içinde ara`}
@@ -52,7 +71,6 @@ export function KategoriAgaci({
             {secenekler.map((dal) => (
               <HareketliBas
                 key={dal.id}
-
                 onPress={() => gezinti.alan && sec(gezinti.alan, dal.id)}
                 accessibilityLabel={`${dal.ad}, ${dal.sayi} ilan, seç`}
                 style={s.mobilSecenek}
@@ -65,7 +83,9 @@ export function KategoriAgaci({
               </HareketliBas>
             ))}
           </View>
-          {secenekler.length === 0 && <Yazi style={s.altBaslik}>Bu isimde bir seçenek bulunamadı.</Yazi>}
+          {gezinti.alan && secenekler.length === 0 && (
+            <Yazi style={s.altBaslik}>Bu isimde bir seçenek bulunamadı.</Yazi>
+          )}
         </ScrollView>
       </View>
     );
@@ -160,7 +180,7 @@ export function KategoriAgaci({
                     {dal.ad}
                   </Yazi>
                   <Yazi style={s.sayac}>{dal.sayi}</Yazi>
-                  <ChevronRight size={13} color="#9a9a9a" />
+                  <ChevronRight size={13} color={renk.gri} />
                 </HareketliBas>
               ))}
               {secenekler.length === 0 ? (
@@ -176,44 +196,46 @@ export function KategoriAgaci({
   );
 }
 
-const s = StyleSheet.create({
-  baslik: { fontFamily: kalin, fontWeight: '700', fontSize: 14 },
-  kutu: {
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 10,
-    backgroundColor: renk.beyaz,
-    padding: 7,
-    gap: 1,
-  },
-  satir: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    minHeight: 44,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
-  ad: { flex: 1, minWidth: 0, fontSize: 13, lineHeight: 19, color: renk.murekkep },
-  secili: { backgroundColor: '#f3f3f3' },
-  mobilKutu: { padding: 14, gap: 9, borderWidth: 1, borderColor: renk.cizgi, borderRadius: 10 },
-  mobilSecenekler: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12 },
-  mobilSecenek: {
-    flexBasis: '46%',
-    flexGrow: 1,
-    minWidth: 110,
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    borderRadius: 5,
-  },
-  sayac: { fontSize: 11, lineHeight: 18, color: renk.gri },
-  cocuklar: { borderTopWidth: 1, borderTopColor: renk.cizgi, marginTop: 7, paddingTop: 9 },
-  altBaslik: { fontSize: 11, lineHeight: 18, color: renk.gri, paddingHorizontal: 10, paddingBottom: 4 },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    baslik: { fontFamily: kalin, fontWeight: '700', fontSize: 14 },
+    kutu: {
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 10,
+      backgroundColor: renk.beyaz,
+      padding: 7,
+      gap: 1,
+    },
+    satir: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+      minHeight: 44,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: 6,
+    },
+    ad: { flex: 1, minWidth: 0, fontSize: 13, lineHeight: 19, color: renk.murekkep },
+    secili: { backgroundColor: renk.acik },
+    mobilKutu: { padding: 14, gap: 9, borderWidth: 1, borderColor: renk.cizgi, borderRadius: 10 },
+    mobilSecenekler: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12 },
+    mobilSecenek: {
+      flexBasis: '46%',
+      flexGrow: 1,
+      minWidth: 110,
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: renk.cizgi,
+      borderRadius: 5,
+    },
+    sayac: { fontSize: 11, lineHeight: 18, color: renk.gri },
+    cocuklar: { borderTopWidth: 1, borderTopColor: renk.cizgi, marginTop: 7, paddingTop: 9 },
+    altBaslik: { fontSize: 11, lineHeight: 18, color: renk.gri, paddingHorizontal: 10, paddingBottom: 4 },
+  }),
+);

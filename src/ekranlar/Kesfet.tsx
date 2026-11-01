@@ -32,9 +32,9 @@ import {
   kesifSeciminiTamamla,
   type KesifSecimi,
 } from '../veri/kategoriler';
-import { ozellikAlanlari, type OzellikAlani } from '../veri/ozellikler';
+import { ozellikFiltreAlanlari, type OzellikAlani } from '../veri/ozellikler';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
-import { kalin, ortak, renk, useEkran } from '../tasarim/tema';
+import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
 type AktifFiltre = { id: string; ad: string; kaldir: () => void };
 
@@ -66,6 +66,9 @@ function filtreAlanlariniBirlestir(alanlar: OzellikAlani[]): OzellikAlani[] {
 }
 
 export default function Kesfet() {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const parametreler = useLocalSearchParams<{
     q?: string;
     firsat?: string;
@@ -107,7 +110,7 @@ export default function Kesfet() {
   const alanlar = useMemo(() => {
     if (!kategoriler.some((kategori) => kategori.id === secim.kategori) || !secim.altKategori) return [];
     return filtreAlanlariniBirlestir(
-      ozellikAlanlari({
+      ozellikFiltreAlanlari({
         ...secim,
         kategori: secim.kategori as Kategori,
         altKategori: secim.altKategori,
@@ -228,7 +231,7 @@ export default function Kesfet() {
     const kapsam = ilanlariFiltrele(tumIlanlar, sonraki);
     const izinliAlanlar = sonraki.kategori
       ? sonraki.altKategori
-        ? ozellikAlanlari({
+        ? ozellikFiltreAlanlari({
             ...sonraki,
             kategori: sonraki.kategori as Kategori,
             altKategori: sonraki.altKategori,
@@ -337,7 +340,7 @@ export default function Kesfet() {
           </View>
         </View>
         {fiyatHatasi ? (
-          <Yazi accessibilityRole="alert" style={{ fontSize: 12, lineHeight: 18, color: '#a33a2d' }}>
+          <Yazi accessibilityRole="alert" style={{ fontSize: 12, lineHeight: 18, color: renk.hata }}>
             En az fiyat, en çok fiyattan büyük olamaz.
           </Yazi>
         ) : null}
@@ -357,8 +360,14 @@ export default function Kesfet() {
               style={{ transform: [{ rotate: teknikAcik ? '180deg' : '0deg' }] }}
             />
           </HareketliBas>
-          {teknikAcik
-            ? teknikAlanlar.map((alan) => (
+          {teknikAcik ? (
+            <>
+              {!secim.model && (
+                <Yazi style={{ fontSize: 12, lineHeight: 18, color: renk.gri }}>
+                  Daha ayrıntılı özellikler için ürün türünü veya modelini seç.
+                </Yazi>
+              )}
+              {teknikAlanlar.map((alan) => (
                 <SecimAlani
                   key={alan.ad}
                   etiket={alan.ad}
@@ -367,8 +376,9 @@ export default function Kesfet() {
                   secenekler={alan.secenekler}
                   degistir={(deger) => ozellikSec(alan.ad, deger)}
                 />
-              ))
-            : null}
+              ))}
+            </>
+          ) : null}
         </View>
       ) : !secim.kategori ? (
         <Yazi style={{ fontSize: 12, color: renk.gri, lineHeight: 19 }}>
@@ -377,6 +387,10 @@ export default function Kesfet() {
       ) : !secim.altKategori ? (
         <Yazi style={{ fontSize: 12, color: renk.gri, lineHeight: 19 }}>
           Ürün özellikleri için bir alt kategori seç.
+        </Yazi>
+      ) : !secim.model ? (
+        <Yazi style={{ fontSize: 12, color: renk.gri, lineHeight: 19 }}>
+          Teknik özellikleri görmek için kategoriden ürün türünü seç.
         </Yazi>
       ) : null}
       <View style={s.filtreBolum}>
@@ -412,7 +426,7 @@ export default function Kesfet() {
           style={[ortak.satir, { minHeight: 44 }]}
         >
           <View style={[s.kutu, takas && { backgroundColor: renk.sari, borderColor: renk.sari }]}>
-            {takas ? <Check size={13} color={renk.murekkep} /> : null}
+            {takas ? <Check size={13} color={renk.vurguYazi} /> : null}
           </View>
           <Yazi style={{ fontSize: 13 }}>Takasa açık ilanlar</Yazi>
         </HareketliBas>
@@ -543,14 +557,14 @@ export default function Kesfet() {
                     onPress={() => setListe(false)}
                     style={[s.gorunum, !liste && s.seciliGorunum]}
                   >
-                    <LayoutGrid size={17} color={renk.murekkep} />
+                    <LayoutGrid size={17} color={!liste ? renk.vurguYazi : renk.murekkep} />
                   </SimgeButon>
                   <SimgeButon
                     etiket="Liste görünümü"
                     onPress={() => setListe(true)}
                     style={[s.gorunum, liste && s.seciliGorunum]}
                   >
-                    <List size={17} color={renk.murekkep} />
+                    <List size={17} color={liste ? renk.vurguYazi : renk.murekkep} />
                   </SimgeButon>
                 </>
               ) : null}
@@ -574,7 +588,7 @@ export default function Kesfet() {
                   <Yazi numberOfLines={1} style={{ fontSize: 12, maxWidth: 210 }}>
                     {filtre.ad}
                   </Yazi>
-                  <X size={13} />
+                  <X color={renk.murekkep} size={13} />
                 </HareketliBas>
               ))}
               <HareketliBas
@@ -604,7 +618,11 @@ export default function Kesfet() {
         kapat={() => setFiltreAcik(false)}
         baslik="Filtrele"
         altlik={
-          <Buton onPress={() => setFiltreAcik(false)} disabled={fiyatHatasi} simge={<ArrowRight size={17} />}>
+          <Buton
+            onPress={() => setFiltreAcik(false)}
+            disabled={fiyatHatasi}
+            simge={<ArrowRight color={renk.murekkep} size={17} />}
+          >
             {sonuc.length} ilanı göster
           </Buton>
         }
@@ -638,32 +656,34 @@ export default function Kesfet() {
   );
 }
 
-const s = StyleSheet.create({
-  filtreBolum: { gap: 16, paddingBottom: 22, borderBottomWidth: 1, borderColor: renk.cizgi },
-  filtreBaslik: { fontFamily: kalin, fontWeight: '700', fontSize: 14 },
-  kutu: {
-    width: 19,
-    height: 19,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  kirik: { color: renk.gri, fontSize: 12 },
-  yolBaglantisi: { flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: 5 },
-  aktifFiltre: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    minHeight: 44,
-    backgroundColor: '#f4f4f4',
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    paddingVertical: 8,
-    paddingHorizontal: 11,
-    borderRadius: 8,
-  },
-  gorunum: { width: 44, height: 44, borderRadius: 8 },
-  seciliGorunum: { backgroundColor: renk.sari, borderColor: renk.sari },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    filtreBolum: { gap: 16, paddingBottom: 22, borderBottomWidth: 1, borderColor: renk.cizgi },
+    filtreBaslik: { fontFamily: kalin, fontWeight: '700', fontSize: 14 },
+    kutu: {
+      width: 19,
+      height: 19,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    kirik: { color: renk.gri, fontSize: 12 },
+    yolBaglantisi: { flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: 5 },
+    aktifFiltre: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      minHeight: 44,
+      backgroundColor: renk.acik,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      paddingVertical: 8,
+      paddingHorizontal: 11,
+      borderRadius: 8,
+    },
+    gorunum: { width: 44, height: 44, borderRadius: 8 },
+    seciliGorunum: { backgroundColor: renk.sari, borderColor: renk.sari },
+  }),
+);
