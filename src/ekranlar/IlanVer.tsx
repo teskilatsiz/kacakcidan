@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Keyboard, Platform, StyleSheet, View } from 'react-native';
 import type { ImagePickerAsset } from 'expo-image-picker';
+import { randomUUID } from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import ArrowLeft from 'lucide-react-native/icons/arrow-left';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
@@ -29,10 +30,12 @@ import { kategoriYapisi } from '../veri/kategoriler';
 import { ozellikAlanlari, ozellikleriTemizle } from '../veri/ozellikler';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 import { kategoriler, ilanYolu, para, type Ilan, type Kategori } from '../veri/ilanlar';
-import { kalin, ortak, renk, useEkran } from '../tasarim/tema';
+import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
 const adimlar = ['Kategori', 'Fotoğraf & video', 'İlan bilgileri', 'Önizleme'];
 export default function IlanVer({ duzenleme = false }: { duzenleme?: boolean } = {}) {
+  const { renk } = useTema();
+
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { eklenenler, hazir, oturum } = usePazar();
   const router = useRouter();
@@ -50,7 +53,7 @@ export default function IlanVer({ duzenleme = false }: { duzenleme?: boolean } =
       <Kabuk>
         <View style={[ortak.alan, { maxWidth: 650, padding: 24 }]}>
           <BosDurum
-            simge={<Package size={28} />}
+            simge={<Package color={renk.murekkep} size={28} />}
             baslik="Bu ilan düzenlenemiyor"
             aciklama="İlan kaldırılmış olabilir. Düzenlemek istediğin ilanı hesabındaki ilanlardan seç."
             eylem={<Buton onPress={() => router.replace('/profil')}>İlanlarım</Buton>}
@@ -62,6 +65,9 @@ export default function IlanVer({ duzenleme = false }: { duzenleme?: boolean } =
 }
 
 function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { mobil, dar, bosluk } = useEkran();
   const { profil, ilanEkle, ilanGuncelle, hazir, oturum } = usePazar();
   const router = useRouter();
@@ -78,19 +84,33 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
   const [altKategori, setAltKategori] = useState(ilkAltKategoriGecerli ? (ilan?.altKategori ?? '') : '');
   const [marka, setMarka] = useState(
     ilan?.marka && ilkAltKategoriGecerli
-      ? bilinenMarka || ilan.marka === 'markasiz'
+      ? bilinenMarka || (ilkAltYapi?.markaGirisi && ilan.marka === 'markasiz')
         ? ilan.marka
-        : 'diger'
+        : ilkAltYapi?.markaGirisi
+          ? 'diger'
+          : ''
       : '',
   );
   const [digerMarka, setDigerMarka] = useState(
-    ilan?.marka && ilkAltKategoriGecerli && !bilinenMarka && ilan.marka !== 'markasiz' ? ilan.marka : '',
+    ilan?.marka &&
+      ilkAltKategoriGecerli &&
+      ilkAltYapi?.markaGirisi &&
+      !bilinenMarka &&
+      ilan.marka !== 'markasiz'
+      ? ilan.marka
+      : '',
   );
   const [model, setModel] = useState(
-    ilan?.model && ilkAltKategoriGecerli ? (bilinenModel ? ilan.model : 'diger') : '',
+    ilan?.model && ilkAltKategoriGecerli
+      ? bilinenModel
+        ? ilan.model
+        : ilkAltYapi?.modelGirisi
+          ? 'diger'
+          : ''
+      : '',
   );
   const [digerModel, setDigerModel] = useState(
-    ilan?.model && ilkAltKategoriGecerli && !bilinenModel ? ilan.model : '',
+    ilan?.model && ilkAltKategoriGecerli && ilkAltYapi?.modelGirisi && !bilinenModel ? ilan.model : '',
   );
   const [fotograflar, setFotograflar] = useState<ImagePickerAsset[]>(() =>
     ilan
@@ -167,17 +187,29 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     .replace('Ekipman türleri', 'Ekipman türü')
     .replace('Araç türleri', 'Araç türü')
     .replace('Koleksiyon türleri', 'Koleksiyon türü');
-  const markaSecenekleri = yapi?.markalar.filter((m) => !['diger', 'markasiz'].includes(m.id)) ?? [];
+  const markaGirisi = yapi?.markaGirisi ?? true;
+  const modelGirisi = yapi?.modelGirisi ?? true;
+  const markaSecenekleri =
+    yapi?.markalar.filter((m) => !markaGirisi || !['diger', 'markasiz'].includes(m.id)) ?? [];
+  const markaEtiketi = (yapi?.markaBasligi ?? 'Marka')
+    .replace('Markalar', 'Marka')
+    .replace('Ürün grupları', 'Ürün grubu')
+    .replace('Türler', 'Tür');
+  const modelEtiketi = (yapi?.modelBasligi ?? 'Model')
+    .replace('Modeller', 'Model')
+    .replace('Ürün türleri', 'Ürün türü')
+    .replace('Alt türler', 'Alt tür');
   const modelSecenekleri = yapi?.modeller[marka] ?? [];
   const kategoriAdi = kategoriler.find((k) => k.id === kategori)?.ad;
   const altKategoriAdi = yapi?.altKategoriler.find((k) => k.id === altKategori)?.ad;
   const markaAdi =
-    marka === 'diger'
+    marka === 'diger' && markaGirisi
       ? digerMarka.trim()
-      : marka === 'markasiz'
+      : markaGirisi && marka === 'markasiz'
         ? 'Markasız'
         : markaSecenekleri.find((m) => m.id === marka)?.ad;
-  const modelAdi = model === 'diger' ? digerModel.trim() : modelSecenekleri.find((m) => m.id === model)?.ad;
+  const modelAdi =
+    model === 'diger' && modelGirisi ? digerModel.trim() : modelSecenekleri.find((m) => m.id === model)?.ad;
   const kategoriYolu = [kategoriAdi, altKategoriAdi, markaAdi, modelAdi].filter(Boolean).join(' / ');
   const sayisalFiyat = Number(fiyat.replace(',', '.'));
   const kapak = fotograflar[0];
@@ -239,11 +271,14 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
   function kategoriDenetle() {
     if (!kategori) return 'Önce ürününün kategorisini seç.';
     if (!altKategori) return 'Ürünün için bir alt kategori seç.';
-    if (!marka) return 'Bir marka seç. Ürünün markasızsa Markasız seçeneğini kullanabilirsin.';
-    if (marka === 'diger' && digerMarka.trim().length < 2) return 'Ürünün markasını yaz.';
-    if ((modelSecenekleri.length > 0 || marka === 'diger') && !model)
-      return 'Ürünün modelini seç veya Diğer model seçeneğine modelini yaz.';
-    if (model === 'diger' && digerModel.trim().length < 2) return 'Ürünün modelini yaz.';
+    if (!marka)
+      return markaGirisi
+        ? 'Bir marka seç. Markasız ürün için Markasız seçeneğini kullanabilirsin.'
+        : `${markaEtiketi} seç.`;
+    if (markaGirisi && marka === 'diger' && digerMarka.trim().length < 2) return 'Ürünün markasını yaz.';
+    if ((modelSecenekleri.length > 0 || (markaGirisi && marka === 'diger')) && !model)
+      return `${modelEtiketi} seç.`;
+    if (modelGirisi && model === 'diger' && digerModel.trim().length < 2) return 'Ürünün modelini yaz.';
     return '';
   }
   function bilgileriDenetle() {
@@ -390,12 +425,14 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
       for (const fotograf of fotograflar) fotografKayitlari.push(await medyayiSakla(fotograf));
       const videoKaydi = video ? await medyayiSakla(video) : undefined;
       const yeni: Ilan = {
-        id: ilan?.id ?? `yerel-${Date.now()}`,
+        id: ilan?.id ?? `yerel-${randomUUID()}`,
+        numara: ilan?.numara,
+        saticiId: ilan?.saticiId ?? hesapId,
         baslik: baslik.trim(),
         kategori,
         altKategori,
-        marka: marka === 'diger' ? digerMarka.trim() : marka,
-        model: model === 'diger' ? digerModel.trim() : model || undefined,
+        marka: markaGirisi && marka === 'diger' ? digerMarka.trim() : marka,
+        model: modelGirisi && model === 'diger' ? digerModel.trim() : model || undefined,
         fiyat: sayisalFiyat,
         durum,
         aciklama: aciklama.trim(),
@@ -403,6 +440,11 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
         gorsel: fotografKayitlari[0]!,
         fotografler: fotografKayitlari,
         video: videoKaydi,
+        videoPoster: videoKaydi
+          ? ilan?.video === videoKaydi
+            ? ilan.videoPoster
+            : fotografKayitlari[0]
+          : undefined,
         ozellikler: ozellikleriTemizle(teknikAlanlar, ozellikler),
         satici: profil.ad,
         benim: true,
@@ -436,7 +478,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
         {kaydedilen ? (
           <Giris style={{ alignItems: 'center', paddingVertical: mobil ? 40 : 70, gap: 20 }}>
             <View style={s.tamam}>
-              <CheckCircle2 size={40} strokeWidth={1.5} />
+              <CheckCircle2 color={renk.murekkep} size={40} strokeWidth={1.5} />
             </View>
             <Baslik buyuk>{ilan ? 'İlanın güncellendi.' : 'İlanın hazır.'}</Baslik>
             <Yazi style={{ textAlign: 'center', color: renk.gri }}>{kaydedilen.baslik}</Yazi>
@@ -444,7 +486,10 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
               {para(kaydedilen.fiyat)}
             </Yazi>
             <View style={{ flexDirection: mobil ? 'column' : 'row', gap: 12 }}>
-              <Buton onPress={() => router.replace(ilanYolu(kaydedilen))} simge={<ArrowRight size={18} />}>
+              <Buton
+                onPress={() => router.replace(ilanYolu(kaydedilen))}
+                simge={<ArrowRight color={renk.murekkep} size={18} />}
+              >
                 İlanı görüntüle
               </Buton>
               <Buton ikincil onPress={() => router.replace('/profil')}>
@@ -493,12 +538,16 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     minHeight: 44,
                   }}
                 >
-                  <View style={[s.adimNo, { backgroundColor: adim >= i + 1 ? renk.murekkep : '#edeee8' }]}>
+                  <View style={[s.adimNo, { backgroundColor: adim >= i + 1 ? renk.murekkep : renk.acik }]}>
                     {adim > i + 1 ? (
-                      <Check size={14} color="#fff" />
+                      <Check size={14} color={renk.tersYazi} />
                     ) : (
                       <Yazi
-                        style={{ color: adim === i + 1 ? '#fff' : renk.gri, fontSize: 12, fontWeight: '700' }}
+                        style={{
+                          color: adim === i + 1 ? renk.tersYazi : renk.gri,
+                          fontSize: 12,
+                          fontWeight: '700',
+                        }}
                       >
                         {i + 1}
                       </Yazi>
@@ -519,7 +568,10 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 24 }}>
               <View
-                style={[ortak.kart, { flex: 1, minWidth: 0, padding: mobil ? 16 : 28, gap: mobil ? 18 : 24 }]}
+                style={[
+                  { ...ortak.kart, backgroundColor: renk.beyaz, borderColor: renk.cizgi },
+                  { flex: 1, minWidth: 0, padding: mobil ? 16 : 28, gap: mobil ? 18 : 24 },
+                ]}
               >
                 <View ref={baslikAlani} tabIndex={-1} style={{ gap: 6 }}>
                   <Baslik style={{ fontSize: mobil ? 22 : 25 }}>
@@ -582,19 +634,23 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     <View style={{ flexDirection: mobil ? 'column' : 'row', gap: 18 }}>
                       <View style={{ flex: 1, minWidth: 0, gap: 14 }}>
                         <SecimAlani
-                          etiket={yapi?.markaBasligi ?? 'Marka'}
+                          etiket={markaEtiketi}
                           deger={marka}
                           secenekler={[
                             ...markaSecenekleri,
-                            { id: 'diger', ad: 'Diğer marka' },
-                            { id: 'markasiz', ad: 'Markasız' },
+                            ...(markaGirisi
+                              ? [
+                                  { id: 'diger', ad: 'Diğer marka' },
+                                  { id: 'markasiz', ad: 'Markasız' },
+                                ]
+                              : []),
                           ]}
                           degistir={markaSec}
-                          ipucu={altKategori ? 'Marka seç' : 'Önce alt kategori seç'}
+                          ipucu={altKategori ? `${markaEtiketi} seç` : 'Önce alt kategori seç'}
                           disabled={!altKategori}
                           gerekli
                         />
-                        {marka === 'diger' ? (
+                        {markaGirisi && marka === 'diger' ? (
                           <Alan
                             nativeID="ilan-marka-adi"
                             etiket="Marka adı"
@@ -607,18 +663,22 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                       </View>
                       <View style={{ flex: 1, minWidth: 0, gap: 14 }}>
                         <SecimAlani
-                          etiket={yapi?.modelBasligi ?? 'Model'}
+                          etiket={modelEtiketi}
                           deger={model}
                           secenekler={[
-                            ...modelSecenekleri.filter((m) => m.id !== 'diger'),
-                            ...(marka ? [{ id: 'diger', ad: 'Diğer model' }] : []),
+                            ...modelSecenekleri.filter((m) => !modelGirisi || m.id !== 'diger'),
+                            ...(marka && modelGirisi ? [{ id: 'diger', ad: 'Diğer model' }] : []),
                           ]}
                           degistir={modelSec}
-                          ipucu={marka ? 'Model seç' : 'Önce marka seç'}
+                          ipucu={
+                            marka
+                              ? `${modelEtiketi} seç`
+                              : `Önce ${markaEtiketi.toLocaleLowerCase('tr-TR')} seç`
+                          }
                           disabled={!marka}
-                          gerekli={modelSecenekleri.length > 0 || marka === 'diger'}
+                          gerekli={modelSecenekleri.length > 0 || (markaGirisi && marka === 'diger')}
                         />
-                        {model === 'diger' ? (
+                        {modelGirisi && model === 'diger' ? (
                           <Alan
                             nativeID="ilan-model-adi"
                             etiket="Model adı"
@@ -664,7 +724,9 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                               />
                               {i === 0 ? (
                                 <View style={s.kapak}>
-                                  <Yazi style={{ fontSize: 10, fontWeight: '700' }}>Kapak</Yazi>
+                                  <Yazi style={{ fontSize: 10, fontWeight: '700', color: renk.vurguYazi }}>
+                                    Kapak
+                                  </Yazi>
                                 </View>
                               ) : null}
                               <HareketliBas
@@ -673,7 +735,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                                 onPress={() => fotografiSil(i)}
                                 style={s.kaldir}
                               >
-                                <X size={16} />
+                                <X color={renk.murekkep} size={16} />
                               </HareketliBas>
                             </View>
                             <Yazi numberOfLines={1} style={{ fontSize: 10, color: renk.gri }}>
@@ -688,7 +750,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                                 onPress={() => fotografiTasi(i, i - 1)}
                                 style={[s.siraDugmesi, i === 0 && { opacity: 0.3 }]}
                               >
-                                <ChevronLeft size={16} />
+                                <ChevronLeft color={renk.murekkep} size={16} />
                               </HareketliBas>
                               <HareketliBas
                                 accessibilityRole="button"
@@ -698,7 +760,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                                 onPress={() => fotografiTasi(i, i + 1)}
                                 style={[s.siraDugmesi, i === fotograflar.length - 1 && { opacity: 0.3 }]}
                               >
-                                <ChevronRight size={16} />
+                                <ChevronRight color={renk.murekkep} size={16} />
                               </HareketliBas>
                               {i > 0 ? (
                                 <HareketliBas
@@ -767,7 +829,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                               }}
                               style={{ minHeight: 44, justifyContent: 'center' }}
                             >
-                              <Yazi style={{ fontSize: 12, color: '#a63327' }}>Videoyu kaldır</Yazi>
+                              <Yazi style={{ fontSize: 12, color: renk.hata }}>Videoyu kaldır</Yazi>
                             </HareketliBas>
                           </View>
                         </>
@@ -949,13 +1011,13 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                           height: 21,
                           borderWidth: 1,
                           borderRadius: 5,
-                          borderColor: takas ? renk.murekkep : '#b8bcb1',
-                          backgroundColor: takas ? renk.murekkep : '#fff',
+                          borderColor: takas ? renk.murekkep : renk.cizgi,
+                          backgroundColor: takas ? renk.murekkep : renk.beyaz,
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
                       >
-                        {takas ? <Check size={15} color="#fff" /> : null}
+                        {takas ? <Check size={15} color={renk.tersYazi} /> : null}
                       </View>
                       <Yazi style={{ fontSize: 12, flex: 1 }}>Takas tekliflerini değerlendirebilirim.</Yazi>
                     </HareketliBas>
@@ -1024,7 +1086,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                           ))}
                       </View>
                     ) : null}
-                    <Yazi style={{ color: '#51584b', lineHeight: 25 }}>{aciklama}</Yazi>
+                    <Yazi style={{ color: renk.gri, lineHeight: 25 }}>{aciklama}</Yazi>
                     <View style={s.ipucu}>
                       <CheckCircle2 size={20} color={renk.murekkep} />
                       <Yazi style={{ flex: 1, fontSize: 12, color: renk.gri }}>
@@ -1035,7 +1097,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                 ) : null}
 
                 {hata ? (
-                  <Yazi role="alert" style={{ fontSize: 12, color: '#a63327' }}>
+                  <Yazi role="alert" style={{ fontSize: 12, color: renk.hata }}>
                     {hata}
                   </Yazi>
                 ) : null}
@@ -1061,7 +1123,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                       ikincil
                       disabled={calisiyor}
                       onPress={() => adimaGit(adim - 1)}
-                      simge={<ArrowLeft size={16} />}
+                      simge={<ArrowLeft color={renk.murekkep} size={16} />}
                     >
                       Geri
                     </Buton>
@@ -1075,7 +1137,13 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                   <Buton
                     disabled={calisiyor || !hazir}
                     onPress={adim === 4 ? kaydet : devam}
-                    simge={adim === 4 ? <Check size={17} /> : <ArrowRight size={17} />}
+                    simge={
+                      adim === 4 ? (
+                        <Check color={renk.murekkep} size={17} />
+                      ) : (
+                        <ArrowRight color={renk.murekkep} size={17} />
+                      )
+                    }
                     testID="ilan-devam"
                     style={mobil && adim === 4 ? { flexGrow: 1 } : undefined}
                   >
@@ -1084,7 +1152,12 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                 </View>
               </View>
               {!dar ? (
-                <View style={[ortak.kart, { width: 270, padding: 20, gap: 16 }]}>
+                <View
+                  style={[
+                    { ...ortak.kart, backgroundColor: renk.beyaz, borderColor: renk.cizgi },
+                    { width: 270, padding: 20, gap: 16 },
+                  ]}
+                >
                   {kapak ? (
                     <Gorsel
                       source={{ uri: kapak.uri }}
@@ -1102,7 +1175,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         justifyContent: 'center',
                       }}
                     >
-                      <Package size={40} strokeWidth={1.2} color="#a8ad9d" />
+                      <Package size={40} strokeWidth={1.2} color={renk.gri} />
                     </View>
                   )}
                   <Yazi style={{ fontWeight: '700', fontSize: 15 }}>
@@ -1130,7 +1203,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                       },
                     ].map((madde) => (
                       <View key={madde.ad} style={ortak.satir}>
-                        <CheckCircle2 size={16} color={madde.hazir ? renk.murekkep : '#c6cabf'} />
+                        <CheckCircle2 size={16} color={madde.hazir ? renk.murekkep : renk.gri} />
                         <Yazi style={{ fontSize: 12, color: madde.hazir ? renk.murekkep : renk.gri }}>
                           {madde.ad}
                         </Yazi>
@@ -1148,6 +1221,8 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
 }
 
 function Duzenle({ onPress, etiket }: { onPress: () => void; etiket: string }) {
+  const { renk } = useTema();
+
   return (
     <HareketliBas
       accessibilityRole="button"
@@ -1155,62 +1230,64 @@ function Duzenle({ onPress, etiket }: { onPress: () => void; etiket: string }) {
       onPress={onPress}
       style={{ flexDirection: 'row', gap: 5, alignItems: 'center', minHeight: 44 }}
     >
-      <Pencil size={14} />
+      <Pencil color={renk.murekkep} size={14} />
       <Yazi style={{ fontSize: 11, textDecorationLine: 'underline' }}>Düzenle</Yazi>
     </HareketliBas>
   );
 }
-const s = StyleSheet.create({
-  etiket: { fontSize: 13, fontWeight: '700' },
-  secenekler: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  adimNo: { width: 29, height: 29, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  yukle: {
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#c7cbbc',
-    backgroundColor: '#fafbf8',
-    borderRadius: 12,
-    padding: 20,
-    paddingVertical: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-  },
-  kaldir: {
-    position: 'absolute',
-    right: 6,
-    top: 6,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  kapak: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    backgroundColor: renk.sari,
-    borderRadius: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  siraDugmesi: { minWidth: 32, minHeight: 40, alignItems: 'center', justifyContent: 'center' },
-  ipucu: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 11,
-    borderRadius: 10,
-    backgroundColor: renk.zemin,
-    padding: 15,
-  },
-  tamam: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: renk.sariSoluk,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    etiket: { fontSize: 13, fontWeight: '700' },
+    secenekler: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    adimNo: { width: 29, height: 29, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+    yukle: {
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      borderColor: renk.cizgi,
+      backgroundColor: renk.acik,
+      borderRadius: 12,
+      padding: 20,
+      paddingVertical: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+    },
+    kaldir: {
+      position: 'absolute',
+      right: 6,
+      top: 6,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: renk.beyaz,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    kapak: {
+      position: 'absolute',
+      bottom: 8,
+      left: 8,
+      backgroundColor: renk.sari,
+      borderRadius: 5,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    siraDugmesi: { minWidth: 32, minHeight: 40, alignItems: 'center', justifyContent: 'center' },
+    ipucu: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 11,
+      borderRadius: 10,
+      backgroundColor: renk.zemin,
+      padding: 15,
+    },
+    tamam: {
+      width: 84,
+      height: 84,
+      borderRadius: 42,
+      backgroundColor: renk.sariSoluk,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  }),
+);
