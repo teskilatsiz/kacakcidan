@@ -1,6 +1,6 @@
 import '../src/tasarim/global.css';
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
-import { Slot, usePathname } from 'expo-router';
+import { KeyboardAvoidingView, Platform, Pressable, Text, useColorScheme, View } from 'react-native';
+import { Slot, usePathname, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFontlar } from '../src/tasarim/useFontlar';
@@ -11,6 +11,50 @@ import { SayfaGecisi } from '../src/bilesenler/SayfaGecisi';
 import { KlavyeOdagi } from '../src/bilesenler/KlavyeOdagi';
 import { TemaSaglayici } from '../src/tasarim/TemaSaglayici';
 import { useTema } from '../src/tasarim/tema';
+
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const koyu = useColorScheme() === 'dark';
+  const arkaPlan = koyu ? '#1b1d1f' : '#f7f7f4';
+  const yazi = koyu ? '#f3f3f0' : '#202224';
+  const ikincil = koyu ? '#b1b3b5' : '#686b6e';
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        backgroundColor: arkaPlan,
+      }}
+    >
+      <View style={{ width: '100%', maxWidth: 380, alignItems: 'center', gap: 12 }}>
+        <Text style={{ color: yazi, fontSize: 20, fontWeight: '700', textAlign: 'center' }}>
+          Sayfa açılamadı
+        </Text>
+        <Text style={{ color: ikincil, fontSize: 14, lineHeight: 21, textAlign: 'center' }}>
+          {__DEV__ ? error.message : 'Bağlantını kontrol edip yeniden deneyebilirsin.'}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={retry}
+          style={{
+            minHeight: 44,
+            minWidth: 140,
+            marginTop: 4,
+            paddingHorizontal: 18,
+            borderRadius: 10,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#ffd12f',
+          }}
+        >
+          <Text style={{ color: '#17191b', fontSize: 14, fontWeight: '700' }}>Yeniden dene</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
 
 export default function KokDuzen() {
   return (

@@ -19,7 +19,8 @@ import { Giris, HareketliBas, useAzaltilmisHareket } from '../bilesenler/Hareket
 import { Alan, Baslik, BosDurum, Buton, Pencere, SimgeButon, Yazi } from '../bilesenler/Temel';
 import { kisiler, usePazar } from '../durum/Pazar';
 import { font, kalin, ortak, temaStilleri, useEkran, useTema } from '../tasarim/tema';
-import { ilanYolu, para } from '../veri/ilanlar';
+import { ilanYolu, para, ilanBedeli } from '../veri/ilanlar';
+import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { useGorunurAlan } from '../tasarim/gorunurAlan';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
 import { IskeletParcasi, YuklemeIskeleti } from '../bilesenler/YuklemeIskeleti';
@@ -100,6 +101,7 @@ export default function Mesajlar() {
       : (secim ?? (mobil ? null : (tumKisiler[0]?.id ?? null)));
   const kisi = tumKisiler.find((k) => k.id === aktifId);
   const ilan = tumIlanlar.find((i) => i.id === kisi?.ilanId);
+  const urunIlani = ilan ? urunKategorisiMi(ilan.kategori) : false;
   const konusma = kisi ? (mesajlar[kisi.id] ?? []) : [];
   const taslak = kisi ? (taslaklar[kisi.id] ?? '') : '';
   const sorgu = arama.trim().toLocaleLowerCase('tr-TR');
@@ -127,11 +129,14 @@ export default function Mesajlar() {
         if (!panel) return;
         const taban = gorunurAlan.ust + gorunurAlan.yukseklik;
         const menu = document.querySelector<HTMLElement>('[data-mobil-menu]')?.getBoundingClientRect();
-        const menuPayi = menu && menu.top < taban && menu.bottom <= taban + 2 ? taban - menu.top : 0;
-        const uygunYukseklik = Math.max(
-          120,
-          Math.floor(taban - panel.getBoundingClientRect().top - menuPayi - (mobil ? 0 : 22)),
-        );
+        // Gizli mobil menü sıfır boyutla (0, 0) döner; onu kullanılabilir alan
+        // sanıp çıkarmak masaüstü sohbetini 120 px'e kadar daraltıyordu.
+        const menuGorunurVeAltaSabit =
+          !!menu && menu.width > 0 && menu.height > 0 && menu.top < taban && menu.bottom >= taban - 2;
+        const menuPayi = menuGorunurVeAltaSabit ? Math.max(0, taban - menu!.top) : 0;
+        const kalan = Math.floor(taban - panel.getBoundingClientRect().top - menuPayi - (mobil ? 0 : 22));
+        const altSinir = yazismaOdakta ? 120 : mobil ? 220 : 420;
+        const uygunYukseklik = Math.max(altSinir, kalan);
         setWebPanelYuksekligi(mobil ? uygunYukseklik : Math.min(760, uygunYukseklik));
       });
     };
@@ -291,8 +296,8 @@ export default function Mesajlar() {
                     webPanelYuksekligi !== undefined
                       ? webPanelYuksekligi
                       : mobil
-                        ? Math.max(180, (pencereYuksekligi || 844) - (kisi ? 190 : 290))
-                        : Math.min(760, Math.max(590, (height || 900) - 290)),
+                        ? Math.max(220, (pencereYuksekligi || 844) - (kisi ? 190 : 290))
+                        : Math.min(760, Math.max(420, (height || 900) - 290)),
                 }
               : { flex: 1, minHeight: 0 },
             mobil && s.mobilDuzen,
@@ -434,7 +439,7 @@ export default function Mesajlar() {
                           {ilan.baslik}
                         </Yazi>
                         <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 13 }}>
-                          {para(ilan.fiyat)}
+                          {ilanBedeli(ilan)}
                         </Yazi>
                       </View>
                       <ChevronRight size={17} color={renk.gri} />
@@ -465,7 +470,7 @@ export default function Mesajlar() {
                       <MessageCircle size={28} color={renk.gri} />
                       <Yazi style={{ fontSize: 13, fontWeight: '600' }}>İlk mesaj senden gelsin.</Yazi>
                       <Yazi style={{ fontSize: 13, color: renk.gri, textAlign: 'center', maxWidth: 280 }}>
-                        Ürünle ilgili merak ettiklerini sorabilir, teslim detaylarını konuşabilirsin.
+                        İlanla ilgili merak ettiklerini sorabilir, ayrıntıları burada konuşabilirsin.
                       </Yazi>
                     </View>
                   )}
@@ -507,18 +512,20 @@ export default function Mesajlar() {
                       editable={hazir}
                       style={[s.mesajGirdi, mobil && { fontSize: 16 }]}
                     />
-                    <HareketliBas
-                      onPointerDown={Platform.OS === 'web' ? (olay) => olay.preventDefault() : undefined}
-                      onPress={() => {
-                        setTeklifHatasi('');
-                        setTeklifAcik(true);
-                      }}
-                      accessibilityLabel="İlan için teklif yaz"
-                      style={s.teklifKisa}
-                    >
-                      <Tag size={18} color={renk.gri} />
-                      {!mobil && <Yazi style={{ color: renk.gri, fontSize: 13 }}>Teklif</Yazi>}
-                    </HareketliBas>
+                    {urunIlani && (
+                      <HareketliBas
+                        onPointerDown={Platform.OS === 'web' ? (olay) => olay.preventDefault() : undefined}
+                        onPress={() => {
+                          setTeklifHatasi('');
+                          setTeklifAcik(true);
+                        }}
+                        accessibilityLabel="İlan için teklif yaz"
+                        style={s.teklifKisa}
+                      >
+                        <Tag size={18} color={renk.gri} />
+                        {!mobil && <Yazi style={{ color: renk.gri, fontSize: 13 }}>Teklif</Yazi>}
+                      </HareketliBas>
+                    )}
                     <HareketliBas
                       onPointerDown={Platform.OS === 'web' ? (olay) => olay.preventDefault() : undefined}
                       accessibilityLabel="Mesajı gönder"
@@ -563,14 +570,16 @@ export default function Mesajlar() {
                           letterSpacing: -0.7,
                         }}
                       >
-                        {para(ilan.fiyat)}
+                        {ilanBedeli(ilan)}
                       </Yazi>
                     </View>
                     <View style={s.detaylar}>
-                      <View style={ortak.aralikli}>
-                        <Yazi style={s.detayEtiket}>Ürün durumu</Yazi>
-                        <Yazi style={{ fontSize: 13 }}>{ilan.durum}</Yazi>
-                      </View>
+                      {urunIlani && (
+                        <View style={ortak.aralikli}>
+                          <Yazi style={s.detayEtiket}>Ürün durumu</Yazi>
+                          <Yazi style={{ fontSize: 13 }}>{ilan.durum}</Yazi>
+                        </View>
+                      )}
                       <View style={[ortak.satir, { gap: 6 }]}>
                         <MapPin size={13} color={renk.gri} />
                         <Yazi style={s.detayEtiket}>{ilan.konum}</Yazi>
@@ -587,9 +596,13 @@ export default function Mesajlar() {
                     <View style={s.ipucu}>
                       <ShieldCheck size={20} color={renk.murekkep} />
                       <View style={{ flex: 1, gap: 5 }}>
-                        <Yazi style={{ fontSize: 13, fontWeight: '700' }}>Teslim almadan önce</Yazi>
+                        <Yazi style={{ fontSize: 13, fontWeight: '700' }}>
+                          {urunIlani ? 'Teslim almadan önce' : 'Ayrıntıları netleştir'}
+                        </Yazi>
                         <Yazi style={{ fontSize: 13, lineHeight: 21, color: renk.gri }}>
-                          Ürünü görüp kontrol et. Teslim detaylarını satıcıyla birlikte netleştir.
+                          {urunIlani
+                            ? 'Ürünü görüp kontrol et. Teslim detaylarını satıcıyla birlikte netleştir.'
+                            : 'İlandaki koşulları kontrol et, merak ettiklerini ilan sahibine sor.'}
                         </Yazi>
                       </View>
                     </View>

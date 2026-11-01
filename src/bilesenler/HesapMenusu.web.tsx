@@ -5,6 +5,9 @@ import { usePazar } from '../durum/Pazar';
 import { useMedyaAdresi } from '../durum/medyaDeposu';
 import { useTema } from '../tasarim/tema';
 import { HesapMenusuIcerigi } from './HesapMenusuIcerigi';
+import { UyelikPenceresi } from './UyelikPenceresi';
+import { CikisOnayi } from './CikisOnayi';
+import { usePathname } from 'expo-router';
 
 export function HesapMenusu() {
   const { renk } = useTema();
@@ -13,6 +16,9 @@ export function HesapMenusu() {
   const dugme = useRef<HTMLButtonElement>(null);
   const pencere = useRef<HTMLDivElement>(null);
   const [acik, setAcik] = useState(false);
+  const [uyelik, setUyelik] = useState<'giris' | 'kayit' | null>(null);
+  const [cikis, setCikis] = useState(false);
+  const yol = usePathname();
   const [konum, setKonum] = useState({ top: 70, left: 0 });
   const kimlik = useId();
   const kapat = () => pencere.current?.hidePopover();
@@ -43,7 +49,7 @@ export function HesapMenusu() {
       <button
         ref={dugme}
         type="button"
-        aria-label="Hesap menüsünü aç"
+        aria-label={oturum ? 'Hesap menüsünü aç' : 'Giriş ve kayıt seçeneklerini aç'}
         aria-expanded={acik}
         aria-controls={kimlik}
         aria-haspopup="dialog"
@@ -95,7 +101,7 @@ export function HesapMenusu() {
         ) : (
           <>
             <UserRound size={20} color={renk.murekkep} />
-            <span style={{ fontSize: 12, fontWeight: 600 }}>Hesabım</span>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Giriş yap</span>
           </>
         )}
         <ChevronDown size={13} color={renk.gri} />
@@ -125,8 +131,20 @@ export function HesapMenusu() {
           fontFamily: 'DM Sans, sans-serif',
         }}
       >
-        <HesapMenusuIcerigi kapat={kapat} />
+        <HesapMenusuIcerigi
+          kapat={kapat}
+          uyelikAc={(kayit) => setUyelik(kayit ? 'kayit' : 'giris')}
+          cikisIste={() => setCikis(true)}
+        />
       </div>
+      <UyelikPenceresi
+        acik={uyelik !== null}
+        kayit={uyelik === 'kayit'}
+        kapat={() => setUyelik(null)}
+        turDegistir={(kayit) => setUyelik(kayit ? 'kayit' : 'giris')}
+        donus={yol}
+      />
+      <CikisOnayi acik={cikis} kapat={() => setCikis(false)} />
     </>
   );
 }

@@ -2,7 +2,6 @@ import { useId } from 'react';
 import Sun from 'lucide-react-native/icons/sun';
 import Moon from 'lucide-react-native/icons/moon';
 import Monitor from 'lucide-react-native/icons/monitor';
-import Check from 'lucide-react-native/icons/check';
 import { useTema } from '../tasarim/tema';
 
 const secenekler = [
@@ -35,6 +34,7 @@ export function TemaSecici({ kompakt = false }: { kompakt?: boolean }) {
             padding: kompakt ? 3 : 0,
             borderRadius: 10,
             background: kompakt ? renk.zemin : undefined,
+            maxWidth: '100%',
           }}
         >
           {secenekler.map(({ id, ad, Simge }) => {
@@ -51,8 +51,8 @@ export function TemaSecici({ kompakt = false }: { kompakt?: boolean }) {
                   minWidth: 0,
                   minHeight: kompakt ? 44 : 72,
                   borderRadius: 8,
-                  border: `1px solid ${secili ? renk.cizgi : 'transparent'}`,
-                  background: secili ? renk.beyaz : kompakt ? 'transparent' : renk.acik,
+                  border: kompakt || secili ? 0 : `1px solid ${renk.cizgi}`,
+                  background: secili ? renk.sari : kompakt ? 'transparent' : renk.beyaz,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -71,20 +71,24 @@ export function TemaSecici({ kompakt = false }: { kompakt?: boolean }) {
                   onChange={() => temaSec(id)}
                   style={{ position: 'absolute', width: 1, height: 1, margin: 0, opacity: 0 }}
                 />
-                <Simge size={19} color={renk.murekkep} strokeWidth={secili ? 2 : 1.6} aria-hidden />
+                <Simge
+                  size={19}
+                  color={secili ? renk.sabitKoyu : renk.murekkep}
+                  strokeWidth={secili ? 2 : 1.6}
+                  aria-hidden
+                />
                 {!kompakt && (
                   <span
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
-                      color: renk.murekkep,
+                      color: secili ? renk.sabitKoyu : renk.murekkep,
                       fontSize: 12,
                       fontWeight: secili ? 700 : 400,
                     }}
                   >
                     {ad}
-                    {secili && <Check size={12} color={renk.murekkep} aria-hidden />}
                   </span>
                 )}
               </label>

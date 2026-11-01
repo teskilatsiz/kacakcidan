@@ -1,0 +1,42 @@
+.uyelik-formu {
+  min-width: 0;
+  width: 100%;
+  --uyelik-girdi-zemini: #fafafa;
+}
+.uyelik-formu[data-koyu='true'] {
+  --uyelik-girdi-zemini: #202020;
+}
+.uyelik-formu input {
+  min-width: 0;
+  background-color: var(--uyelik-girdi-zemini) !important;
+  caret-color: var(--renk-murekkep);
+}
+/* Tarayıcının otomatik doldurma rengi de seçilen temaya uyar. */
+.uyelik-formu input:is(:autofill, :-webkit-autofill),
+.uyelik-formu input:is(:autofill, :-webkit-autofill):focus {
+  box-shadow: 0 0 0 1000px var(--uyelik-girdi-zemini) inset !important;
+  -webkit-text-fill-color: var(--renk-murekkep);
+  caret-color: var(--renk-murekkep);
+}
+.uyelik-gonder {
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .uyelik-gonder:hover:not(:disabled) {
+    background-color: #f5c51e !important;
+  }
+}
+.uyelik-gonder:active:not(:disabled) {
+  transform: scale(0.985);
+}
+@media (prefers-reduced-motion: reduce) {
+  .uyelik-gonder {
+    transition: none;
+  }
+  .uyelik-gonder:active:not(:disabled) {
+    transform: none;
+  }
+}

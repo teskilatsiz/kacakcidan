@@ -3,9 +3,15 @@ import { useGlobalSearchParams, usePathname } from 'expo-router';
 
 export function SayfaGecisi() {
   const yol = usePathname();
-  const { kayit, q } = useGlobalSearchParams<{ kayit?: string; q?: string }>();
+  const { kayit, hesap, q } = useGlobalSearchParams<{ kayit?: string; hesap?: string; q?: string }>();
   const sayfa =
-    yol === '/ilan/yerel' ? `${yol}:${kayit ?? ''}` : yol === '/kesfet' ? `${yol}:${q ?? ''}` : yol;
+    yol === '/ilan/yerel'
+      ? `${yol}:${kayit ?? ''}`
+      : yol === '/satici/yerel'
+        ? `${yol}:${hesap ?? ''}`
+        : yol === '/kesfet'
+          ? `${yol}:${q ?? ''}`
+          : yol;
   useEffect(() => {
     const onceki = history.scrollRestoration;
     history.scrollRestoration = 'manual';

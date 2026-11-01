@@ -18,7 +18,7 @@ const config: ExpoConfig = {
     name: 'Kaçakçıdan',
     shortName: 'Kaçakçıdan',
     description:
-      'Telefon, bilgisayar, konsol ve daha pek çok ikinci el ilanını Kaçakçıdan’da bul. Fiyatları karşılaştır, satıcıya mesaj gönder, kullanmadıklarını satışa çıkar.',
+      'İkinci el otomobil, emlak ve ürün ilanlarını ara; iş ve hizmet ilanlarını incele. Fiyat ve konuma göre filtrele, satıcıyla iletişime geç veya kendi ilanını ver.',
     themeColor: '#ffd12f',
     backgroundColor: '#f6f6f3',
   },
@@ -28,6 +28,9 @@ const config: ExpoConfig = {
       'expo-router',
       {
         apiRoutes: false,
+        // Geliştirme sunucusunda ekranı ilk kez açarken parçalı paket isteği
+        // başarısız olursa tüm rota yüklemesi kırılmasın. Üretimde bölme sürer.
+        asyncRoutes: { web: 'production' },
         ...(siteUrl ? { origin: siteUrl } : {}),
       },
     ],

@@ -8,6 +8,7 @@ export type HesapFormuProps = {
   /** Şifre adımında tarayıcının doğru hesabı otomatik doldurabilmesi için korunur. */
   eposta?: string;
   kayit?: boolean;
+  kimlik?: string;
 };
 export type HesapGonderProps = {
   children: string;

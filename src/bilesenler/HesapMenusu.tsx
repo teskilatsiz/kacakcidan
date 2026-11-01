@@ -5,10 +5,12 @@ import { useTema } from '../tasarim/tema';
 import { HareketliBas } from './Hareketli';
 import { Pencere, Yazi } from './Temel';
 import { HesapMenusuIcerigi } from './HesapMenusuIcerigi';
+import { CikisOnayi } from './CikisOnayi';
 
 export function HesapMenusu() {
   const { renk } = useTema();
   const [acik, setAcik] = useState(false);
+  const [cikis, setCikis] = useState(false);
   return (
     <>
       <HareketliBas
@@ -22,8 +24,9 @@ export function HesapMenusu() {
         <ChevronDown size={13} color={renk.gri} />
       </HareketliBas>
       <Pencere acik={acik} kapat={() => setAcik(false)} baslik="Hesabım">
-        <HesapMenusuIcerigi kapat={() => setAcik(false)} />
+        <HesapMenusuIcerigi kapat={() => setAcik(false)} cikisIste={() => setCikis(true)} />
       </Pencere>
+      <CikisOnayi acik={cikis} kapat={() => setCikis(false)} />
     </>
   );
 }

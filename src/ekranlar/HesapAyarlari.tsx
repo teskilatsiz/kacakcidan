@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import ArrowLeft from 'lucide-react-native/icons/arrow-left';
-import LogOut from 'lucide-react-native/icons/log-out';
 import Mail from 'lucide-react-native/icons/mail';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { HesapGerekli } from '../bilesenler/HesapGerekli';
@@ -10,8 +9,9 @@ import { HesapAyarSekmeleri, type AyarBolumu } from '../bilesenler/HesapAyarSekm
 import { IskeletParcasi, YuklemeIskeleti } from '../bilesenler/YuklemeIskeleti';
 import { HareketliBas } from '../bilesenler/Hareketli';
 import { ProfilFormu } from '../bilesenler/ProfilFormu';
+import { CikisDugmesi } from '../bilesenler/CikisOnayi';
 import { TemaSecici } from '../bilesenler/TemaSecici';
-import { Baslik, Buton, Yazi } from '../bilesenler/Temel';
+import { Baslik, Yazi } from '../bilesenler/Temel';
 import { usePazar } from '../durum/Pazar';
 import { ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
@@ -19,9 +19,8 @@ export default function HesapAyarlari() {
   const { renk } = useTema();
   const s = useStiller();
 
-  const { hazir, oturum, cikisYap } = usePazar();
+  const { hazir, oturum } = usePazar();
   const { mobil, dar, bosluk } = useEkran();
-  const router = useRouter();
   const [bolum, setBolum] = useState<AyarBolumu>('profil');
 
   if (!hazir)
@@ -124,7 +123,7 @@ export default function HesapAyarlari() {
                 <Baslik style={s.bolumBasligi}>Hesap bilgileri</Baslik>
               </View>
               <View style={{ gap: 10 }}>
-                <Yazi style={{ fontSize: 12, fontWeight: '600', color: renk.gri }}>Giriş e-postan</Yazi>
+                <Yazi style={{ fontSize: 12, fontWeight: '600', color: renk.gri }}>E-posta adresin</Yazi>
                 <Yazi selectable style={{ fontSize: 15, lineHeight: 24, fontWeight: '600', flexShrink: 1 }}>
                   {oturum.eposta}
                 </Yazi>
@@ -132,20 +131,14 @@ export default function HesapAyarlari() {
                   Giriş yaparken kullandığın e-posta adresi. Profilinde gösterilmez.
                 </Yazi>
               </View>
+              <View style={{ gap: 10 }}>
+                <Yazi style={{ fontWeight: '600', fontSize: 14 }}>İletişim bilgileri</Yazi>
+                <ProfilFormu key={`iletisim-${oturum.id}`} iletisim />
+              </View>
               <View style={s.oturum}>
                 <Yazi style={{ fontWeight: '600', fontSize: 14 }}>Oturum</Yazi>
                 <Yazi style={s.aciklama}>Bu cihazdaki oturumunu kapat.</Yazi>
-                <Buton
-                  ikincil
-                  simge={<LogOut size={17} color={renk.murekkep} />}
-                  onPress={() => {
-                    cikisYap();
-                    router.replace('/');
-                  }}
-                  style={{ borderColor: renk.cizgi, marginTop: 4, alignSelf: 'flex-start', minWidth: 150 }}
-                >
-                  Çıkış yap
-                </Buton>
+                <CikisDugmesi style={{ marginTop: 4, alignSelf: 'flex-start', minWidth: 150 }} />
               </View>
             </View>
             <View
@@ -175,6 +168,8 @@ const useStiller = temaStilleri((renk) =>
   StyleSheet.create({
     geri: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' },
     bolum: {
+      minWidth: 0,
+      width: '100%',
       borderWidth: 1,
       borderColor: renk.cizgi,
       borderRadius: 14,

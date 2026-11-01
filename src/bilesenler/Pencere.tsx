@@ -14,8 +14,15 @@ export function Pencere({ acik, kapat, baslik, children, altlik, genis = false }
   const guvenli = useSafeAreaInsets();
   const azalt = useAzaltilmisHareket();
   return (
-    <Modal visible={acik} transparent animationType={azalt ? 'none' : 'fade'} onRequestClose={kapat}>
-      <KeyboardAvoidingView style={s.perde} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <Modal
+      visible={acik}
+      transparent
+      statusBarTranslucent
+      navigationBarTranslucent
+      animationType={azalt ? 'none' : 'fade'}
+      onRequestClose={kapat}
+    >
+      <KeyboardAvoidingView style={s.perde} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Pressable accessible={false} onPress={kapat} style={StyleSheet.absoluteFill} />
         <View
           pointerEvents="box-none"
@@ -51,14 +58,12 @@ export function Pencere({ acik, kapat, baslik, children, altlik, genis = false }
                 gap: 20,
                 paddingHorizontal: 22,
                 paddingTop: 8,
-                paddingBottom: altlik ? 20 : Math.max(24, guvenli.bottom),
+                paddingBottom: altlik ? 20 : 24 + guvenli.bottom,
               }}
             >
               {children}
             </KlavyeKaydirma>
-            {altlik ? (
-              <View style={[s.altlik, { paddingBottom: Math.max(16, guvenli.bottom) }]}>{altlik}</View>
-            ) : null}
+            {altlik ? <View style={[s.altlik, { paddingBottom: 16 + guvenli.bottom }]}>{altlik}</View> : null}
           </Giris>
         </View>
       </KeyboardAvoidingView>

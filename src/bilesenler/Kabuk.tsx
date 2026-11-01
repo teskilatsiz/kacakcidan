@@ -1,9 +1,8 @@
 import { Gorsel } from './Gorsel';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { DeviceEventEmitter, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Link, useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
-import Check from 'lucide-react-native/icons/check';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Heart from 'lucide-react-native/icons/heart';
@@ -32,8 +31,11 @@ import { KlavyeKaydirma } from './KlavyeKaydirma';
 import { KategoriSimgesi } from './KategoriSimgesi';
 import { TemaSecici } from './TemaSecici';
 import { HesapMenusu } from './HesapMenusu';
+import { CikisOnayi } from './CikisOnayi';
+import { AnlikBildirim } from './AnlikBildirim';
+import { SAYFA_BASINA_DON, sayfaBasinaDon } from '../tasarim/sayfaOdagi';
 
-export function Logo({ acik = false }: { acik?: boolean }) {
+export function Logo({ acik = false, kucuk = false }: { acik?: boolean; kucuk?: boolean }) {
   const { renk } = useTema();
   const s = useStiller();
 
@@ -44,11 +46,20 @@ export function Logo({ acik = false }: { acik?: boolean }) {
         accessibilityLabel="Kaçakçıdan ana sayfa"
         style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }}
       >
-        <Yazi style={[s.logo, { color: acik ? renk.sabitBeyaz : renk.murekkep }]}>
+        <Yazi
+          dataSet={{ 'logo-yazisi': 'true' }}
+          style={[
+            s.logo,
+            kucuk && { fontSize: 25, lineHeight: 35 },
+            { color: acik ? renk.sabitBeyaz : renk.murekkep },
+          ]}
+        >
           Kaçakçı
           <Yazi
+            dataSet={{ 'logo-yazisi': 'true' }}
             style={[
               s.logo,
+              kucuk && { fontSize: 25, lineHeight: 35 },
               {
                 color: acik ? renk.sabitBeyaz : renk.murekkep,
                 textDecorationLine: 'underline',
@@ -111,7 +122,11 @@ export function KonumSecici({ kisa = false, satir = false }: { kisa?: boolean; s
           </View>
         ) : (
           !kisa && (
-            <Yazi numberOfLines={1} style={{ maxWidth: mobil ? 116 : 180, fontSize: 12, color: renk.gri }}>
+            <Yazi
+              dataSet={{ 'konum-metni': 'true' }}
+              numberOfLines={1}
+              style={{ maxWidth: mobil ? 116 : 180, fontSize: 12, color: renk.gri }}
+            >
               {konumEtiketi}
             </Yazi>
           )
@@ -170,15 +185,17 @@ export function UstMenu() {
   const { renk } = useTema();
   const s = useStiller();
 
-  const { mobil, dar, bosluk, genislik } = useEkran();
-  const { profil, favoriler, oturum, cikisYap, okunmamisBildirimSayisi } = usePazar();
+  const { mobil, bosluk, genislik } = useEkran();
+  const { profil, favoriler, oturum, okunmamisBildirimSayisi } = usePazar();
   const router = useRouter();
   const { q } = useGlobalSearchParams<{ q?: string }>();
   const [arama, setArama] = useState('');
   useEffect(() => setArama(typeof q === 'string' ? q : ''), [q]);
   const [menu, setMenu] = useState(false);
+  const [cikisOnayi, setCikisOnayi] = useState(false);
   const yol = usePathname();
   const hesapSayfasi = yol === '/giris' || yol === '/kayit';
+  const anaSayfa = yol === '/';
   const ikiSatir = genislik < 1000;
   const ara = (sorgu = arama) =>
     router.push({ pathname: '/kesfet', params: { q: sorgu.trim(), kategori: '' } });
@@ -193,26 +210,34 @@ export function UstMenu() {
       }}
       dataSet={{ 'ust-arama': 'true' }}
     >
-      <AraKutusu deger={arama} degistir={setArama} ara={ara} />
+      <AraKutusu deger={arama} degistir={setArama} ara={ara} sade={mobil && anaSayfa} />
     </View>
   );
   return (
     <>
-      <View style={s.ust} dataSet={{ 'ust-menu': 'true' }}>
+      <View style={s.ust} dataSet={{ 'ust-menu': 'true', anasayfa: String(anaSayfa) }}>
         <View
           style={[ortak.alan, { paddingHorizontal: bosluk, paddingVertical: ikiSatir ? 10 : 16, gap: 9 }]}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: mobil ? 8 : 22 }}>
-            <Logo />
-            {!ikiSatir && !hesapSayfasi && aramaAlani}
+          <View
+            dataSet={{ 'ust-satir': 'true' }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: mobil ? 8 : 22 }}
+          >
+            <Logo kucuk={mobil && anaSayfa} />
+            {!hesapSayfasi && (Platform.OS === 'web' || !ikiSatir) && aramaAlani}
             <View
               style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 'auto', gap: mobil ? 4 : 14 }}
             >
-              {!mobil && <KonumSecici kisa={genislik < 1280} />}
-              {!mobil && (
+              {(Platform.OS === 'web' || !mobil) && (
+                <View dataSet={{ 'ust-masaustu': 'true' }}>
+                  <KonumSecici kisa={Platform.OS !== 'web' && genislik < 1280} />
+                </View>
+              )}
+              {(Platform.OS === 'web' || !mobil) && (
                 <Link href="/favoriler" asChild>
                   <HareketliBas
                     accessibilityLabel={`Favorilerim, ${favoriler.length} ilan`}
+                    dataSet={{ 'ust-masaustu': 'true' }}
                     style={{
                       minWidth: 44,
                       minHeight: 44,
@@ -223,7 +248,6 @@ export function UstMenu() {
                     }}
                   >
                     <Heart size={21} color={renk.murekkep} />
-                    {!dar && <Yazi style={{ fontSize: 12 }}>Favoriler</Yazi>}
                   </HareketliBas>
                 </Link>
               )}
@@ -264,11 +288,29 @@ export function UstMenu() {
                       </View>
                     )}
                   </View>
-                  {!dar && <Yazi style={{ fontSize: 12 }}>Bildirimler</Yazi>}
                 </HareketliBas>
               </Link>
-              {!mobil && (
-                <>
+              {(Platform.OS === 'web' || !mobil) && (
+                <Link href="/mesajlar" asChild>
+                  <HareketliBas
+                    accessibilityLabel="Mesajlarım"
+                    dataSet={{ 'ust-masaustu': 'true' }}
+                    style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <MessageCircle size={21} color={renk.murekkep} />
+                  </HareketliBas>
+                </Link>
+              )}
+              {(Platform.OS === 'web' || !mobil) && (
+                <View
+                  dataSet={{ 'ust-masaustu': 'true' }}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}
+                >
+                  {(Platform.OS === 'web' || !ikiSatir) && (
+                    <View dataSet={{ 'ust-hesap': 'true' }}>
+                      <HesapMenusu />
+                    </View>
+                  )}
                   <Link href="/ilan-ver" asChild>
                     <HareketliBas vurgu="dugme" style={s.ilanButon}>
                       <Plus size={18} color={renk.vurguYazi} />
@@ -279,25 +321,26 @@ export function UstMenu() {
                       </Yazi>
                     </HareketliBas>
                   </Link>
-                  {!ikiSatir && <HesapMenusu />}
-                </>
+                </View>
               )}
-              {ikiSatir && (
-                <SimgeButon etiket="Menüyü aç" onPress={() => setMenu(true)} style={{ borderWidth: 0 }}>
-                  <Menu size={22} color={renk.murekkep} />
-                </SimgeButon>
+              {(Platform.OS === 'web' || ikiSatir) && (
+                <View dataSet={{ 'ust-hamburger': 'true' }}>
+                  <SimgeButon etiket="Menüyü aç" onPress={() => setMenu(true)} style={{ borderWidth: 0 }}>
+                    <Menu size={22} color={renk.murekkep} />
+                  </SimgeButon>
+                </View>
               )}
             </View>
           </View>
-          {ikiSatir && !hesapSayfasi && aramaAlani}
+          {Platform.OS !== 'web' && ikiSatir && !hesapSayfasi && aramaAlani}
         </View>
       </View>
       <Pencere acik={menu} kapat={() => setMenu(false)} baslik="Menü">
         {!oturum ? (
           <View style={s.menuHesapKarti}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={s.menuAvatar}>
-                <UserRound size={20} color={renk.murekkep} />
+              <View style={[s.menuAvatar, { backgroundColor: renk.sari }]}>
+                <UserRound size={20} color={renk.vurguYazi} />
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 16 }}>Hesabım</Yazi>
@@ -441,8 +484,7 @@ export function UstMenu() {
             accessibilityLabel="Çıkış yap"
             onPress={() => {
               setMenu(false);
-              cikisYap();
-              router.replace('/');
+              setCikisOnayi(true);
             }}
             style={s.menuTercihSatiri}
           >
@@ -451,6 +493,7 @@ export function UstMenu() {
           </HareketliBas>
         ) : null}
       </Pencere>
+      <CikisOnayi acik={cikisOnayi} kapat={() => setCikisOnayi(false)} />
     </>
   );
 }
@@ -480,13 +523,20 @@ export function AltBilgi() {
   return (
     <View style={s.altBilgi} role="contentinfo" dataSet={{ 'alt-bilgi': 'true' }}>
       <View style={[ortak.alan, s.altIc, { paddingHorizontal: bosluk }]}>
-        <View style={[s.altGovde, dar && s.altGovdeDar]}>
-          <View style={[s.altMarka, dar && s.altMarkaDar]}>
+        <View dataSet={{ 'footer-govde': 'true' }} style={[s.altGovde, dar && s.altGovdeDar]}>
+          <View dataSet={{ 'footer-marka': 'true' }} style={[s.altMarka, dar && s.altMarkaDar]}>
             <Logo />
             <Paragraf style={s.altAciklama}>Kullanmadıkların el değiştirsin.</Paragraf>
           </View>
-          <View style={[s.altKolonlar, dar && s.altKolonlarDar]} role="navigation">
-            <View style={[s.altKolon, s.altKategoriKolon, mobil && s.altKategoriKolonMobil]}>
+          <View
+            dataSet={{ 'footer-kolonlar': 'true' }}
+            style={[s.altKolonlar, dar && s.altKolonlarDar]}
+            role="navigation"
+          >
+            <View
+              dataSet={{ 'footer-kategoriler': 'true' }}
+              style={[s.altKolon, s.altKategoriKolon, mobil && s.altKategoriKolonMobil]}
+            >
               <Yazi role="heading" aria-level={2} style={s.altKolonBaslik}>
                 Kategoriler
               </Yazi>
@@ -496,13 +546,19 @@ export function AltBilgi() {
                 )}
               </View>
             </View>
-            <View style={[s.altKolon, s.altIkincilKolon, mobil && s.altIkincilKolonMobil]}>
+            <View
+              dataSet={{ 'footer-ikincil': 'true' }}
+              style={[s.altKolon, s.altIkincilKolon, mobil && s.altIkincilKolonMobil]}
+            >
               <Yazi role="heading" aria-level={2} style={s.altKolonBaslik}>
                 Hesabım
               </Yazi>
               {hesapBaglantilari.map(({ ad, yol }) => baglanti(ad, yol))}
             </View>
-            <View style={[s.altKolon, s.altIkincilKolon, mobil && s.altIkincilKolonMobil]}>
+            <View
+              dataSet={{ 'footer-ikincil': 'true' }}
+              style={[s.altKolon, s.altIkincilKolon, mobil && s.altIkincilKolonMobil]}
+            >
               <Yazi role="heading" aria-level={2} style={s.altKolonBaslik}>
                 Alışveriş
               </Yazi>
@@ -510,9 +566,9 @@ export function AltBilgi() {
             </View>
           </View>
         </View>
-        <View style={[s.altAlt, mobil && s.altAltMobil]}>
+        <View dataSet={{ 'footer-telif': 'true' }} style={[s.altAlt, mobil && s.altAltMobil]}>
           <Yazi style={s.altTelif}>© 2026 Kaçakçıdan</Yazi>
-          <Yazi style={s.altTelif}>İkinci el alışveriş pazaryeri.</Yazi>
+          <Yazi style={s.altTelif}>İkinci el online ilan ve alışveriş sitesi.</Yazi>
         </View>
       </View>
     </View>
@@ -526,7 +582,7 @@ export function MobilMenu() {
   const klavyeAcik = useKlavyeAcik();
   const insets = useSafeAreaInsets();
   const yol = usePathname();
-  if (!mobil || klavyeAcik) return null;
+  if ((Platform.OS !== 'web' && !mobil) || klavyeAcik) return null;
   const baglantilar = [
     { href: '/', ad: 'Ana sayfa', simge: Home },
     { href: '/favoriler', ad: 'Favoriler', simge: Heart },
@@ -543,6 +599,7 @@ export function MobilMenu() {
         <Link href={href as '/'} asChild key={href}>
           <HareketliBas
             accessibilityLabel={ad}
+            onPress={sayfaBasinaDon}
             accessibilityState={{ selected: yol === href }}
             aria-current={Platform.OS === 'web' && yol === href ? 'page' : undefined}
             style={{
@@ -602,13 +659,22 @@ export function Kabuk({
   const { bildirim } = usePazar();
   const { mobil } = useEkran();
   const yol = usePathname();
+  const { kayit, hesap } = useGlobalSearchParams<{ kayit?: string; hesap?: string }>();
+  const sayfa =
+    yol === '/ilan/yerel' ? `${yol}:${kayit ?? ''}` : yol === '/satici/yerel' ? `${yol}:${hesap ?? ''}` : yol;
   const urunSayfasi = yol.startsWith('/ilan/');
   const klavyeAcik = useKlavyeAcik();
   const insets = useSafeAreaInsets();
   const kaydirma = useRef<ComponentRef<typeof ScrollView>>(null);
   useEffect(() => {
     kaydirma.current?.scrollTo({ y: 0, animated: false });
-  }, [yol]);
+  }, [sayfa]);
+  useEffect(() => {
+    const abonelik = DeviceEventEmitter.addListener(SAYFA_BASINA_DON, () =>
+      kaydirma.current?.scrollTo({ y: 0, animated: false }),
+    );
+    return () => abonelik.remove();
+  }, []);
   const icerik = (
     <>
       <UstMenu />
@@ -616,7 +682,7 @@ export function Kabuk({
         {children}
       </View>
       {altBilgi && <AltBilgi />}
-      {mobil && !klavyeAcik && (
+      {(Platform.OS === 'web' || mobil) && !klavyeAcik && (
         <View
           dataSet={{ 'alt-menu-boslugu': 'true' }}
           style={{ height: mobilAltMenuYuksekligi + (Platform.OS === 'web' ? 0 : insets.bottom) }}
@@ -647,16 +713,7 @@ export function Kabuk({
           dataSet={{ bildirim: 'true', 'urun-bildirimi': String(urunSayfasi) }}
           style={[s.bildirim, { bottom: mobil ? (urunSayfasi ? 150 : 90) : 28 }]}
         >
-          <Giris style={s.bildirimIc}>
-            <Check size={18} color={renk.tersYazi} />
-            <Yazi
-              accessibilityLiveRegion="polite"
-              role="status"
-              style={{ color: renk.tersYazi, flexShrink: 1 }}
-            >
-              {bildirim}
-            </Yazi>
-          </Giris>
+          <AnlikBildirim mesaj={bildirim} />
         </View>
       ) : null}
     </View>
@@ -842,15 +899,5 @@ const useStiller = temaStilleri((renk) =>
       zIndex: 20,
     },
     bildirim: { position: 'absolute', alignSelf: 'center', width: '92%', maxWidth: 500, zIndex: 100 },
-    bildirimIc: {
-      backgroundColor: renk.murekkep,
-      paddingVertical: 16,
-      paddingHorizontal: 22,
-      borderRadius: 12,
-      flexDirection: 'row',
-      gap: 12,
-      alignItems: 'center',
-      boxShadow: '0 8px 30px #0002',
-    },
   }),
 );

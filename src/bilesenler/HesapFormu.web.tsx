@@ -1,10 +1,15 @@
 import type { HesapFormuProps, HesapGonderProps } from './HesapFormu';
 import { useTema } from '../tasarim/tema';
+import './HesapFormu.web.css';
 
-export function HesapFormu({ children, gonder, eposta, kayit }: HesapFormuProps) {
+export function HesapFormu({ children, gonder, eposta, kayit, kimlik }: HesapFormuProps) {
+  const { koyu } = useTema();
+  const formKimligi = kimlik ? `hesap-formu-${kimlik}` : kayit ? 'hesap-kayit-formu' : 'hesap-giris-formu';
   return (
     <form
-      id={kayit ? 'hesap-kayit-formu' : 'hesap-giris-formu'}
+      id={formKimligi}
+      className="uyelik-formu"
+      data-koyu={koyu ? 'true' : 'false'}
       name={kayit ? 'kayit' : 'giris'}
       autoComplete="on"
       noValidate
@@ -15,7 +20,15 @@ export function HesapFormu({ children, gonder, eposta, kayit }: HesapFormuProps)
       aria-label="Hesap bilgileri"
       style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
     >
-      {eposta ? <input type="hidden" name="username" autoComplete="username" value={eposta} /> : null}
+      {eposta ? (
+        <input
+          type="hidden"
+          id={`${formKimligi}-eposta`}
+          name="username"
+          autoComplete="username"
+          value={eposta}
+        />
+      ) : null}
       {children}
     </form>
   );
@@ -24,6 +37,7 @@ export function HesapGonder({ children, disabled, calisiyor }: HesapGonderProps)
   const { renk } = useTema();
   return (
     <button
+      className="uyelik-gonder"
       name="hesap-gonder"
       type="submit"
       disabled={disabled}

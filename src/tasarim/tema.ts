@@ -18,9 +18,12 @@ export const TemaBaglami = createContext({
 });
 export const useTema = () => useContext(TemaBaglami);
 
-/** Stiller yalnızca palet değiştiğinde yeniden üretilir. */
+/** Web stilleri modül yüklenirken, native stiller palet başına bir kez oluşturulur. */
 export function temaStilleri<T>(olustur: (renkler: Renkler) => T) {
   const onbellek = new WeakMap<Renkler, T>();
+  // RN Web, atomik kuralları StyleSheet.create çağrısında kaydeder. Expo'nun
+  // ilk HTML başlığı alınmadan hazır olmaları gerekir; renkler CSS değişkenidir.
+  if (Platform.OS === 'web') onbellek.set(renk, olustur(renk));
   return function useTemaStilleri(): T {
     const { renk: palet } = useTema();
     if (!onbellek.has(palet)) onbellek.set(palet, olustur(palet));

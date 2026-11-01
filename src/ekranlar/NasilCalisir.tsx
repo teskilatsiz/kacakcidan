@@ -21,8 +21,8 @@ export default function NasilCalisir() {
             Nasıl çalışır?
           </Baslik>
           <Yazi style={{ color: renk.gri, lineHeight: 25, fontSize: 14 }}>
-            Aradığını bul, satıcıyla konuş, ayrıntıları netleştir. Kullanmadıkların için de birkaç fotoğrafla
-            ilan aç.
+            Otomobil, emlak, iş, hizmet ve ikinci el ürün ilanlarını incele. İlan sahibiyle konuş, ayrıntıları
+            netleştir. Kendi ilanını da birkaç adımda yayınla.
           </Yazi>
         </View>
         <View style={{ flexDirection: mobil ? 'column' : 'row', gap: 20 }}>
@@ -31,19 +31,19 @@ export default function NasilCalisir() {
               no: '01',
               simge: Search,
               ad: 'Aradığını bul',
-              yazi: 'Kategori seç ya da arama kutusuna bir ürün yaz. Konum, fiyat ve ürün durumuyla sonuçları daralt. İlgini çeken ilanları kalbe dokunarak kaydet.',
+              yazi: 'Kategori seç ya da arama kutusuna aradığını yaz. Konum, fiyat ve kategoriye özel alanlarla sonuçları daralt. İlgini çeken ilanları favorilerine kaydet.',
             },
             {
               no: '02',
               simge: MessageCircle,
-              ad: 'Satıcıyla konuş',
-              yazi: 'İlandaki mesaj düğmesinden merak ettiklerini sor. İstersen fiyat teklifini ilet. Ürünün durumu, kutu içeriği ve teslim yeri konusunda anlaş.',
+              ad: 'İlan sahibiyle konuş',
+              yazi: 'İlandaki iletişim düğmesinden merak ettiklerini sor. Ürünlerde teslimi, iş ilanlarında çalışma koşullarını, hizmetlerde işin kapsamını netleştir.',
             },
             {
               no: '03',
               simge: Camera,
               ad: 'İlanını oluştur',
-              yazi: 'Net fotoğraflar ekle, doğru kategoriyi seç, ürünün durumunu ve varsa kusurlarını açıkça yaz. Fiyatını belirle, ilanını kontrol edip paylaş.',
+              yazi: 'Doğru kategoriyi seç, istenen bilgileri doldur. Varsa fotoğraf ve video ekle. Açıklamanı yaz, ilanını kontrol edip yayınla.',
             },
           ].map((o) => (
             <View
@@ -51,7 +51,7 @@ export default function NasilCalisir() {
               style={[ortak.kart, { flex: 1, padding: 24, gap: 16, backgroundColor: renk.acik }]}
             >
               <View style={ortak.aralikli}>
-                <o.simge size={27} strokeWidth={1.3} />
+                <o.simge size={27} strokeWidth={1.3} color={renk.murekkep} />
                 <Yazi style={{ color: renk.gri, fontSize: 16 }}>{o.no}</Yazi>
               </View>
               <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 20, lineHeight: 28 }}>

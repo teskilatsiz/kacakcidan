@@ -126,10 +126,10 @@
     line-height: 29px;
   }
   .pazar-pencere-icerik {
-    padding: 8px 20px max(24px, env(safe-area-inset-bottom));
+    padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
   }
   .pazar-pencere-altlik {
-    padding: 14px 20px max(16px, env(safe-area-inset-bottom));
+    padding: 14px 20px calc(16px + env(safe-area-inset-bottom));
   }
 }
 @media (prefers-reduced-motion: reduce) {

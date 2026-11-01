@@ -33,7 +33,7 @@ export function HesapGerekli({
           <>
             <View
               style={{
-                backgroundColor: renk.acik,
+                backgroundColor: renk.sari,
                 width: 64,
                 height: 64,
                 borderRadius: 20,
@@ -41,7 +41,7 @@ export function HesapGerekli({
                 justifyContent: 'center',
               }}
             >
-              <UserRound size={28} color={renk.murekkep} />
+              <UserRound size={28} color={renk.sabitKoyu} />
             </View>
             <Baslik buyuk style={{ textAlign: 'center' }}>
               {baslik}

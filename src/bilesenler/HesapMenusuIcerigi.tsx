@@ -10,12 +10,24 @@ import { HareketliBas } from './Hareketli';
 import { TemaSecici } from './TemaSecici';
 import { Yazi } from './Temel';
 
-export function HesapMenusuIcerigi({ kapat }: { kapat: () => void }) {
+export function HesapMenusuIcerigi({
+  kapat,
+  uyelikAc,
+  cikisIste,
+}: {
+  kapat: () => void;
+  uyelikAc?: (kayit: boolean) => void;
+  cikisIste: () => void;
+}) {
   const { renk } = useTema();
-  const { oturum, profil, cikisYap } = usePazar();
+  const { oturum, profil } = usePazar();
   const router = useRouter();
   const git = (href: '/profil' | '/giris' | '/kayit' | '/mesajlar' | '/ayarlar') => {
     kapat();
+    if (uyelikAc && (href === '/giris' || href === '/kayit')) {
+      uyelikAc(href === '/kayit');
+      return;
+    }
     router.push(href);
   };
   const satir = {
@@ -27,7 +39,7 @@ export function HesapMenusuIcerigi({ kapat }: { kapat: () => void }) {
     borderRadius: 8,
   };
   return (
-    <View style={{ gap: 8 }}>
+    <View style={{ gap: 8, minWidth: 0 }}>
       <View
         style={{
           gap: 3,
@@ -37,7 +49,7 @@ export function HesapMenusuIcerigi({ kapat }: { kapat: () => void }) {
           borderColor: renk.cizgi,
         }}
       >
-        <Yazi numberOfLines={1} style={{ fontWeight: '700' }}>
+        <Yazi numberOfLines={2} style={{ fontWeight: '700', minWidth: 0 }}>
           {oturum ? profil.ad : 'Hesabım'}
         </Yazi>
         <Yazi style={{ color: renk.gri, fontSize: 12 }}>
@@ -69,15 +81,14 @@ export function HesapMenusuIcerigi({ kapat }: { kapat: () => void }) {
       </View>
       {oturum && (
         <HareketliBas
-          style={satir}
+          style={[satir, { backgroundColor: renk.zemin, marginTop: 4 }]}
           onPress={() => {
             kapat();
-            cikisYap();
-            router.replace('/');
+            cikisIste();
           }}
         >
-          <LogOut size={18} color={renk.gri} />
-          <Yazi style={{ color: renk.gri }}>Çıkış yap</Yazi>
+          <LogOut size={18} color={renk.murekkep} />
+          <Yazi style={{ fontWeight: '600' }}>Çıkış yap</Yazi>
         </HareketliBas>
       )}
     </View>

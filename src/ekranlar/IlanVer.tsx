@@ -22,6 +22,8 @@ import { Giris, HareketliBas } from '../bilesenler/Hareketli';
 import { Gorsel } from '../bilesenler/Gorsel';
 import { VideoOynatici } from '../bilesenler/VideoOynatici';
 import { SecimAlani } from '../bilesenler/SecimAlani';
+import { TelefonBilgisiAlanlari } from '../bilesenler/TelefonBilgisiAlanlari';
+import { telefonHatasi, telefonuGoster, telefonuNormallestir } from '../veri/telefon';
 import { usePazar } from '../durum/Pazar';
 import { medyaSec } from '../durum/medyaSecici';
 import { medyaBoyutlariniOku, medyaKaydet, medyaOnizlemesiniBirak, medyaSil } from '../durum/medyaDeposu';
@@ -29,7 +31,8 @@ import { fotografHatasi, MEDYA_SINIRLARI, megabayt, videoHatasi } from '../veri/
 import { kategoriYapisi } from '../veri/kategoriler';
 import { ozellikAlanlari, ozellikleriTemizle } from '../veri/ozellikler';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
-import { kategoriler, ilanYolu, para, type Ilan, type Kategori } from '../veri/ilanlar';
+import { kategoriler, ilanYolu, ilanBedeli, type Ilan, type Kategori } from '../veri/ilanlar';
+import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
 const adimlar = ['Kategori', 'Fotoğraf & video', 'İlan bilgileri', 'Önizleme'];
@@ -122,11 +125,16 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
   );
   const [baslik, setBaslik] = useState(ilan?.baslik ?? '');
   const [fiyat, setFiyat] = useState(ilan ? String(ilan.fiyat).replace('.', ',') : '');
+  const [fiyatGorusulur, setFiyatGorusulur] = useState(ilan?.fiyatGorusulur ?? false);
   const [durum, setDurum] = useState<Ilan['durum']>(ilan?.durum ?? 'İkinci el');
   const [aciklama, setAciklama] = useState(ilan?.aciklama ?? '');
   const [konum, setKonum] = useState(ilan?.konum ?? profil.konum);
   const [konumaDokunuldu, setKonumaDokunuldu] = useState(Boolean(ilan));
   const [takas, setTakas] = useState(ilan?.takas ?? false);
+  const [telefon, setTelefon] = useState(ilan ? (ilan.telefon ?? '') : (profil.telefon ?? ''));
+  const [telefonGoster, setTelefonGoster] = useState(
+    ilan ? Boolean(ilan.telefonGoster) : Boolean(profil.telefonGoster),
+  );
   const [ozellikler, setOzellikler] = useState<Record<string, string>>(ilan?.ozellikler ?? {});
   const [hata, setHata] = useState('');
   const [alanHatalari, setAlanHatalari] = useState<Record<string, string>>({});
@@ -181,12 +189,20 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
   }, [adim, kaydedilen]);
 
   const yapi = kategori ? kategoriYapisi(kategori, altKategori) : undefined;
+  const isIlani = kategori === 'is-ilanlari';
+  const hizmetIlani = kategori === 'hizmetler';
+  const urunIlani = urunKategorisiMi(kategori);
+  const fotografGerekli = !isIlani;
+  const fiyatSecimiVar = isIlani || hizmetIlani;
   const altKategoriEtiketi = yapi?.altKategoriBasligi
     .replace('Alt kategoriler', 'Alt kategori')
     .replace('Ürün grupları', 'Ürün grubu')
     .replace('Ekipman türleri', 'Ekipman türü')
     .replace('Araç türleri', 'Araç türü')
-    .replace('Koleksiyon türleri', 'Koleksiyon türü');
+    .replace('Koleksiyon türleri', 'Koleksiyon türü')
+    .replace('İş alanları', 'İş alanı')
+    .replace('Emlak grupları', 'Emlak grubu')
+    .replace('Hizmet alanları', 'Hizmet alanı');
   const markaGirisi = yapi?.markaGirisi ?? true;
   const modelGirisi = yapi?.modelGirisi ?? true;
   const markaSecenekleri =
@@ -194,11 +210,17 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
   const markaEtiketi = (yapi?.markaBasligi ?? 'Marka')
     .replace('Markalar', 'Marka')
     .replace('Ürün grupları', 'Ürün grubu')
-    .replace('Türler', 'Tür');
+    .replace('Türler', 'Tür')
+    .replace('Pozisyon grupları', 'Pozisyon grubu')
+    .replace('İlan türleri', 'İlan türü')
+    .replace('Hizmet grupları', 'Hizmet grubu');
   const modelEtiketi = (yapi?.modelBasligi ?? 'Model')
     .replace('Modeller', 'Model')
     .replace('Ürün türleri', 'Ürün türü')
-    .replace('Alt türler', 'Alt tür');
+    .replace('Alt türler', 'Alt tür')
+    .replace('Pozisyonlar', 'Pozisyon')
+    .replace('Emlak türleri', 'Emlak türü')
+    .replace('Hizmet türleri', 'Hizmet türü');
   const modelSecenekleri = yapi?.modeller[marka] ?? [];
   const kategoriAdi = kategoriler.find((k) => k.id === kategori)?.ad;
   const altKategoriAdi = yapi?.altKategoriler.find((k) => k.id === altKategori)?.ad;
@@ -236,6 +258,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     setDigerMarka('');
     setDigerModel('');
     setOzellikler({});
+    setFiyatGorusulur(false);
     setHata('');
   }
   function altKategoriSec(deger: string) {
@@ -269,8 +292,8 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     setAdim(yeni);
   }
   function kategoriDenetle() {
-    if (!kategori) return 'Önce ürününün kategorisini seç.';
-    if (!altKategori) return 'Ürünün için bir alt kategori seç.';
+    if (!kategori) return 'Önce ilanın kategorisini seç.';
+    if (!altKategori) return 'İlanın için bir alt kategori seç.';
     if (!marka)
       return markaGirisi
         ? 'Bir marka seç. Markasız ürün için Markasız seçeneğini kullanabilirsin.'
@@ -283,13 +306,18 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
   }
   function bilgileriDenetle() {
     const hatalar: Record<string, string> = {};
+    const telefonSorunu = telefonHatasi(telefon, telefonGoster);
+    if (telefonSorunu) hatalar.telefon = telefonSorunu;
     if (baslik.trim().length < 5) hatalar.baslik = 'Başlık en az 5 karakter olmalı.';
-    if (!fiyat.trim() || !Number.isFinite(sayisalFiyat) || sayisalFiyat < 1 || sayisalFiyat > 999999999)
+    if (
+      !(fiyatSecimiVar && fiyatGorusulur) &&
+      (!fiyat.trim() || !Number.isFinite(sayisalFiyat) || sayisalFiyat < 1 || sayisalFiyat > 999999999)
+    )
       hatalar.fiyat = '1 TL ile 999.999.999 TL arasında bir fiyat yaz.';
     if (!seciliKonum.il) hatalar.il = 'İlanın bulunduğu ili seç.';
     if (!seciliKonum.ilce) hatalar.ilce = 'İlanın bulunduğu ilçeyi seç.';
     if (aciklama.trim().length < 20)
-      hatalar.aciklama = 'Ürünün hakkında en az 20 karakterlik bir açıklama yaz.';
+      hatalar.aciklama = 'İlanın hakkında en az 20 karakterlik bir açıklama yaz.';
     for (const alan of teknikAlanlar) {
       const deger = ozellikler[alan.ad];
       if (alan.sayisal && deger && Number(deger) > (alan.enCok ?? Number.MAX_SAFE_INTEGER))
@@ -306,7 +334,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
         return;
       }
     }
-    if (adim === 2 && !fotograflar.length) {
+    if (adim === 2 && fotografGerekli && !fotograflar.length) {
       setHata('İlanına en az bir fotoğraf ekle.');
       return;
     }
@@ -399,7 +427,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
       setHata(kategoriHatasi);
       return;
     }
-    if (!kategori || !kapak) {
+    if (!kategori || (fotografGerekli && !kapak)) {
       adimaGit(2);
       setHata('En az bir fotoğraf ekle.');
       return;
@@ -433,11 +461,12 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
         altKategori,
         marka: markaGirisi && marka === 'diger' ? digerMarka.trim() : marka,
         model: modelGirisi && model === 'diger' ? digerModel.trim() : model || undefined,
-        fiyat: sayisalFiyat,
+        fiyat: fiyatSecimiVar && fiyatGorusulur ? 0 : sayisalFiyat,
+        fiyatGorusulur: fiyatSecimiVar && fiyatGorusulur,
         durum,
         aciklama: aciklama.trim(),
         konum: konumuBirlestir(seciliKonum.il, seciliKonum.ilce),
-        gorsel: fotografKayitlari[0]!,
+        gorsel: fotografKayitlari[0] ?? '/gorseller/yazilim-is.webp',
         fotografler: fotografKayitlari,
         video: videoKaydi,
         videoPoster: videoKaydi
@@ -447,8 +476,10 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
           : undefined,
         ozellikler: ozellikleriTemizle(teknikAlanlar, ozellikler),
         satici: profil.ad,
+        telefon: telefonuNormallestir(telefon),
+        telefonGoster: Boolean(telefonuNormallestir(telefon) && telefonGoster),
         benim: true,
-        takas,
+        takas: urunIlani && takas,
         zaman: ilan?.zaman ?? 'Az önce',
       };
       const sonuc = await (ilan ? ilanGuncelle(yeni, hesapId) : ilanEkle(yeni, hesapId));
@@ -483,7 +514,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
             <Baslik buyuk>{ilan ? 'İlanın güncellendi.' : 'İlanın hazır.'}</Baslik>
             <Yazi style={{ textAlign: 'center', color: renk.gri }}>{kaydedilen.baslik}</Yazi>
             <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 25, lineHeight: 34 }}>
-              {para(kaydedilen.fiyat)}
+              {ilanBedeli(kaydedilen)}
             </Yazi>
             <View style={{ flexDirection: mobil ? 'column' : 'row', gap: 12 }}>
               <Buton
@@ -504,7 +535,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
               <Yazi style={{ color: renk.gri, fontSize: 13 }}>
                 {ilan
                   ? 'Bilgilerini güncelle, değişikliklerini gözden geçirip kaydet.'
-                  : 'Ürününü anlat, fotoğraflarını ekle, son bir kez gözden geçir.'}
+                  : 'Kategoriyi seç, ilan bilgilerini tamamla, son bir kez gözden geçir.'}
               </Yazi>
             </View>
             <View
@@ -577,9 +608,9 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                   <Baslik style={{ fontSize: mobil ? 22 : 25 }}>
                     {
                       [
-                        'Neyi satıyorsun?',
-                        'Ürünün her açıdan görünsün.',
-                        'Alıcının merak edecekleri',
+                        'Hangi kategoride ilan vereceksin?',
+                        isIlani ? 'Çalışma ortamını göster.' : 'İlanına fotoğraf ekle.',
+                        isIlani ? 'İşin koşullarını anlat.' : 'İlanın ayrıntılarını tamamla.',
                         'Son bir kez gözden geçir.',
                       ][adim - 1]
                     }
@@ -587,9 +618,13 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                   <Yazi style={{ fontSize: 12, color: renk.gri }}>
                     {
                       [
-                        'Doğru kategori, ürününün daha kolay bulunmasını sağlar.',
-                        'İlk fotoğraf ilanının kapağı olacak. Sıralamayı değiştirebilirsin.',
-                        'Açık bir başlık ve dürüst bir açıklama alışverişi kolaylaştırır.',
+                        'Doğru kategori, ilanının daha kolay bulunmasını sağlar.',
+                        isIlani
+                          ? 'Fotoğraf eklemek isteğe bağlı. Doğrudan ilan bilgilerine geçebilirsin.'
+                          : 'İlk fotoğraf ilanının kapağı olacak. Sıralamayı değiştirebilirsin.',
+                        isIlani
+                          ? 'Sorumlulukları, aranan nitelikleri ve çalışma koşullarını açıkça belirt.'
+                          : 'Açık bir başlık ve ayrıntılı bir açıklama karar vermeyi kolaylaştırır.',
                         'Bir şey eksikse ilgili bölüme dönüp düzenleyebilirsin.',
                       ][adim - 1]
                     }
@@ -619,7 +654,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                       deger={kategori}
                       secenekler={kategoriler}
                       degistir={kategoriSec}
-                      ipucu="Ürününün kategorisini seç"
+                      ipucu="İlanının kategorisini seç"
                       gerekli
                     />
                     <SecimAlani
@@ -696,7 +731,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                 {adim === 2 ? (
                   <View style={{ gap: 24 }}>
                     <View style={ortak.aralikli}>
-                      <Yazi style={s.etiket}>Fotoğraflar</Yazi>
+                      <Yazi style={s.etiket}>Fotoğraflar{isIlani ? ' (isteğe bağlı)' : ''}</Yazi>
                       <Yazi style={{ fontSize: 12, color: renk.gri }}>
                         {fotograflar.length} / {MEDYA_SINIRLARI.fotografSayisi}
                       </Yazi>
@@ -807,14 +842,14 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     ) : null}
                     <View style={{ gap: 14, paddingTop: 20, borderTopWidth: 1, borderTopColor: renk.cizgi }}>
                       <View style={ortak.aralikli}>
-                        <Yazi style={s.etiket}>Ürün videosu</Yazi>
+                        <Yazi style={s.etiket}>İlan videosu</Yazi>
                         <Yazi style={{ fontSize: 11, color: renk.gri }}>İsteğe bağlı</Yazi>
                       </View>
                       {video ? (
                         <>
-                          <VideoOynatici kaynak={video.uri} baslik="Seçtiğin ürün videosu" />
+                          <VideoOynatici kaynak={video.uri} baslik="Seçtiğin ilan videosu" />
                           <Yazi numberOfLines={1} style={{ fontSize: 11, color: renk.gri }}>
-                            {video.fileName || 'Ürün videosu'}
+                            {video.fileName || 'İlan videosu'}
                           </Yazi>
                           <View style={ortak.aralikli}>
                             <Buton ikincil disabled={calisiyor} onPress={() => dosyaSec('video')}>
@@ -852,8 +887,9 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     <View style={s.ipucu}>
                       <Camera size={18} color={renk.gri} />
                       <Yazi style={{ flex: 1, fontSize: 12, color: renk.gri }}>
-                        Gün ışığında çek. Kusurları da göster. Ürünün farklı açılarını eklemek alıcının karar
-                        vermesini kolaylaştırır.
+                        {isIlani
+                          ? 'İş yerini ve çalışma ortamını gösteren fotoğraflar ekleyebilirsin. İş ilanları fotoğraf eklemeden de yayımlanabilir.'
+                          : 'Gün ışığında çek. Farklı açıları ve bilinmesi gereken ayrıntıları göster.'}
                       </Yazi>
                     </View>
                   </View>
@@ -864,7 +900,15 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     <Alan
                       nativeID="ilan-basligi"
                       etiket="İlan başlığı"
-                      placeholder="Örn. iPhone 15 Pro 256 GB, kutulu ve faturalı"
+                      placeholder={
+                        isIlani
+                          ? 'Örn. Kadıköy’de tam zamanlı barista aranıyor'
+                          : hizmetIlani
+                            ? 'Örn. Şehir içi asansörlü evden eve nakliyat'
+                            : kategori === 'emlak'
+                              ? 'Örn. Metroya yakın, ara kat 2+1 daire'
+                              : 'Örn. iPhone 15 Pro 256 GB, kutulu ve faturalı'
+                      }
                       value={baslik}
                       onChangeText={(v) => {
                         setBaslik(v);
@@ -876,23 +920,54 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     <Yazi style={{ fontSize: 11, color: renk.gri, marginTop: -15, textAlign: 'right' }}>
                       {baslik.length} / 75
                     </Yazi>
-                    <View style={{ flexDirection: mobil ? 'column' : 'row', gap: 18 }}>
-                      <View style={{ flex: 1 }}>
-                        <Alan
-                          nativeID="ilan-fiyati"
-                          etiket="Fiyat (TL)"
-                          placeholder="Örn. 25000"
-                          keyboardType="decimal-pad"
-                          value={fiyat}
-                          onChangeText={(v) => {
-                            setFiyat(v.replace(/[^0-9,]/g, ''));
-                            hataSil('fiyat');
-                          }}
-                          maxLength={12}
-                          hata={alanHatalari.fiyat}
-                        />
+                    {fiyatSecimiVar ? (
+                      <View style={{ gap: 10 }}>
+                        <Yazi style={[s.etiket, { flex: 1, minWidth: 0 }]}>
+                          {isIlani ? 'Ücret bilgisi' : 'Hizmet bedeli'}
+                        </Yazi>
+                        <View style={s.secenekler}>
+                          <Secenek
+                            secili={!fiyatGorusulur}
+                            onPress={() => {
+                              setFiyatGorusulur(false);
+                              hataSil('fiyat');
+                            }}
+                          >
+                            Tutar belirt
+                          </Secenek>
+                          <Secenek
+                            secili={fiyatGorusulur}
+                            onPress={() => {
+                              setFiyatGorusulur(true);
+                              hataSil('fiyat');
+                            }}
+                          >
+                            {isIlani ? 'Görüşmede paylaşılacak' : 'Teklif usulü'}
+                          </Secenek>
+                        </View>
                       </View>
-                    </View>
+                    ) : null}
+                    {!(fiyatSecimiVar && fiyatGorusulur) ? (
+                      <View style={{ flexDirection: mobil ? 'column' : 'row', gap: 18 }}>
+                        <View style={{ flex: 1 }}>
+                          <Alan
+                            nativeID="ilan-fiyati"
+                            etiket={
+                              isIlani ? 'Ücret (TL)' : hizmetIlani ? 'Hizmet bedeli (TL)' : 'Fiyat (TL)'
+                            }
+                            placeholder="Örn. 25000"
+                            keyboardType="decimal-pad"
+                            value={fiyat}
+                            onChangeText={(v) => {
+                              setFiyat(v.replace(/[^0-9,]/g, ''));
+                              hataSil('fiyat');
+                            }}
+                            maxLength={12}
+                            hata={alanHatalari.fiyat}
+                          />
+                        </View>
+                      </View>
+                    ) : null}
                     <View style={{ flexDirection: mobil ? 'column' : 'row', gap: 18 }}>
                       <View style={{ flex: 1, minWidth: 0 }}>
                         <SecimAlani
@@ -928,20 +1003,30 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         />
                       </View>
                     </View>
-                    <View style={{ gap: 10 }}>
-                      <Yazi style={s.etiket}>Ürünün durumu</Yazi>
-                      <View style={s.secenekler}>
-                        {(['İkinci el', 'Yeni gibi', 'Sıfır'] as const).map((d) => (
-                          <Secenek key={d} secili={durum === d} onPress={() => setDurum(d)}>
-                            {d}
-                          </Secenek>
-                        ))}
+                    {urunIlani ? (
+                      <View style={{ gap: 10 }}>
+                        <Yazi style={s.etiket}>Ürünün durumu</Yazi>
+                        <View style={s.secenekler}>
+                          {(['İkinci el', 'Yeni gibi', 'Sıfır'] as const).map((d) => (
+                            <Secenek key={d} secili={durum === d} onPress={() => setDurum(d)}>
+                              {d}
+                            </Secenek>
+                          ))}
+                        </View>
                       </View>
-                    </View>
+                    ) : null}
                     {kategori ? (
                       <View style={{ gap: 14 }}>
                         <View style={ortak.aralikli}>
-                          <Yazi style={s.etiket}>Ürün özellikleri</Yazi>
+                          <Yazi style={[s.etiket, { flex: 1, minWidth: 0 }]}>
+                            {isIlani
+                              ? 'Çalışma koşulları ve aranan nitelikler'
+                              : hizmetIlani
+                                ? 'Hizmet ayrıntıları'
+                                : kategori === 'emlak'
+                                  ? 'Emlak özellikleri'
+                                  : 'Ürün özellikleri'}
+                          </Yazi>
                           <Yazi style={{ fontSize: 11, color: renk.gri }}>İsteğe bağlı</Yazi>
                         </View>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
@@ -986,7 +1071,15 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     <Alan
                       nativeID="ilan-aciklamasi"
                       etiket="Açıklama"
-                      placeholder="Ne zamandır kullanıyorsun? Kutusu ve faturası var mı? Bilinmesi gereken bir kusuru var mı?"
+                      placeholder={
+                        isIlani
+                          ? 'İşin tanımını, sorumlulukları, aranan nitelikleri ve çalışma saatlerini anlat.'
+                          : hizmetIlani
+                            ? 'Hizmetin kapsamını, hangi bölgelere hizmet verdiğini ve ücretin neleri içerdiğini anlat.'
+                            : kategori === 'emlak'
+                              ? 'Taşınmazın konumunu, kullanım durumunu ve öne çıkan özelliklerini anlat.'
+                              : 'Ne zamandır kullanıyorsun? Kutusu ve faturası var mı? Bilinmesi gereken bir kusuru var mı?'
+                      }
                       value={aciklama}
                       onChangeText={(v) => {
                         setAciklama(v);
@@ -999,28 +1092,45 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     <Yazi style={{ fontSize: 11, color: renk.gri, marginTop: -15, textAlign: 'right' }}>
                       {aciklama.length} / 2000
                     </Yazi>
-                    <HareketliBas
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: takas }}
-                      onPress={() => setTakas(!takas)}
-                      style={[ortak.satir, { minHeight: 44 }]}
-                    >
-                      <View
-                        style={{
-                          width: 21,
-                          height: 21,
-                          borderWidth: 1,
-                          borderRadius: 5,
-                          borderColor: takas ? renk.murekkep : renk.cizgi,
-                          backgroundColor: takas ? renk.murekkep : renk.beyaz,
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                    <View style={{ gap: 14, borderTopWidth: 1, borderTopColor: renk.cizgi, paddingTop: 20 }}>
+                      <Yazi style={s.etiket}>İletişim tercihi</Yazi>
+                      <TelefonBilgisiAlanlari
+                        ilan
+                        telefon={telefon}
+                        telefonGoster={telefonGoster}
+                        disabled={calisiyor}
+                        hata={alanHatalari.telefon}
+                        degistir={(deger) => {
+                          setTelefon(deger.telefon);
+                          setTelefonGoster(deger.telefonGoster);
+                          hataSil('telefon');
                         }}
+                      />
+                    </View>
+                    {urunIlani ? (
+                      <HareketliBas
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: takas }}
+                        onPress={() => setTakas(!takas)}
+                        style={[ortak.satir, { minHeight: 44 }]}
                       >
-                        {takas ? <Check size={15} color={renk.tersYazi} /> : null}
-                      </View>
-                      <Yazi style={{ fontSize: 12, flex: 1 }}>Takas tekliflerini değerlendirebilirim.</Yazi>
-                    </HareketliBas>
+                        <View
+                          style={{
+                            width: 21,
+                            height: 21,
+                            borderWidth: 1,
+                            borderRadius: 5,
+                            borderColor: takas ? renk.murekkep : renk.cizgi,
+                            backgroundColor: takas ? renk.murekkep : renk.beyaz,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {takas ? <Check size={15} color={renk.tersYazi} /> : null}
+                        </View>
+                        <Yazi style={{ fontSize: 12, flex: 1 }}>Takas tekliflerini değerlendirebilirim.</Yazi>
+                      </HareketliBas>
+                    ) : null}
                   </View>
                 ) : null}
 
@@ -1063,16 +1173,27 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     <View style={{ gap: 10, paddingTop: 20, borderTopWidth: 1, borderColor: renk.cizgi }}>
                       <View style={ortak.aralikli}>
                         <Yazi style={{ fontSize: 11, color: renk.gri }}>
-                          {durum}
-                          {takas ? ' · Takasa açık' : ''}
+                          {urunIlani ? durum : kategoriAdi}
+                          {urunIlani && takas ? ' · Takasa açık' : ''}
                         </Yazi>
                         <Duzenle onPress={() => adimaGit(3)} etiket="İlan bilgilerini düzenle" />
                       </View>
                       <Baslik>{baslik}</Baslik>
                       <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 28, lineHeight: 38 }}>
-                        {para(sayisalFiyat)}
+                        {ilanBedeli({
+                          fiyat: fiyatSecimiVar && fiyatGorusulur ? 0 : sayisalFiyat,
+                          fiyatGorusulur: fiyatSecimiVar && fiyatGorusulur,
+                          kategori: kategori || 'telefon',
+                          marka,
+                          ozellikler,
+                        })}
                       </Yazi>
                       <Yazi style={{ color: renk.gri, fontSize: 13 }}>{konum}</Yazi>
+                      <Yazi style={{ color: renk.gri, fontSize: 12, lineHeight: 20 }}>
+                        {telefonGoster && telefonuGoster(telefon)
+                          ? `Cep telefonu: ${telefonuGoster(telefon)}`
+                          : 'Cep telefonu ilanda gösterilmez.'}
+                      </Yazi>
                     </View>
                     {Object.values(ozellikler).some((deger) => deger.trim()) ? (
                       <View style={{ gap: 8 }}>
@@ -1181,9 +1302,16 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                   <Yazi style={{ fontWeight: '700', fontSize: 15 }}>
                     {baslik.trim() || 'İlanın burada şekilleniyor.'}
                   </Yazi>
-                  {Number.isFinite(sayisalFiyat) && sayisalFiyat > 0 ? (
+                  {(fiyatSecimiVar && fiyatGorusulur) ||
+                  (Number.isFinite(sayisalFiyat) && sayisalFiyat > 0) ? (
                     <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 23, lineHeight: 31 }}>
-                      {para(sayisalFiyat)}
+                      {ilanBedeli({
+                        fiyat: fiyatSecimiVar && fiyatGorusulur ? 0 : sayisalFiyat,
+                        fiyatGorusulur: fiyatSecimiVar && fiyatGorusulur,
+                        kategori: kategori || 'telefon',
+                        marka,
+                        ozellikler,
+                      })}
                     </Yazi>
                   ) : null}
                   <Yazi style={{ fontSize: 12, color: renk.gri }}>
@@ -1191,15 +1319,20 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                   </Yazi>
                   <View style={{ borderTopWidth: 1, borderColor: renk.cizgi, paddingTop: 16, gap: 12 }}>
                     {[
-                      { ad: 'Kategori ve ürün', hazir: Boolean(altKategori && marka) },
-                      { ad: 'Ürün fotoğrafları', hazir: fotograflar.length > 0 },
+                      { ad: 'Kategori seçimi', hazir: Boolean(altKategori && marka) },
+                      {
+                        ad: isIlani ? 'Fotoğraflar (isteğe bağlı)' : 'İlan fotoğrafları',
+                        hazir: !fotografGerekli || fotograflar.length > 0,
+                      },
                       {
                         ad: 'Başlık ve açıklama',
                         hazir: baslik.trim().length >= 5 && aciklama.trim().length >= 20,
                       },
                       {
-                        ad: 'Fiyat ve konum',
-                        hazir: sayisalFiyat > 0 && Boolean(seciliKonum.il && seciliKonum.ilce),
+                        ad: isIlani ? 'Ücret ve konum' : 'Fiyat ve konum',
+                        hazir:
+                          ((fiyatSecimiVar && fiyatGorusulur) || sayisalFiyat > 0) &&
+                          Boolean(seciliKonum.il && seciliKonum.ilce),
                       },
                     ].map((madde) => (
                       <View key={madde.ad} style={ortak.satir}>

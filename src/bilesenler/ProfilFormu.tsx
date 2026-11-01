@@ -4,6 +4,10 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 import Camera from 'lucide-react-native/icons/camera';
 import Check from 'lucide-react-native/icons/check';
 import Trash2 from 'lucide-react-native/icons/trash';
+import ArrowLeft from 'lucide-react-native/icons/arrow-left';
+import ChevronRight from 'lucide-react-native/icons/chevron-right';
+import { TelefonBilgisiAlanlari } from './TelefonBilgisiAlanlari';
+import { telefonHatasi, telefonuGoster, telefonuNormallestir } from '../veri/telefon';
 import { Gorsel } from './Gorsel';
 import { HareketliBas } from './Hareketli';
 import { Alan, Buton, Pencere, Yazi } from './Temel';
@@ -42,12 +46,23 @@ export function ProfilResmi({ ad, fotograf, boyut = 72 }: { ad: string; fotograf
   );
 }
 
+type ProfilAlani = 'fotograf' | 'ad' | 'konum' | 'hakkinda' | 'telefon';
+const alanBasliklari: Record<ProfilAlani, string> = {
+  fotograf: 'Profil fotoğrafı',
+  ad: 'Ad soyad',
+  konum: 'İl ve ilçe',
+  hakkinda: 'Hakkında',
+  telefon: 'Telefon ve görünürlük',
+};
+
 export function ProfilFormu({
   kompakt = false,
+  iletisim = false,
   tamamlaninca,
   mesgulDegisti,
 }: {
   kompakt?: boolean;
+  iletisim?: boolean;
   tamamlaninca?: () => void;
   mesgulDegisti?: (mesgul: boolean) => void;
 }) {
@@ -56,8 +71,11 @@ export function ProfilFormu({
 
   const { profil, profilKaydet, haberVer, oturum } = usePazar();
   const { mobil } = useEkran();
+  const [formGenisligi, setFormGenisligi] = useState(0);
+  const darForm = mobil || kompakt || (formGenisligi > 0 && formGenisligi < 580);
   const kimlik = useId();
   const [taslak, setTaslak] = useState(profil);
+  const [alan, setAlan] = useState<ProfilAlani | null>(null);
   const [hata, setHata] = useState('');
   const [hatalar, setHatalar] = useState<{ ad?: string }>({});
   const [fotografSeciliyor, setFotografSeciliyor] = useState(false);
@@ -73,10 +91,12 @@ export function ProfilFormu({
   const seciliKonum = konumuAyir(taslak.konum);
   const mesgul = fotografSeciliyor || kaydediliyor;
   const degisti =
-    taslak.ad !== profil.ad ||
-    taslak.konum !== profil.konum ||
-    taslak.hakkinda !== profil.hakkinda ||
-    taslak.fotograf !== profil.fotograf;
+    alan === 'telefon'
+      ? (taslak.telefon ?? '') !== (profil.telefon ?? '') ||
+        Boolean(taslak.telefonGoster) !== Boolean(profil.telefonGoster)
+      : alan
+        ? taslak[alan] !== profil[alan]
+        : false;
 
   useEffect(() => {
     ekranda.current = true;
@@ -128,13 +148,20 @@ export function ProfilFormu({
     setHata('');
   };
   const kaydet = async () => {
-    if (islemSuruyor.current || !degisti || !etkinHesap.current) return;
+    if (islemSuruyor.current || !degisti || !alan || !etkinHesap.current) return;
     const yeniHatalar: typeof hatalar = {};
-    if (taslak.ad.trim().length < 2) yeniHatalar.ad = 'Adını en az iki karakterle yaz.';
+    if (alan === 'ad' && taslak.ad.trim().length < 2) yeniHatalar.ad = 'Adını en az iki karakterle yaz.';
     setHatalar(yeniHatalar);
     if (yeniHatalar.ad) {
       adAlani.current?.focus();
       return;
+    }
+    if (alan === 'telefon') {
+      const sorun = telefonHatasi(taslak.telefon ?? '', Boolean(taslak.telefonGoster));
+      if (sorun) {
+        setHata(sorun);
+        return;
+      }
     }
     islemSuruyor.current = true;
     setKaydediliyor(true);
@@ -146,19 +173,20 @@ export function ProfilFormu({
         if (yeniFotograf) void medyaSil(yeniFotograf).catch(() => undefined);
         return;
       }
-      const kayit = {
-        ...taslak,
-        ad: taslak.ad.trim(),
-        konum: taslak.konum.trim(),
-        hakkinda: taslak.hakkinda.trim(),
-        fotograf: yeniFotograf ?? taslak.fotograf,
-      };
-      profilKaydet(kayit);
+      const kayit = { ...profil };
+      if (alan === 'telefon') {
+        kayit.telefon = telefonuNormallestir(taslak.telefon);
+        kayit.telefonGoster = Boolean(kayit.telefon && taslak.telefonGoster);
+      } else if (alan === 'fotograf') kayit.fotograf = yeniFotograf ?? taslak.fotograf;
+      else kayit[alan] = taslak[alan].trim();
+      const sonuc = await profilKaydet(kayit);
+      if (!sonuc.basarili) throw new Error(sonuc.hata ?? 'Profil kaydedilemedi. Tekrar dene.');
+      if (!ekranda.current || hesapId.current !== etkinHesap.current) return;
       setTaslak(kayit);
       onizlemeyiTemizle();
       Keyboard.dismiss();
       haberVer('Profilin güncellendi.');
-      tamamlaninca?.();
+      setAlan(null);
     } catch (sorun) {
       if (yeniFotograf) void medyaSil(yeniFotograf).catch(() => undefined);
       if (ekranda.current)
@@ -169,123 +197,233 @@ export function ProfilFormu({
     }
   };
 
-  return (
-    <View style={{ gap: kompakt ? 16 : 22 }}>
-      <View style={[s.fotografSatiri, !kompakt && { paddingBottom: 20 }]}>
-        <ProfilResmi ad={taslak.ad} fotograf={taslak.fotograf} boyut={kompakt || mobil ? 60 : 72} />
-        <View style={{ flex: 1, minWidth: 0, gap: 7 }}>
-          <View style={[ortak.satir, { flexWrap: 'wrap', gap: 8 }]}>
-            <Buton
-              ikincil
-              onPress={() => void fotografSec()}
-              disabled={mesgul}
-              simge={
-                fotografSeciliyor ? (
-                  <ActivityIndicator size="small" />
-                ) : (
-                  <Camera color={renk.murekkep} size={16} />
-                )
-              }
-              style={s.fotografSec}
-            >
-              {taslak.fotograf ? 'Değiştir' : 'Fotoğraf ekle'}
-            </Buton>
-            {taslak.fotograf ? (
+  const alaniAc = (yeni: ProfilAlani) => {
+    if (islemSuruyor.current) return;
+    onizlemeyiTemizle();
+    setTaslak(profil);
+    setHata('');
+    setHatalar({});
+    setAlan(yeni);
+  };
+  const geri = () => {
+    if (islemSuruyor.current) return;
+    Keyboard.dismiss();
+    onizlemeyiTemizle();
+    setHata('');
+    setAlan(null);
+  };
+  if (!alan) {
+    const alanlar: ProfilAlani[] = iletisim ? ['telefon'] : ['fotograf', 'ad', 'konum', 'hakkinda'];
+    return (
+      <View style={{ width: '100%', minWidth: 0, gap: 16 }}>
+        <View style={{ borderWidth: 1, borderColor: renk.cizgi, borderRadius: 12, overflow: 'hidden' }}>
+          {alanlar.map((tur, i) => {
+            const deger =
+              tur === 'ad'
+                ? profil.ad
+                : tur === 'konum'
+                  ? profil.konum || 'Eklenmedi'
+                  : tur === 'hakkinda'
+                    ? profil.hakkinda || 'Kendinden kısaca bahset'
+                    : tur === 'telefon'
+                      ? telefonuGoster(profil.telefon) || 'Numara ekle'
+                      : profil.fotograf
+                        ? 'Fotoğrafını değiştir'
+                        : 'Fotoğraf ekle';
+            return (
               <HareketliBas
-                onPress={fotografiKaldir}
-                disabled={mesgul}
-                accessibilityLabel="Profil fotoğrafını kaldır"
-                style={s.fotografKaldir}
+                key={tur}
+                accessibilityLabel={`${alanBasliklari[tur]} düzenle`}
+                onPress={() => alaniAc(tur)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 14,
+                  padding: 16,
+                  minHeight: 78,
+                  minWidth: 0,
+                  borderTopWidth: i ? 1 : 0,
+                  borderTopColor: renk.cizgi,
+                }}
               >
-                <Trash2 size={16} color={renk.murekkep} />
+                {tur === 'fotograf' ? (
+                  <ProfilResmi ad={profil.ad} fotograf={profil.fotograf} boyut={48} />
+                ) : null}
+                <View style={{ flex: 1, minWidth: 0, gap: 5 }}>
+                  <Yazi style={{ fontSize: 13, lineHeight: 20, fontWeight: '600' }}>
+                    {alanBasliklari[tur]}
+                  </Yazi>
+                  <Yazi numberOfLines={2} style={{ color: renk.gri, fontSize: 12, lineHeight: 19 }}>
+                    {deger}
+                  </Yazi>
+                  {tur === 'telefon' && profil.telefon ? (
+                    <Yazi style={{ color: renk.gri, fontSize: 11 }}>
+                      {profil.telefonGoster ? 'Profilinde görünür' : 'Profilinde gizli'}
+                    </Yazi>
+                  ) : null}
+                </View>
+                <ChevronRight size={18} color={renk.gri} />
               </HareketliBas>
-            ) : null}
+            );
+          })}
+        </View>
+        {kompakt && tamamlaninca ? (
+          <Buton ikincil onPress={tamamlaninca}>
+            Bitti
+          </Buton>
+        ) : null}
+      </View>
+    );
+  }
+
+  return (
+    <View
+      onLayout={(olay) => setFormGenisligi(olay.nativeEvent.layout.width)}
+      style={{ width: '100%', minWidth: 0, gap: kompakt ? 16 : 22 }}
+    >
+      <HareketliBas
+        disabled={mesgul}
+        onPress={geri}
+        accessibilityLabel="Profil alanlarına dön"
+        style={{ flexDirection: 'row', gap: 8, alignItems: 'center', minHeight: 44, alignSelf: 'flex-start' }}
+      >
+        <ArrowLeft size={18} color={renk.murekkep} />
+        <Yazi style={{ fontSize: 13, fontWeight: '600' }}>{alanBasliklari[alan]}</Yazi>
+      </HareketliBas>
+      {alan === 'fotograf' ? (
+        <View style={[s.fotografSatiri, !kompakt && { paddingBottom: 20 }]}>
+          <ProfilResmi ad={taslak.ad} fotograf={taslak.fotograf} boyut={kompakt || mobil ? 60 : 72} />
+          <View style={{ flex: 1, minWidth: 0, gap: 7 }}>
+            <View style={[ortak.satir, { flexWrap: 'wrap', gap: 8 }]}>
+              <Buton
+                ikincil
+                onPress={() => void fotografSec()}
+                disabled={mesgul}
+                simge={
+                  fotografSeciliyor ? (
+                    <ActivityIndicator size="small" />
+                  ) : (
+                    <Camera color={renk.murekkep} size={16} />
+                  )
+                }
+                style={s.fotografSec}
+              >
+                {taslak.fotograf ? 'Değiştir' : 'Fotoğraf ekle'}
+              </Buton>
+              {taslak.fotograf ? (
+                <HareketliBas
+                  onPress={fotografiKaldir}
+                  disabled={mesgul}
+                  accessibilityLabel="Profil fotoğrafını kaldır"
+                  style={s.fotografKaldir}
+                >
+                  <Trash2 size={16} color={renk.murekkep} />
+                </HareketliBas>
+              ) : null}
+            </View>
+            <Yazi style={{ color: renk.gri, fontSize: 11, lineHeight: 17 }}>
+              JPG, PNG veya WebP · En fazla 2 MB
+            </Yazi>
           </View>
-          <Yazi style={{ color: renk.gri, fontSize: 11, lineHeight: 17 }}>
-            JPG, PNG veya WebP · En fazla 2 MB
+        </View>
+      ) : null}
+      {alan === 'ad' ? (
+        <View style={{ gap: 16, minWidth: 0 }}>
+          <View style={{ width: '100%', minWidth: 0 }}>
+            <Alan
+              ref={adAlani}
+              nativeID={`profil-${kimlik}-ad`}
+              etiket="Ad soyad"
+              value={taslak.ad}
+              onChangeText={(ad) => {
+                setTaslak((onceki) => ({ ...onceki, ad }));
+                setHatalar((onceki) => ({ ...onceki, ad: undefined }));
+              }}
+              hata={hatalar.ad}
+              maxLength={60}
+              autoComplete="name"
+              autoCapitalize="words"
+              returnKeyType="done"
+              submitBehavior="submit"
+              onSubmitEditing={() => void kaydet()}
+              editable={!mesgul}
+            />
+          </View>
+        </View>
+      ) : null}
+      {alan === 'konum' ? (
+        <View style={{ flexDirection: darForm ? 'column' : 'row', gap: 16, minWidth: 0 }}>
+          <View style={darForm ? { width: '100%', minWidth: 0 } : s.alan}>
+            <SecimAlani
+              etiket="İl (isteğe bağlı)"
+              ipucu="İl seç"
+              deger={seciliKonum.il}
+              secenekler={iller}
+              degistir={(il) => setTaslak((onceki) => ({ ...onceki, konum: konumuBirlestir(il) }))}
+              disabled={mesgul}
+            />
+          </View>
+          <View style={darForm ? { width: '100%', minWidth: 0 } : s.alan}>
+            <SecimAlani
+              etiket="İlçe (isteğe bağlı)"
+              ipucu={seciliKonum.il ? 'İlçe seç' : 'Önce il seç'}
+              deger={seciliKonum.ilce}
+              secenekler={ilceSecenekleri(seciliKonum.il)}
+              degistir={(ilce) =>
+                setTaslak((onceki) => ({ ...onceki, konum: konumuBirlestir(seciliKonum.il, ilce) }))
+              }
+              disabled={mesgul || !seciliKonum.il}
+            />
+          </View>
+        </View>
+      ) : null}
+      {alan === 'hakkinda' ? (
+        <View style={{ gap: 5 }}>
+          <Alan
+            ref={hakkindaAlani}
+            nativeID={`profil-${kimlik}-hakkinda`}
+            etiket="Hakkında (isteğe bağlı)"
+            placeholder="Kendinden kısaca bahset"
+            value={taslak.hakkinda}
+            onChangeText={(hakkinda) => setTaslak((onceki) => ({ ...onceki, hakkinda }))}
+            maxLength={180}
+            multiline
+            autoComplete="off"
+            autoCapitalize="sentences"
+            editable={!mesgul}
+            style={{ height: kompakt ? 82 : 100 }}
+          />
+          <Yazi style={{ fontSize: 11, color: renk.gri, textAlign: 'right' }}>
+            {taslak.hakkinda.length}/180
           </Yazi>
         </View>
-      </View>
-      <View style={{ flexDirection: mobil || kompakt ? 'column' : 'row', gap: 16 }}>
-        <View style={mobil || kompakt ? { width: '100%' } : s.alan}>
-          <Alan
-            ref={adAlani}
-            nativeID={`profil-${kimlik}-ad`}
-            etiket="Ad soyad"
-            value={taslak.ad}
-            onChangeText={(ad) => {
-              setTaslak((onceki) => ({ ...onceki, ad }));
-              setHatalar((onceki) => ({ ...onceki, ad: undefined }));
-            }}
-            hata={hatalar.ad}
-            maxLength={60}
-            autoComplete="name"
-            autoCapitalize="words"
-            returnKeyType="next"
-            submitBehavior="submit"
-            onSubmitEditing={() => hakkindaAlani.current?.focus()}
-            editable={!mesgul}
-          />
-        </View>
-      </View>
-      <View style={{ flexDirection: mobil || kompakt ? 'column' : 'row', gap: 16 }}>
-        <View style={mobil || kompakt ? { width: '100%' } : s.alan}>
-          <SecimAlani
-            etiket="İl (isteğe bağlı)"
-            ipucu="İl seç"
-            deger={seciliKonum.il}
-            secenekler={iller}
-            degistir={(il) => setTaslak((onceki) => ({ ...onceki, konum: konumuBirlestir(il) }))}
-            disabled={mesgul}
-          />
-        </View>
-        <View style={mobil || kompakt ? { width: '100%' } : s.alan}>
-          <SecimAlani
-            etiket="İlçe (isteğe bağlı)"
-            ipucu={seciliKonum.il ? 'İlçe seç' : 'Önce il seç'}
-            deger={seciliKonum.ilce}
-            secenekler={ilceSecenekleri(seciliKonum.il)}
-            degistir={(ilce) =>
-              setTaslak((onceki) => ({ ...onceki, konum: konumuBirlestir(seciliKonum.il, ilce) }))
-            }
-            disabled={mesgul || !seciliKonum.il}
-          />
-        </View>
-      </View>
-      <View style={{ gap: 5 }}>
-        <Alan
-          ref={hakkindaAlani}
-          nativeID={`profil-${kimlik}-hakkinda`}
-          etiket="Hakkında (isteğe bağlı)"
-          placeholder="Kendinden kısaca bahset"
-          value={taslak.hakkinda}
-          onChangeText={(hakkinda) => setTaslak((onceki) => ({ ...onceki, hakkinda }))}
-          maxLength={180}
-          multiline
-          autoComplete="off"
-          autoCapitalize="sentences"
-          editable={!mesgul}
-          style={{ height: kompakt ? 82 : 100 }}
+      ) : null}
+      {alan === 'telefon' ? (
+        <TelefonBilgisiAlanlari
+          telefon={taslak.telefon ?? ''}
+          telefonGoster={Boolean(taslak.telefonGoster)}
+          degistir={(deger) => {
+            setTaslak((onceki) => ({ ...onceki, ...deger }));
+            setHata('');
+          }}
+          disabled={mesgul}
         />
-        <Yazi style={{ fontSize: 11, color: renk.gri, textAlign: 'right' }}>
-          {taslak.hakkinda.length}/180
-        </Yazi>
-      </View>
+      ) : null}
       {hata ? (
         <Yazi accessibilityRole="alert" style={{ color: renk.hata, fontSize: 13 }}>
           {hata}
         </Yazi>
       ) : null}
-      <View style={[s.kaydetSatiri, mobil || kompakt ? undefined : { alignItems: 'flex-end' }]}>
+      <View style={[s.kaydetSatiri, darForm ? undefined : { alignItems: 'flex-end' }]}>
         <Buton
           onPress={() => void kaydet()}
           disabled={mesgul || !degisti}
           simge={
             kaydediliyor ? <ActivityIndicator size="small" /> : <Check color={renk.murekkep} size={18} />
           }
-          style={!mobil && !kompakt ? { minWidth: 220 } : undefined}
+          style={darForm ? { width: '100%', minWidth: 0, paddingHorizontal: 8 } : { minWidth: 220 }}
         >
-          {kaydediliyor ? 'Kaydediliyor…' : 'Değişiklikleri kaydet'}
+          {kaydediliyor ? 'Kaydediliyor…' : 'Kaydet'}
         </Buton>
       </View>
     </View>
@@ -310,16 +448,17 @@ const useStiller = temaStilleri((renk) =>
       overflow: 'hidden',
       flexShrink: 0,
     },
-    fotografSatiri: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-    fotografSec: { minHeight: 44, paddingHorizontal: 12 },
+    fotografSatiri: { flexDirection: 'row', alignItems: 'center', gap: 14, minWidth: 0 },
+    fotografSec: { minHeight: 44, paddingHorizontal: 12, maxWidth: '100%', flexShrink: 1 },
     fotografKaldir: {
       width: 44,
       height: 44,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: renk.murekkep,
-      borderRadius: 8,
+      borderColor: renk.cizgi,
+      borderRadius: 10,
+      flexShrink: 0,
     },
     alan: { flexGrow: 1, flexBasis: 0, minWidth: 0 },
     kaydetSatiri: { gap: 8, paddingTop: 2 },

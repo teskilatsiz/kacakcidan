@@ -120,8 +120,57 @@ textarea::placeholder {
     box-shadow 0.18s ease,
     border-color 0.18s ease;
 }
-[data-ana-icerik] {
-  animation: sayfa-girisi 0.2s ease-out both;
+[data-ust-hamburger],
+[data-mobil-menu],
+[data-alt-menu-boslugu] {
+  display: none !important;
+}
+@media (max-width: 999px) {
+  [data-ust-hesap] {
+    display: none !important;
+  }
+  [data-ust-hamburger] {
+    display: flex !important;
+  }
+  [data-ust-satir] {
+    flex-wrap: wrap;
+    gap: 9px !important;
+  }
+  [data-ust-satir] [data-ust-arama] {
+    order: 3;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+@media (max-width: 1279px) {
+  [data-ust-masaustu] [data-konum-metni] {
+    display: none !important;
+  }
+}
+@media (min-width: 700px) and (max-width: 1099px) {
+  [data-ust-menu] > div {
+    padding-inline: 28px !important;
+  }
+}
+@media (min-width: 700px) and (max-width: 999px) {
+  [data-ust-menu] > div {
+    padding-block: 10px !important;
+  }
+}
+@media (max-width: 1099px) {
+  [data-footer-govde] {
+    flex-direction: column !important;
+    gap: 26px !important;
+  }
+  [data-footer-marka] {
+    width: 100% !important;
+  }
+  [data-footer-kolonlar] {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    column-gap: 0 !important;
+  }
 }
 @media (hover: hover) {
   [data-ilan-karti]:hover {
@@ -143,6 +192,42 @@ textarea::placeholder {
   }
 }
 @media (max-width: 699px) {
+  [data-alt-bilgi] > div {
+    padding-inline: 20px !important;
+  }
+  [data-footer-kategoriler] {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+  }
+  [data-footer-ikincil] {
+    flex: 0 0 50% !important;
+    width: 50% !important;
+  }
+  [data-footer-telif] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+  [data-ust-masaustu] {
+    display: none !important;
+  }
+  [data-ust-menu] > div {
+    padding: 10px 20px !important;
+  }
+  [data-ust-satir] > div:last-child {
+    gap: 4px !important;
+  }
+  [data-ust-menu][data-anasayfa='true'] [data-logo-yazisi] {
+    font-size: 25px !important;
+    line-height: 35px !important;
+  }
+  [data-ust-menu][data-anasayfa='true'] [data-arama-dugmesi] {
+    display: none;
+  }
+  [data-mobil-menu],
+  [data-alt-menu-boslugu] {
+    display: flex !important;
+  }
   input,
   textarea,
   select {
@@ -151,6 +236,14 @@ textarea::placeholder {
   [data-ilan-izgarasi] {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 12px !important;
+  }
+  [data-vitrin-karti='true'] [data-ilan-etiketleri] {
+    display: none !important;
+  }
+  [data-ilan-konumu] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 2px !important;
   }
   [data-hero-perde] {
     background: linear-gradient(90deg, #17191bcc, #17191b55);
@@ -194,11 +287,22 @@ textarea::placeholder {
 [data-ust-arama] {
   overflow: visible;
 }
+[data-kesif-bant-gorseli]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--renk-acik), transparent 80%);
+  pointer-events: none;
+}
 [data-bildirim] {
   position: fixed !important;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
+}
+html.pazar-klavye-acik [data-bildirim] {
+  top: calc(var(--pazar-gorunur-ust, 0px) + 12px);
+  bottom: auto !important;
 }
 [data-arama-girdisi]:focus-visible {
   outline: none !important;
@@ -255,8 +359,4 @@ textarea::placeholder {
 [data-vurgu='kategori']:hover [data-kategori-yazisi],
 [data-vurgu='kategori']:focus-visible [data-kategori-yazisi] {
   color: var(--renk-vurguYazi) !important;
-}
-[data-tema-secenegi]:focus-within {
-  outline: 2px solid var(--renk-odak);
-  outline-offset: 3px;
 }

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import Camera from 'lucide-react-native/icons/camera';
-import Bell from 'lucide-react-native/icons/bell';
 import Eye from 'lucide-react-native/icons/eye';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Heart from 'lucide-react-native/icons/heart';
@@ -12,7 +11,8 @@ import Package from 'lucide-react-native/icons/package';
 import Pencil from 'lucide-react-native/icons/pencil';
 import Settings from 'lucide-react-native/icons/settings';
 import UserRound from 'lucide-react-native/icons/user-round';
-import Trash2 from 'lucide-react-native/icons/trash';
+import EyeOff from 'lucide-react-native/icons/eye-off';
+import RotateCcw from 'lucide-react-native/icons/rotate-ccw';
 import { Gorsel } from '../bilesenler/Gorsel';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { Baslik, BosDurum, Buton, Pencere, Yazi } from '../bilesenler/Temel';
@@ -21,9 +21,12 @@ import { IlanIzgarasi } from '../bilesenler/IlanKarti';
 import { IskeletParcasi, YuklemeIskeleti } from '../bilesenler/YuklemeIskeleti';
 import { usePazar } from '../durum/Pazar';
 import { ProfilDuzenlemePenceresi, ProfilResmi } from '../bilesenler/ProfilFormu';
+import { CikisDugmesi } from '../bilesenler/CikisOnayi';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { gorselKaynagi } from '../veri/gorseller';
-import { ilanYolu, para } from '../veri/ilanlar';
+import { ilanBedeli, ilanYolu } from '../veri/ilanlar';
+import { ilanKaldirmaNedenleri, type IlanKaldirmaNedeni } from '../veri/ilanYonetimi';
+import { saticiYolu } from '../veri/saticilar';
 
 export default function Profil() {
   const { renk } = useTema();
@@ -33,14 +36,14 @@ export default function Profil() {
     profil,
     tumIlanlar,
     favoriler,
-    mesajlar,
     eklenenler,
-    ilanSil,
+    ilaniYayindanKaldir,
+    ilaniYenidenYayinla,
     oturum,
     hazir,
     ilanIstatistikleri,
     sorular,
-    okunmamisBildirimSayisi,
+    haberVer,
   } = usePazar();
   const { mobil, dar, bosluk } = useEkran();
   const yanPanel = !dar;
@@ -48,12 +51,40 @@ export default function Profil() {
   const [duzenle, setDuzenle] = useState(false);
   const [sekme, setSekme] = useState<'ilanlar' | 'favoriler'>('ilanlar');
   const [silinecek, setSilinecek] = useState('');
-  const benimkiler = tumIlanlar.filter((ilan) => ilan.benim);
+  const [yayinFiltresi, setYayinFiltresi] = useState<'yayinda' | 'kaldirildi'>('yayinda');
+  const [kaldirmaNedeni, setKaldirmaNedeni] = useState<IlanKaldirmaNedeni>('satildi');
+  const [yayinMesgul, setYayinMesgul] = useState(false);
+  const [yayinHatasi, setYayinHatasi] = useState('');
+  const tumBenimkiler = eklenenler.map(
+    (ilan) => tumIlanlar.find((kayit) => kayit.id === ilan.id) ?? { ...ilan, satici: profil.ad, benim: true },
+  );
+  const benimkiler = tumBenimkiler.filter((ilan) =>
+    yayinFiltresi === 'kaldirildi' ? ilan.yayinDurumu === 'kaldirildi' : ilan.yayinDurumu !== 'kaldirildi',
+  );
   const kaydedilen = tumIlanlar.filter((ilan) => favoriler.includes(ilan.id));
-  const konusmaSayisi = Object.values(mesajlar).filter((konusma) => konusma.length > 0).length;
   const silinecekIlan = eklenenler.find((ilan) => ilan.id === silinecek);
 
   const ac = () => setDuzenle(true);
+  async function kaldir() {
+    if (yayinMesgul) return;
+    setYayinMesgul(true);
+    const sonuc = await ilaniYayindanKaldir(silinecek, kaldirmaNedeni);
+    setYayinMesgul(false);
+    if (!sonuc.basarili) {
+      setYayinHatasi(sonuc.hata ?? 'İşlem tamamlanamadı.');
+      return;
+    }
+    setSilinecek('');
+    setYayinFiltresi('kaldirildi');
+  }
+  async function yenidenYayinla(id: string) {
+    if (yayinMesgul) return;
+    setYayinMesgul(true);
+    const sonuc = await ilaniYenidenYayinla(id);
+    setYayinMesgul(false);
+    if (!sonuc.basarili) haberVer(sonuc.hata ?? 'İlanın yeniden yayınlanamadı.');
+    else setYayinFiltresi('yayinda');
+  }
 
   if (!hazir)
     return (
@@ -117,12 +148,12 @@ export default function Profil() {
                 width: 58,
                 height: 58,
                 borderRadius: 29,
-                backgroundColor: renk.sariSoluk,
+                backgroundColor: renk.sari,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <UserRound color={renk.murekkep} size={27} strokeWidth={1.6} />
+              <UserRound color={renk.vurguYazi} size={27} strokeWidth={1.6} />
             </View>
             <Baslik buyuk style={mobil ? { textAlign: 'center' } : undefined}>
               Hesabım
@@ -170,45 +201,29 @@ export default function Profil() {
       >
         <Baslik buyuk>Hesabım</Baslik>
         <View style={{ flexDirection: yanPanel ? 'row' : 'column', gap: 24, alignItems: 'flex-start' }}>
-          <View
-            style={[
-              s.profilKart,
-              { padding: mobil ? 18 : 22, width: yanPanel ? 290 : '100%', flexShrink: 0 },
-            ]}
-          >
-            <View style={[ortak.aralikli, { alignItems: 'flex-start', gap: 12 }]}>
-              <View
-                style={[
-                  ortak.satir,
-                  { flex: 1, alignItems: 'center', minWidth: 0, gap: mobil || yanPanel ? 13 : 18 },
-                ]}
+          <View style={[s.profilKart, { padding: mobil ? 18 : 22, width: yanPanel ? 290 : '100%' }]}>
+            <View style={[ortak.satir, { minWidth: 0, gap: 14, alignItems: 'flex-start' }]}>
+              <HareketliBas
+                accessibilityLabel="Profil fotoğrafını düzenle"
+                onPress={ac}
+                style={s.fotografDugmesi}
               >
-                <HareketliBas
-                  accessibilityLabel="Profil fotoğrafını düzenle"
-                  onPress={ac}
-                  style={s.fotografDugmesi}
-                >
-                  <ProfilResmi
-                    ad={profil.ad}
-                    fotograf={profil.fotograf}
-                    boyut={mobil || yanPanel ? 64 : 76}
-                  />
-                  <View style={s.kameraRozeti}>
-                    <Camera size={12} color={renk.vurguYazi} />
-                  </View>
-                </HareketliBas>
-                <View style={{ flex: 1, minWidth: 0, gap: 5 }}>
-                  <Yazi style={s.ad}>{profil.ad}</Yazi>
-                  <View style={[ortak.satir, { gap: 5, minWidth: 0 }]}>
-                    <MapPin size={14} color={renk.gri} />
-                    <Yazi style={s.konum}>{profil.konum || 'Konum belirtilmedi'}</Yazi>
-                  </View>
+                <ProfilResmi ad={profil.ad} fotograf={profil.fotograf} boyut={mobil || yanPanel ? 64 : 76} />
+                <View style={s.kameraRozeti}>
+                  <Camera size={12} color={renk.vurguYazi} />
+                </View>
+              </HareketliBas>
+              <View style={{ flex: 1, minWidth: 0, gap: 7, paddingTop: 3 }}>
+                <Yazi numberOfLines={3} style={s.ad}>
+                  {profil.ad}
+                </Yazi>
+                <View style={[ortak.satir, { gap: 5, minWidth: 0, alignItems: 'flex-start' }]}>
+                  <MapPin size={14} color={renk.gri} style={{ marginTop: 3, flexShrink: 0 }} />
+                  <Yazi numberOfLines={2} style={s.konum}>
+                    {profil.konum || 'Konum belirtilmedi'}
+                  </Yazi>
                 </View>
               </View>
-              <HareketliBas onPress={ac} accessibilityLabel="Profili düzenle" style={s.duzenle}>
-                <Pencil color={renk.vurguYazi} size={16} />
-                {mobil || yanPanel ? null : <Yazi style={s.kucukKalin}>Profili düzenle</Yazi>}
-              </HareketliBas>
             </View>
             {profil.hakkinda.trim() ? (
               <Yazi style={s.hakkinda}>{profil.hakkinda}</Yazi>
@@ -217,37 +232,36 @@ export default function Profil() {
                 <Yazi style={{ fontSize: 13, color: renk.gri }}>Kendinden kısaca bahset</Yazi>
               </HareketliBas>
             )}
+            <Link href={saticiYolu(oturum.id)} asChild>
+              <HareketliBas
+                accessibilityRole="link"
+                style={{
+                  minHeight: 40,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                }}
+              >
+                <Yazi style={{ fontSize: 12, color: renk.gri }}>Profilimi görüntüle</Yazi>
+                <ChevronRight size={16} color={renk.gri} />
+              </HareketliBas>
+            </Link>
+            <HareketliBas onPress={ac} accessibilityLabel="Profili düzenle" style={s.duzenle}>
+              <Pencil color={renk.murekkep} size={16} />
+              <Yazi style={s.kucukKalin}>Profili düzenle</Yazi>
+            </HareketliBas>
             <View style={s.ozetSatiri}>
-              <View style={{ flex: 1, gap: 3 }}>
-                <Yazi style={s.ozetSayisi}>{benimkiler.length}</Yazi>
+              <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+                <Yazi style={s.ozetSayisi}>
+                  {tumBenimkiler.filter((ilan) => ilan.yayinDurumu !== 'kaldirildi').length}
+                </Yazi>
                 <Yazi style={s.ozet}>Yayındaki ilan</Yazi>
               </View>
-              <View style={{ flex: 1, gap: 3 }}>
+              <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
                 <Yazi style={s.ozetSayisi}>{kaydedilen.length}</Yazi>
                 <Yazi style={s.ozet}>Kayıtlı favori</Yazi>
               </View>
-            </View>
-            <View style={[s.hesapBaglantilari, { flexDirection: yanPanel ? 'column' : 'row' }]}>
-              <Link href="/mesajlar" asChild>
-                <HareketliBas
-                  accessibilityLabel={`Mesajlarım, ${konusmaSayisi} konuşma`}
-                  style={s.hesapBaglantisi}
-                >
-                  <MessageCircle size={15} color={renk.gri} />
-                  <Yazi style={s.baglantiYazisi}>Mesajlarım</Yazi>
-                  {konusmaSayisi > 0 && <Yazi style={s.sayac}>{konusmaSayisi}</Yazi>}
-                </HareketliBas>
-              </Link>
-              <Link href="/bildirimler" asChild>
-                <HareketliBas
-                  accessibilityLabel={`Bildirimler, ${okunmamisBildirimSayisi} okunmamış`}
-                  style={s.hesapBaglantisi}
-                >
-                  <Bell size={18} color={renk.murekkep} />
-                  <Yazi style={s.baglantiYazisi}>Bildirimler</Yazi>
-                  {okunmamisBildirimSayisi > 0 && <Yazi style={s.sayac}>{okunmamisBildirimSayisi}</Yazi>}
-                </HareketliBas>
-              </Link>
             </View>
             <Link href="/ayarlar" asChild>
               <HareketliBas accessibilityLabel="Hesap ayarları" style={s.ayarlar}>
@@ -256,12 +270,13 @@ export default function Profil() {
                 <ChevronRight size={16} color={renk.gri} />
               </HareketliBas>
             </Link>
+            <CikisDugmesi />
           </View>
 
           <View style={[{ gap: 18 }, yanPanel ? { flex: 1, minWidth: 0 } : { width: '100%' }]}>
             <View style={s.sekmeler} accessibilityLabel="Hesap içeriği">
               {[
-                { id: 'ilanlar' as const, ad: 'İlanlarım', sayi: benimkiler.length, simge: Package },
+                { id: 'ilanlar' as const, ad: 'İlanlarım', sayi: tumBenimkiler.length, simge: Package },
                 { id: 'favoriler' as const, ad: 'Favorilerim', sayi: kaydedilen.length, simge: Heart },
               ].map(({ id, ad, sayi, simge: Simge }) => (
                 <HareketliBas
@@ -282,13 +297,55 @@ export default function Profil() {
                 </HareketliBas>
               ))}
             </View>
+            {sekme === 'ilanlar' && tumBenimkiler.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {[
+                  {
+                    id: 'yayinda' as const,
+                    ad: 'Yayında',
+                    sayi: tumBenimkiler.filter((ilan) => ilan.yayinDurumu !== 'kaldirildi').length,
+                  },
+                  {
+                    id: 'kaldirildi' as const,
+                    ad: 'Yayında değil',
+                    sayi: tumBenimkiler.filter((ilan) => ilan.yayinDurumu === 'kaldirildi').length,
+                  },
+                ].map((secenek) => (
+                  <HareketliBas
+                    key={secenek.id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: yayinFiltresi === secenek.id }}
+                    onPress={() => setYayinFiltresi(secenek.id)}
+                    style={{
+                      minHeight: 40,
+                      paddingHorizontal: 13,
+                      borderRadius: 8,
+                      flexDirection: 'row',
+                      gap: 7,
+                      alignItems: 'center',
+                      backgroundColor: yayinFiltresi === secenek.id ? renk.sari : renk.zemin,
+                    }}
+                  >
+                    <Yazi
+                      style={{
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: yayinFiltresi === secenek.id ? renk.vurguYazi : renk.murekkep,
+                      }}
+                    >
+                      {secenek.ad} ({secenek.sayi})
+                    </Yazi>
+                  </HareketliBas>
+                ))}
+              </View>
+            )}
             {sekme === 'ilanlar' && benimkiler.length > 0 ? (
               <View style={s.ilanListesi}>
                 {benimkiler.map((ilan, sira) => (
                   <View key={ilan.id} style={[s.ilanSatiri, sira > 0 && s.ilanAyirici]}>
                     <Link href={ilanYolu(ilan)} asChild>
                       <HareketliBas
-                        accessibilityLabel={`${ilan.baslik}, ${para(ilan.fiyat)}, ilanı aç`}
+                        accessibilityLabel={`${ilan.baslik}, ${ilanBedeli(ilan)}, ilanı aç`}
                         style={s.ilanBaglantisi}
                       >
                         <Gorsel
@@ -300,9 +357,13 @@ export default function Profil() {
                           <Yazi numberOfLines={2} style={s.ilanAdi}>
                             {ilan.baslik}
                           </Yazi>
-                          <Yazi style={s.fiyat}>{para(ilan.fiyat)}</Yazi>
+                          <Yazi style={s.fiyat}>{ilanBedeli(ilan)}</Yazi>
                           <Yazi numberOfLines={1} style={s.ilanBilgisi}>
-                            {ilan.durum} · {ilan.zaman}
+                            {ilan.yayinDurumu === 'kaldirildi'
+                              ? ilan.kaldirmaNedeni === 'satildi'
+                                ? 'Satış tamamlandı'
+                                : 'Yayında değil'
+                              : `${ilan.durum} · ${ilan.zaman}`}
                           </Yazi>
                           <View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
                             <View style={[ortak.satir, { gap: 4 }]}>
@@ -351,12 +412,30 @@ export default function Profil() {
                           <Yazi style={[s.ilanDugmesiYazisi, { color: renk.vurguYazi }]}>Düzenle</Yazi>
                         </HareketliBas>
                         <HareketliBas
-                          accessibilityLabel={`${ilan.baslik} ilanını kaldır`}
-                          onPress={() => setSilinecek(ilan.id)}
+                          accessibilityLabel={
+                            ilan.yayinDurumu === 'kaldirildi'
+                              ? `${ilan.baslik} ilanını yeniden yayınla`
+                              : `${ilan.baslik} ilanını yayından kaldır`
+                          }
+                          disabled={yayinMesgul}
+                          onPress={() => {
+                            if (ilan.yayinDurumu === 'kaldirildi') void yenidenYayinla(ilan.id);
+                            else {
+                              setSilinecek(ilan.id);
+                              setKaldirmaNedeni('satildi');
+                              setYayinHatasi('');
+                            }
+                          }}
                           style={[s.ilanDugmesi, s.ilanKaldir, mobil && s.ilanDugmesiMobil]}
                         >
-                          <Trash2 size={17} color={renk.murekkep} />
-                          <Yazi style={s.ilanDugmesiYazisi}>Kaldır</Yazi>
+                          {ilan.yayinDurumu === 'kaldirildi' ? (
+                            <RotateCcw size={17} color={renk.murekkep} />
+                          ) : (
+                            <EyeOff size={17} color={renk.murekkep} />
+                          )}
+                          <Yazi style={s.ilanDugmesiYazisi}>
+                            {ilan.yayinDurumu === 'kaldirildi' ? 'Yeniden yayınla' : 'Yayından kaldır'}
+                          </Yazi>
                         </HareketliBas>
                       </View>
                     ) : (
@@ -376,11 +455,19 @@ export default function Profil() {
                     <Package color={renk.murekkep} size={28} />
                   )
                 }
-                baslik={sekme === 'favoriler' ? 'Henüz favorin yok' : 'Henüz bir ilanın yok'}
+                baslik={
+                  sekme === 'favoriler'
+                    ? 'Henüz favorin yok'
+                    : yayinFiltresi === 'kaldirildi'
+                      ? 'Yayından kaldırdığın ilan yok'
+                      : 'Yayında ilanın yok'
+                }
                 aciklama={
                   sekme === 'favoriler'
                     ? 'Aklında kalan ilanları kalp düğmesiyle buraya kaydet.'
-                    : 'Fotoğraflarını ekle, fiyatını belirle. İlk ilanını hazırlamaya başla.'
+                    : yayinFiltresi === 'kaldirildi'
+                      ? 'Yayından kaldırdığın ilanların burada saklanır. İstediğinde yeniden yayınlayabilirsin.'
+                      : 'Fotoğraflarını ekle, fiyatını belirle. İlanını hazırlamaya başla.'
                 }
                 eylem={
                   <Buton onPress={() => router.push(sekme === 'favoriler' ? '/kesfet' : '/ilan-ver')}>
@@ -395,24 +482,62 @@ export default function Profil() {
 
       {duzenle ? <ProfilDuzenlemePenceresi kapat={() => setDuzenle(false)} /> : null}
 
-      <Pencere acik={Boolean(silinecek)} kapat={() => setSilinecek('')} baslik="İlanı kaldır">
+      <Pencere
+        acik={Boolean(silinecek)}
+        kapat={() => {
+          if (!yayinMesgul) setSilinecek('');
+        }}
+        baslik="İlanı yayından kaldır"
+        altlik={
+          <Buton disabled={yayinMesgul} onPress={kaldir}>
+            {yayinMesgul ? 'Kaydediliyor…' : 'Yayından kaldır'}
+          </Buton>
+        }
+      >
         <Yazi style={{ fontWeight: '600' }}>{silinecekIlan?.baslik || 'İlanın'}</Yazi>
-        <Yazi style={{ color: renk.gri }}>Bu ilanı kaldırmak istediğine emin misin?</Yazi>
-        <View style={ortak.satir}>
-          <Buton ikincil onPress={() => setSilinecek('')} style={{ flex: 1, paddingHorizontal: 12 }}>
-            Vazgeç
-          </Buton>
-          <Buton
-            koyu
-            onPress={() => {
-              ilanSil(silinecek);
-              setSilinecek('');
-            }}
-            style={{ flex: 1, paddingHorizontal: 12 }}
-          >
-            İlanı kaldır
-          </Buton>
+        <Yazi style={{ color: renk.gri }}>
+          İlanın listelerde görünmez. Fotoğrafları ve bilgileri hesabında saklanır; yeniden yayınlayabilirsin.
+        </Yazi>
+        <View accessibilityRole="radiogroup" style={{ gap: 9 }}>
+          {ilanKaldirmaNedenleri.map((neden) => (
+            <HareketliBas
+              key={neden.id}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: kaldirmaNedeni === neden.id }}
+              onPress={() => setKaldirmaNedeni(neden.id)}
+              style={{
+                padding: 15,
+                minHeight: 70,
+                borderWidth: 1,
+                borderColor: kaldirmaNedeni === neden.id ? renk.murekkep : renk.cizgi,
+                borderRadius: 10,
+                flexDirection: 'row',
+                gap: 12,
+                alignItems: 'center',
+              }}
+            >
+              <View
+                style={{
+                  width: 19,
+                  height: 19,
+                  borderRadius: 10,
+                  borderWidth: kaldirmaNedeni === neden.id ? 5 : 1.5,
+                  borderColor: kaldirmaNedeni === neden.id ? renk.murekkep : renk.gri,
+                  flexShrink: 0,
+                }}
+              />
+              <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+                <Yazi style={{ fontSize: 14, fontWeight: '600' }}>{neden.ad}</Yazi>
+                <Yazi style={{ fontSize: 12, color: renk.gri }}>{neden.aciklama}</Yazi>
+              </View>
+            </HareketliBas>
+          ))}
         </View>
+        {!!yayinHatasi && (
+          <Yazi accessibilityRole="alert" style={{ fontSize: 13 }}>
+            {yayinHatasi}
+          </Yazi>
+        )}
       </Pencere>
     </Kabuk>
   );
@@ -422,6 +547,8 @@ const useStiller = temaStilleri((renk) =>
   StyleSheet.create({
     profilKart: {
       gap: 16,
+      minWidth: 0,
+      flexShrink: 0,
       borderWidth: 1,
       borderColor: renk.cizgi,
       borderRadius: 14,
@@ -441,8 +568,16 @@ const useStiller = temaStilleri((renk) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    ad: { fontFamily: kalin, fontWeight: '700', fontSize: 19, lineHeight: 26, letterSpacing: -0.4 },
-    konum: { fontSize: 13, lineHeight: 20, color: renk.gri, flexShrink: 1 },
+    ad: {
+      fontFamily: kalin,
+      fontWeight: '700',
+      fontSize: 19,
+      lineHeight: 26,
+      letterSpacing: -0.4,
+      minWidth: 0,
+      flexShrink: 1,
+    },
+    konum: { fontSize: 13, lineHeight: 20, color: renk.gri, flex: 1, minWidth: 0 },
     duzenle: {
       minWidth: 44,
       minHeight: 44,
@@ -452,12 +587,12 @@ const useStiller = temaStilleri((renk) =>
       justifyContent: 'center',
       gap: 8,
       borderWidth: 1,
-      borderColor: renk.sari,
-      borderRadius: 8,
-      backgroundColor: renk.sari,
+      borderColor: renk.cizgi,
+      borderRadius: 10,
+      backgroundColor: renk.beyaz,
     },
-    kucukKalin: { fontSize: 13, fontWeight: '600', color: renk.vurguYazi },
-    hakkinda: { color: renk.gri, fontSize: 14, lineHeight: 22, maxWidth: 720 },
+    kucukKalin: { fontSize: 13, fontWeight: '600', color: renk.murekkep },
+    hakkinda: { color: renk.gri, fontSize: 13, lineHeight: 22, minWidth: 0, flexShrink: 1 },
     ozetSatiri: {
       flexDirection: 'row',
       gap: 18,
@@ -468,17 +603,6 @@ const useStiller = temaStilleri((renk) =>
     },
     ozetSayisi: { fontSize: 21, lineHeight: 28, fontWeight: '700', fontFamily: kalin },
     ozet: { fontSize: 12, color: renk.gri, lineHeight: 20 },
-    hesapBaglantilari: { gap: 12 },
-    hesapBaglantisi: {
-      minHeight: 44,
-      flexGrow: 1,
-      flexBasis: 0,
-      minWidth: 0,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    baglantiYazisi: { flex: 1, minWidth: 0, fontSize: 13, fontWeight: '600', color: renk.murekkep },
     sekmeler: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: renk.cizgi, gap: 10 },
     sekme: {
       minHeight: 48,
@@ -544,9 +668,8 @@ const useStiller = temaStilleri((renk) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      borderTopWidth: 1,
-      borderTopColor: renk.cizgi,
-      paddingTop: 4,
+      minWidth: 0,
+      paddingHorizontal: 4,
     },
   }),
 );
