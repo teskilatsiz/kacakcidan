@@ -1,0 +1,14 @@
+@media (prefers-reduced-motion: no-preference) {
+  [data-yukleme-iskeleti][data-iskelet-gorunur='true'] {
+    animation: iskelet-yuklemesi 900ms ease-in-out infinite alternate;
+  }
+}
+
+@keyframes iskelet-yuklemesi {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
