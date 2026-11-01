@@ -203,7 +203,7 @@ export default function Bildirimler() {
                     padding: mobil ? 16 : 22,
                     borderTopWidth: sira ? 1 : 0,
                     borderColor: renk.cizgi,
-                    backgroundColor: bildirim.okundu ? renk.beyaz : renk.sariSoluk,
+                    backgroundColor: bildirim.okundu ? renk.beyaz : renk.acik,
                   }}
                 >
                   <View
@@ -211,13 +211,13 @@ export default function Bildirimler() {
                       width: mobil ? 36 : 42,
                       height: mobil ? 36 : 42,
                       borderRadius: 12,
-                      backgroundColor: renk.zemin,
+                      backgroundColor: bildirim.okundu ? renk.zemin : renk.sari,
                       justifyContent: 'center',
                       alignItems: 'center',
                       flexShrink: 0,
                     }}
                   >
-                    <Simge size={19} color={renk.murekkep} />
+                    <Simge size={19} color={bildirim.okundu ? renk.murekkep : renk.vurguYazi} />
                   </View>
                   <View style={{ flex: 1, minWidth: 0, gap: 5 }}>
                     <Yazi style={{ fontWeight: bildirim.okundu ? '600' : '700', fontSize: 14 }}>
@@ -237,9 +237,7 @@ export default function Bildirimler() {
                   </View>
                   <View style={{ minHeight: 36, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                     {!bildirim.okundu && (
-                      <View
-                        style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: renk.murekkep }}
-                      />
+                      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: renk.sari }} />
                     )}
                     <ChevronRight size={16} color={renk.gri} />
                   </View>

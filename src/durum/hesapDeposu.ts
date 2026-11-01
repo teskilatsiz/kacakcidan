@@ -1,6 +1,13 @@
 import type { Kayit } from './PazarBaglami';
 import type { ParolaKaydi } from './parola.types';
 import type { Ilan } from '../veri/ilanlar';
+import { telefonuNormallestir } from '../veri/telefon.ts';
+import {
+  ilanKaldirmaNedenleri,
+  sikayetNedenleri,
+  type IlanKaldirmaNedeni,
+  type IlanSikayeti,
+} from '../veri/ilanYonetimi.ts';
 import {
   bosEtkilesimKaydi,
   etkilesimleriOku,
@@ -15,14 +22,41 @@ export type HesapDeposu = {
   hesaplar: Hesap[];
   aktifHesap: string | null;
   etkilesimler: EtkilesimKaydi;
+  sikayetler: IlanSikayeti[];
 };
+
+export function iletisimiDuzenle<T extends { telefon?: string; telefonGoster?: boolean }>(veri: T): T {
+  if (veri.telefon === undefined && veri.telefonGoster === undefined) return veri;
+  const { telefon: _telefon, telefonGoster: _izin, ...diger } = veri;
+  const telefon = telefonuNormallestir(veri.telefon);
+  return {
+    ...diger,
+    ...(telefon ? { telefon } : {}),
+    telefonGoster: !!telefon && veri.telefonGoster === true,
+  } as T;
+}
+
+function kaydiTemizle(kayit: Kayit): Kayit {
+  return {
+    ...kayit,
+    profil: iletisimiDuzenle(kayit.profil),
+    eklenenler: kayit.eklenenler.map(iletisimiDuzenle),
+  };
+}
 
 export function bosKayit(ad = ''): Kayit {
   return { favoriler: [], eklenenler: [], mesajlar: {}, profil: { ad, konum: '', hakkinda: '' }, konum: '' };
 }
 
 export function ilkDepo(misafir = bosKayit()): HesapDeposu {
-  return { surum: 2, misafir, hesaplar: [], aktifHesap: null, etkilesimler: bosEtkilesimKaydi() };
+  return {
+    surum: 2,
+    misafir,
+    hesaplar: [],
+    aktifHesap: null,
+    etkilesimler: bosEtkilesimKaydi(),
+    sikayetler: [],
+  };
 }
 
 export function aktifKayit(depo: HesapDeposu): Kayit {
@@ -39,7 +73,12 @@ export function kaydiDegistir(depo: HesapDeposu, guncelle: (kayit: Kayit) => Kay
   };
 }
 
-export function ilanKaydiniGuncelle(depo: HesapDeposu, hesapId: string, ilan: Ilan): HesapDeposu | undefined {
+export function ilanKaydiniGuncelle(
+  depo: HesapDeposu,
+  hesapId: string,
+  ilan: Ilan,
+  oneCikar = false,
+): HesapDeposu | undefined {
   if (!hesapId || depo.aktifHesap !== hesapId || !depo.hesaplar.some((hesap) => hesap.id === hesapId)) return;
   const kayit = aktifKayit(depo);
   const onceki = kayit.eklenenler.find((kayitli) => kayitli.id === ilan.id);
@@ -49,14 +88,16 @@ export function ilanKaydiniGuncelle(depo: HesapDeposu, hesapId: string, ilan: Il
     eklenenler: eski.eklenenler.map((kayitli) =>
       kayitli.id === ilan.id
         ? {
-            ...ilan,
+            ...iletisimiDuzenle(ilan),
             id: onceki.id,
             ...((onceki.numara ?? depo.etkilesimler.ilanNumaralari[onceki.id])
               ? { numara: onceki.numara ?? depo.etkilesimler.ilanNumaralari[onceki.id] }
               : {}),
             saticiId: hesapId,
+            yayinDurumu: onceki.yayinDurumu ?? 'yayinda',
+            ...(onceki.kaldirmaNedeni ? { kaldirmaNedeni: onceki.kaldirmaNedeni } : {}),
             zaman: onceki.zaman,
-            oneCikan: onceki.oneCikan,
+            oneCikan: oneCikar || onceki.oneCikan,
             satici: eski.profil.ad,
             benim: true,
           }
@@ -73,14 +114,40 @@ export function ilanKaydiniEkle(depo: HesapDeposu, hesapId: string, ilan: Ilan):
     ...eski,
     eklenenler: [
       {
-        ...ilan,
+        ...iletisimiDuzenle(ilan),
         numara: etkilesimler.ilanNumaralari[ilan.id],
         saticiId: hesapId,
+        yayinDurumu: 'yayinda',
         benim: true,
         satici: eski.profil.ad,
       },
       ...eski.eklenenler,
     ],
+  }));
+}
+
+export function ilanYayininiDegistir(
+  depo: HesapDeposu,
+  hesapId: string,
+  ilanId: string,
+  neden?: IlanKaldirmaNedeni,
+): HesapDeposu | undefined {
+  if (!hesapId || depo.aktifHesap !== hesapId) return;
+  const ilan = aktifKayit(depo).eklenenler.find((kayit) => kayit.id === ilanId);
+  if (!ilan || (neden && !ilanKaldirmaNedenleri.some((kayit) => kayit.id === neden))) return;
+  if ((!neden && ilan.yayinDurumu !== 'kaldirildi') || (neden && ilan.yayinDurumu === 'kaldirildi')) return;
+  return kaydiDegistir(depo, (kayit) => ({
+    ...kayit,
+    eklenenler: kayit.eklenenler.map((kayitli) => {
+      if (kayitli.id !== ilanId) return kayitli;
+      const { kaldirmaNedeni: _oncekiNeden, ...bilgiler } = kayitli;
+      return {
+        ...bilgiler,
+        yayinDurumu: neden ? 'kaldirildi' : 'yayinda',
+        ...(neden ? { kaldirmaNedeni: neden } : {}),
+        oneCikan: neden ? false : !!kayitli.oneCikan,
+      };
+    }),
   }));
 }
 
@@ -103,9 +170,13 @@ export function kayitGecerli(veri: unknown): veri is Kayit {
         ) &&
         typeof i.fiyat === 'number' &&
         Number.isFinite(i.fiyat) &&
-        ['altKategori', 'marka', 'model', 'video'].every(
+        ['altKategori', 'marka', 'model', 'video', 'telefon'].every(
           (k) => i[k] === undefined || typeof i[k] === 'string',
         ) &&
+        (i.telefonGoster === undefined || typeof i.telefonGoster === 'boolean') &&
+        (i.yayinDurumu === undefined || ['yayinda', 'kaldirildi'].includes(String(i.yayinDurumu))) &&
+        (i.kaldirmaNedeni === undefined ||
+          ilanKaldirmaNedenleri.some((neden) => neden.id === i.kaldirmaNedeni)) &&
         (i.fotografler === undefined ||
           (Array.isArray(i.fotografler) && i.fotografler.every((f) => typeof f === 'string'))) &&
         (i.ozellikler === undefined ||
@@ -114,6 +185,8 @@ export function kayitGecerli(veri: unknown): veri is Kayit {
     nesne(p) &&
     ['ad', 'konum', 'hakkinda'].every((k) => typeof p[k] === 'string') &&
     (p.fotograf === undefined || typeof p.fotograf === 'string') &&
+    (p.telefon === undefined || typeof p.telefon === 'string') &&
+    (p.telefonGoster === undefined || typeof p.telefonGoster === 'boolean') &&
     typeof veri.konum === 'string' &&
     nesne(veri.mesajlar) &&
     Object.values(veri.mesajlar).every(
@@ -150,12 +223,25 @@ export function depoyuOku(ham: string | null, eskiHam: string | null): HesapDepo
   try {
     const veri: unknown = ham ? JSON.parse(ham) : null;
     if (nesne(veri) && veri.surum === 2 && kayitGecerli(veri.misafir) && Array.isArray(veri.hesaplar)) {
-      const hesaplar = veri.hesaplar.filter(hesapGecerli);
+      const hesaplar = veri.hesaplar
+        .filter(hesapGecerli)
+        .map((hesap) => ({ ...hesap, kayit: kaydiTemizle(hesap.kayit) }));
       return {
         surum: 2,
-        misafir: veri.misafir,
+        misafir: kaydiTemizle(veri.misafir),
         hesaplar,
         etkilesimler: etkilesimleriOku(veri.etkilesimler),
+        sikayetler: Array.isArray(veri.sikayetler)
+          ? veri.sikayetler.filter(
+              (s): s is IlanSikayeti =>
+                nesne(s) &&
+                ['id', 'ilanId', 'hesapId', 'aciklama', 'tarih'].every(
+                  (alan) => typeof s[alan] === 'string',
+                ) &&
+                sikayetNedenleri.includes(s.neden as IlanSikayeti['neden']) &&
+                Number.isFinite(Date.parse(String(s.tarih))),
+            )
+          : [],
         aktifHesap: hesaplar.some((h) => h.id === veri.aktifHesap) ? String(veri.aktifHesap) : null,
       };
     }
@@ -164,7 +250,7 @@ export function depoyuOku(ham: string | null, eskiHam: string | null): HesapDepo
   }
   try {
     const eski: unknown = eskiHam ? JSON.parse(eskiHam) : null;
-    if (kayitGecerli(eski)) return ilkDepo(eski);
+    if (kayitGecerli(eski)) return ilkDepo(kaydiTemizle(eski));
   } catch {
     /* Bozuk bir kayıt uygulamanın açılmasını engellemez. */
   }

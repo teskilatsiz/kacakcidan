@@ -1,9 +1,18 @@
 import { createContext } from 'react';
 import type { Ilan } from '../veri/ilanlar';
 import type { Bildirim, IlanSorusu } from '../veri/ilanEtkilesimleri';
+import type { IlanKaldirmaNedeni, SikayetNedeni } from '../veri/ilanYonetimi';
+import type { SaticiProfili } from '../veri/saticilar';
 
 export type Mesaj = { id: string; yazi: string; benim: boolean; saat: string };
-export type Profil = { ad: string; konum: string; hakkinda: string; fotograf?: string };
+export type Profil = {
+  ad: string;
+  konum: string;
+  hakkinda: string;
+  fotograf?: string;
+  telefon?: string;
+  telefonGoster?: boolean;
+};
 
 export type Kayit = {
   favoriler: string[];
@@ -18,6 +27,7 @@ export type HesapSonucu = { basarili: boolean; hata?: string };
 
 export type PazarDegeri = Kayit & {
   tumIlanlar: Ilan[];
+  saticilar: SaticiProfili[];
   hazir: boolean;
   bildirim: string;
   oturum: Oturum | null;
@@ -36,9 +46,13 @@ export type PazarDegeri = Kayit & {
   favoriDegistir: (id: string) => void;
   ilanEkle: (ilan: Ilan, hesapId: string) => Promise<HesapSonucu>;
   ilanGuncelle: (ilan: Ilan, hesapId: string) => Promise<HesapSonucu>;
+  ilanOneCikar: (id: string, hesapId: string) => Promise<HesapSonucu>;
   ilanSil: (id: string) => void;
+  ilaniYayindanKaldir: (id: string, neden: IlanKaldirmaNedeni) => Promise<HesapSonucu>;
+  ilaniYenidenYayinla: (id: string) => Promise<HesapSonucu>;
+  ilanSikayetEt: (id: string, neden: SikayetNedeni, aciklama: string) => Promise<HesapSonucu>;
   mesajGonder: (kisi: string, yazi: string) => void;
-  profilKaydet: (profil: Profil) => void;
+  profilKaydet: (profil: Profil) => Promise<HesapSonucu>;
   konumSec: (konum: string) => void;
   haberVer: (mesaj: string) => void;
 };

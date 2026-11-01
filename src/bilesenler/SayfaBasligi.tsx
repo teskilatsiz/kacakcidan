@@ -7,15 +7,15 @@ import {
   anaSayfaAciklamasi,
   anaSayfaBasligi,
   ilanAciklamasi,
-  kesfetAciklamasi,
+  ilanSayfaBasligi,
+  kesfetSayfaBilgisi,
+  saticiSayfaBilgisi,
   nasilCalisirAciklamasi,
   siteAdresi,
 } from '../tasarim/seo';
-import { para } from '../veri/ilanlar';
 
 const sayfalar: Record<string, [string, string, boolean?]> = {
   '/': [anaSayfaBasligi, anaSayfaAciklamasi],
-  '/kesfet': ['İlanları keşfet | Kaçakçıdan', kesfetAciklamasi],
   '/favoriler': ['Favorilerim | Kaçakçıdan', 'Aklının kaldığı keşifler bir arada.', true],
   '/mesajlar': ['Mesajlarım | Kaçakçıdan', 'İlanlar hakkında doğrudan konuş.', true],
   '/bildirimler': [
@@ -31,7 +31,7 @@ const sayfalar: Record<string, [string, string, boolean?]> = {
     'İlanlarını, favorilerini ve mesajlarını tek hesapta topla.',
     true,
   ],
-  '/ilan-ver': ['İlan ver | Kaçakçıdan', 'Kullanmadığın eşyalar yeniden değerlensin.', true],
+  '/ilan-ver': ['İlan ver | Kaçakçıdan', 'Ürün, araç, emlak, iş veya hizmet ilanını oluştur.', true],
   '/ilan-duzenle': ['İlanı düzenle | Kaçakçıdan', 'İlan bilgilerini ve fotoğraflarını güncelle.', true],
   '/nasil-calisir': ['Nasıl çalışır? | Kaçakçıdan', nasilCalisirAciklamasi],
 };
@@ -39,23 +39,35 @@ const sayfalar: Record<string, [string, string, boolean?]> = {
 /** İlk HTML generateMetadata'dan gelir; web geçişlerinde mevcut etiketler güncellenir. */
 export function SayfaBasligi() {
   const yol = usePathname();
-  const { q, kayit } = useGlobalSearchParams<{ q?: string; kayit?: string }>();
-  const { tumIlanlar } = usePazar();
-  const id = typeof kayit === 'string' && yol === '/ilan/yerel' ? kayit : yol.split('/').at(-1);
-  const ilan = yol.startsWith('/ilan/') ? tumIlanlar.find((i) => i.id === id) : undefined;
+  const parametreler = useGlobalSearchParams();
+  const { tumIlanlar, eklenenler, saticilar, oturum } = usePazar();
+  const kayit = typeof parametreler.kayit === 'string' ? parametreler.kayit : undefined;
+  const hesap = typeof parametreler.hesap === 'string' ? parametreler.hesap : undefined;
+  const id = kayit && yol === '/ilan/yerel' ? kayit : yol.split('/').at(-1);
+  const ilan = yol.startsWith('/ilan/')
+    ? (tumIlanlar.find((i) => i.id === id) ?? (oturum ? eklenenler.find((i) => i.id === id) : undefined))
+    : undefined;
+  const satici = yol.startsWith('/satici/') ? saticilar.find((s) => s.id === (hesap ?? id)) : undefined;
   const [varsayilanBaslik, varsayilanAciklama, kisisel] = sayfalar[yol] || [
     'Sayfa bulunamadı | Kaçakçıdan',
     'Bu sayfa burada değil.',
     true,
   ];
-  const baslik = ilan
-    ? `${ilan.baslik} - ${para(ilan.fiyat)} | Kaçakçıdan`
-    : yol === '/kesfet' && typeof q === 'string' && q.trim()
-      ? `“${q}” için ilanlar | Kaçakçıdan`
-      : varsayilanBaslik;
-  const aciklama = ilan ? ilanAciklamasi(ilan) : varsayilanAciklama;
-  const adres = `${siteAdresi}${yol}`;
-  const noindex = (kisisel && !ilan) || yol === '/ilan/yerel' || process.env.EXPO_PUBLIC_NOINDEX === 'true';
+  const bilgi = ilan
+    ? {
+        baslik: ilanSayfaBasligi(ilan),
+        aciklama: ilanAciklamasi(ilan),
+        yol: `/ilan/${yol === '/ilan/yerel' ? 'yerel' : ilan.id}`,
+        kisisel: yol === '/ilan/yerel',
+      }
+    : yol === '/kesfet'
+      ? kesfetSayfaBilgisi(parametreler)
+      : yol.startsWith('/satici/')
+        ? saticiSayfaBilgisi(satici, yol === '/satici/yerel' || !!hesap)
+        : { baslik: varsayilanBaslik, aciklama: varsayilanAciklama, yol, kisisel: !!kisisel };
+  const { baslik, aciklama } = bilgi;
+  const adres = `${siteAdresi}${bilgi.yol}`;
+  const noindex = bilgi.kisisel || process.env.EXPO_PUBLIC_NOINDEX === 'true';
   const robotlar = noindex ? 'noindex, follow' : 'index, follow';
 
   useEffect(() => {

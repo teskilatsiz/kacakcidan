@@ -67,7 +67,7 @@ export function IlanSorulari({ ilan }: { ilan: Ilan }) {
         <Yazi style={{ color: renk.gri, flex: 1 }}>
           {ilan.benim
             ? 'Gelen soruları cevapla. Cevabını yalnızca soran kişiyle paylaşabilir veya herkesin görmesini sağlayabilirsin.'
-            : 'Ürünle ilgili merak ettiklerini satıcıya sor. Cevaplandığında bildirimlerinden takip edebilirsin.'}
+            : 'İlanla ilgili merak ettiklerini ilan sahibine sor. Cevaplandığında bildirimlerinden takip edebilirsin.'}
         </Yazi>
         {!ilan.benim && (
           <Buton
@@ -86,8 +86,8 @@ export function IlanSorulari({ ilan }: { ilan: Ilan }) {
           </Yazi>
           <Yazi style={{ color: renk.gri }}>
             {ilan.benim
-              ? 'Alıcılardan gelen soruları burada görebilirsin.'
-              : 'Açıklamada bulamadığın bir ayrıntı varsa satıcıya sorabilirsin.'}
+              ? 'İlanınla ilgilenenlerin sorularını burada görebilirsin.'
+              : 'Açıklamada bulamadığın bir ayrıntı varsa ilan sahibine sorabilirsin.'}
           </Yazi>
         </View>
       ) : (
@@ -106,20 +106,25 @@ export function IlanSorulari({ ilan }: { ilan: Ilan }) {
               <Yazi style={{ fontWeight: '700', fontSize: 13 }}>
                 {soru.soranId === oturum?.id ? 'Sen' : soru.soranAd}
               </Yazi>
-              <Yazi style={{ color: renk.gri, fontSize: 12 }}>{tarihYaz(soru.tarih)}</Yazi>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                {!soru.herkeseAcik && (
+                  <View accessibilityLabel="Bu soru ve cevap yalnızca soran kişi ile ilan sahibine görünür">
+                    <EyeOff size={14} color={renk.gri} />
+                  </View>
+                )}
+                <Yazi style={{ color: renk.gri, fontSize: 12 }}>{tarihYaz(soru.tarih)}</Yazi>
+              </View>
             </View>
             <Yazi>{soru.soru}</Yazi>
             {soru.cevap ? (
               <View style={{ gap: 8, padding: 14, borderRadius: 8, backgroundColor: renk.zemin }}>
                 <Yazi style={{ fontWeight: '700', fontSize: 12 }}>
-                  {ilan.benim ? 'Cevabın' : `${ilan.satici} · Satıcı`}
+                  {ilan.benim ? 'Cevabın' : `${ilan.satici} · İlan sahibi`}
                 </Yazi>
                 <Yazi>{soru.cevap}</Yazi>
               </View>
             ) : (
-              <Yazi style={{ color: renk.gri, fontSize: 12 }}>
-                Satıcının cevabı bekleniyor. Bu soru henüz herkese açık değil.
-              </Yazi>
+              <Yazi style={{ color: renk.gri, fontSize: 12 }}>İlan sahibinin cevabı bekleniyor.</Yazi>
             )}
             {ilan.benim ? (
               <View
@@ -145,27 +150,19 @@ export function IlanSorulari({ ilan }: { ilan: Ilan }) {
                       <EyeOff size={16} color={renk.gri} />
                     )}
                     <Yazi style={{ fontSize: 12, flexShrink: 1 }}>
-                      {soru.herkeseAcik ? 'Herkese açık · Gizle' : 'Kişiye özel · Herkese aç'}
+                      {soru.herkeseAcik ? 'Cevabı gizle' : 'Cevabı herkese aç'}
                     </Yazi>
                   </HareketliBas>
                 )}
               </View>
-            ) : (
-              !!soru.cevap && (
-                <Yazi style={{ color: renk.gri, fontSize: 11 }}>
-                  {soru.herkeseAcik
-                    ? 'Herkese açık cevap'
-                    : 'Bu cevabı yalnızca sen ve satıcı görebilirsiniz.'}
-                </Yazi>
-              )
-            )}
+            ) : null}
           </View>
         ))
       )}
       <Pencere
         acik={acik}
         kapat={() => setAcik(false)}
-        baslik={cevaplanan ? 'Soruyu cevapla' : 'Satıcıya soru sor'}
+        baslik={cevaplanan ? 'Soruyu cevapla' : 'İlan sahibine soru sor'}
         altlik={<Buton onPress={gonder}>{cevaplanan ? 'Cevabı gönder' : 'Soruyu gönder'}</Buton>}
       >
         <Yazi style={{ color: renk.gri }}>{cevaplanan?.soru ?? ilan.baslik}</Yazi>
@@ -180,7 +177,7 @@ export function IlanSorulari({ ilan }: { ilan: Ilan }) {
           multiline
           maxLength={cevaplanan ? 1000 : 600}
           placeholder={
-            cevaplanan ? 'Ürünle ilgili ayrıntıları paylaş' : 'Ürün hakkında ne öğrenmek istersin?'
+            cevaplanan ? 'İlanla ilgili ayrıntıları paylaş' : 'İlan hakkında ne öğrenmek istersin?'
           }
           hata={hata}
         />
@@ -205,7 +202,7 @@ export function IlanSorulari({ ilan }: { ilan: Ilan }) {
           </View>
         ) : (
           <Yazi style={{ color: renk.gri, fontSize: 12 }}>
-            Telefon, e-posta veya ödeme bilgilerini paylaşma. Satıcı cevabını herkese açık paylaşabilir.
+            Telefon, e-posta veya ödeme bilgilerini paylaşma. İlan sahibi cevabını herkese açık paylaşabilir.
           </Yazi>
         )}
       </Pencere>

@@ -2,7 +2,7 @@
   "name": "kacakcidan",
   "version": "1.0.0",
   "private": true,
-  "description": "Expo ve React Native ile geliştirilmiş ikinci el pazaryeri arayüzü.",
+  "description": "İkinci el online ilan ve alışveriş sitesi. Expo, React Native ve TypeScript ile geliştirildi.",
   "main": "expo-router/entry",
   "engines": {
     "node": ">=24.3.0 <25"
@@ -28,6 +28,7 @@
     "@noble/hashes": "^2.4.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~58.0.22",
+    "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.14",
     "expo-crypto": "~58.0.7",
     "expo-font": "~58.0.11",

@@ -1,6 +1,8 @@
 import { aramaIcinDuzelt } from './arama.ts';
 import { konumEslesir } from './konumlar.ts';
 import { kategoriler, type Kategori } from './anaKategoriler.ts';
+import { ekIlanlar } from './ekIlanlar.ts';
+import type { IlanKaldirmaNedeni } from './ilanYonetimi.ts';
 
 export { kategoriler, type Kategori } from './anaKategoriler.ts';
 
@@ -8,8 +10,13 @@ export interface Ilan {
   id: string;
   numara?: string;
   saticiId?: string;
+  telefon?: string;
+  telefonGoster?: boolean;
+  yayinDurumu?: 'yayinda' | 'kaldirildi';
+  kaldirmaNedeni?: IlanKaldirmaNedeni;
   baslik: string;
   fiyat: number;
+  fiyatGorusulur?: boolean;
   kategori: Kategori;
   gorsel: string;
   konum: string;
@@ -324,10 +331,37 @@ const ayrintilar: Record<string, Partial<Ilan>> = {
     ozellikler: { Mekanizma: 'Otomatik', Kadran: 'Yeşil' },
   },
 };
-export const ilanlar: Ilan[] = vitrinIlanlari.map((ilan) => ({ ...ilan, ...ayrintilar[ilan.id] }));
+export const ilanlar: Ilan[] = [
+  ...vitrinIlanlari.map((ilan) => ({ ...ilan, ...ayrintilar[ilan.id] })),
+  ...ekIlanlar,
+];
 
 export const para = (deger: number) =>
   `${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(deger)} TL`;
+
+export function ilanBedeli(
+  ilan: Pick<Ilan, 'fiyat' | 'fiyatGorusulur' | 'kategori' | 'marka' | 'ozellikler'>,
+): string {
+  if (ilan.fiyatGorusulur) {
+    if (ilan.kategori === 'is-ilanlari') return 'Ücret görüşmede';
+    if (ilan.kategori === 'hizmetler') return 'Teklif al';
+    return 'Fiyat görüşülür';
+  }
+  const tutar = para(ilan.fiyat);
+  if (ilan.kategori === 'is-ilanlari') {
+    const donem = ilan.ozellikler?.['Ücret dönemi'] ?? 'Aylık';
+    const donemler: Record<string, string> = {
+      Saatlik: 'saat',
+      Günlük: 'gün',
+      Haftalık: 'hafta',
+      Aylık: 'ay',
+      Yıllık: 'yıl',
+    };
+    const ek = donemler[donem];
+    return ek ? `${tutar} / ${ek}` : tutar;
+  }
+  return ilan.kategori === 'emlak' && ilan.marka === 'kiralik' ? `${tutar} / ay` : tutar;
+}
 
 export type Siralama = 'yeni' | 'artan' | 'azalan';
 

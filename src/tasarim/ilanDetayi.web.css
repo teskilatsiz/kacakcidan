@@ -1,0 +1,135 @@
+/* Başlık ve galeri ilk HTML'de aynı sırayla kalır; yalnız yerleşim değişir. */
+[data-ilan-detay-alani] {
+  padding: 16px 48px 40px !important;
+  gap: 28px !important;
+}
+[data-ilan-ust-yerlesimi] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-areas: 'galeri baslik' 'galeri bilgiler';
+  column-gap: 36px !important;
+  row-gap: 24px !important;
+  align-items: start !important;
+}
+[data-ilan-web-baslik] {
+  grid-area: baslik;
+  min-width: 0;
+}
+[data-ilan-galeri-alani] {
+  grid-area: galeri;
+  min-width: 0;
+}
+[data-ilan-yan-alani] {
+  grid-area: bilgiler;
+  min-width: 0;
+}
+[data-ilan-baslik] {
+  gap: 12px !important;
+}
+[data-ilan-baslik] [aria-level='1'] {
+  font-size: 29px !important;
+  line-height: 38px !important;
+}
+[data-ilan-fiyat-alani] {
+  gap: 10px !important;
+}
+[data-ilan-ana-fiyati] {
+  font-size: 34px !important;
+  line-height: 43px !important;
+}
+[data-ilan-satici-karti] {
+  padding: 20px !important;
+}
+[data-ilan-ust-eylemleri] {
+  gap: 14px !important;
+}
+[data-ilan-mobil-eylemi],
+[data-ilan-eylemleri] {
+  display: none !important;
+}
+[data-ilan-ozellik-satiri] {
+  gap: 28px !important;
+  padding-inline: 16px !important;
+}
+[data-ilan-ozellik-adi] {
+  width: 170px !important;
+}
+@media (min-width: 700px) and (max-width: 1099px) {
+  [data-ilan-detay-alani] {
+    padding-inline: 28px !important;
+  }
+}
+@media (max-width: 959px) {
+  [data-ilan-ust-yerlesimi] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'baslik' 'galeri' 'bilgiler';
+    gap: 20px !important;
+  }
+}
+@media (max-width: 699px) {
+  [data-ilan-detay-alani] {
+    padding: 8px 20px 100px !important;
+    gap: 20px !important;
+  }
+  [data-ilan-baslik] {
+    gap: 10px !important;
+  }
+  [data-ilan-baslik] [aria-level='1'] {
+    font-size: 23px !important;
+    line-height: 31px !important;
+  }
+  [data-ilan-fiyat-alani] {
+    gap: 8px !important;
+  }
+  [data-ilan-ana-fiyati] {
+    font-size: 30px !important;
+    line-height: 38px !important;
+  }
+  [data-ilan-satici-karti] {
+    padding: 16px !important;
+  }
+  [data-ilan-ust-eylemleri] {
+    gap: 10px !important;
+  }
+  [data-ilan-masaustu-eylemi] {
+    display: none !important;
+  }
+  [data-ilan-mobil-eylemi],
+  [data-ilan-eylemleri] {
+    display: flex !important;
+  }
+  [data-ilan-eylemleri] {
+    padding-inline: 20px !important;
+  }
+  [data-ilan-eylemleri] > [dir] {
+    font-size: 21px !important;
+    line-height: 29px !important;
+  }
+  [data-ilan-eylemleri] > [role='button'] {
+    padding-inline: 18px !important;
+  }
+  [data-ilan-ozellik-satiri] {
+    gap: 12px !important;
+    padding-inline: 12px !important;
+  }
+  [data-ilan-ozellik-adi] {
+    width: 42% !important;
+  }
+  [data-ilan-benzerleri] [data-ilan-hucresi]:nth-child(n + 5) {
+    display: none !important;
+  }
+  [data-ilan-benzerleri] [aria-level='2'] {
+    font-size: 21px !important;
+  }
+}
+@media (max-width: 359px) {
+  [data-ilan-eylemleri] > [dir] {
+    font-size: 18px !important;
+  }
+  [data-ilan-eylemleri] > [role='button'] {
+    padding-inline: 12px !important;
+  }
+}
+html.pazar-klavye-acik [data-ilan-eylemleri] {
+  display: none !important;
+}

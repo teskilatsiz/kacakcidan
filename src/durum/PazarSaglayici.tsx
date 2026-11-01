@@ -12,11 +12,15 @@ import {
   ilkDepo,
   ilanKaydiniEkle,
   ilanKaydiniGuncelle,
+  ilanYayininiDegistir,
   kaydiDegistir,
   type HesapDeposu,
 } from './hesapDeposu';
 import { parolaDogrula, parolaOlustur } from './parola';
 import { medyaSil } from './medyaDeposu';
+import { profiliKaliciKaydet } from './profilKaydi';
+import { katalogSaticilari, saticiKimligi, type SaticiProfili } from '../veri/saticilar';
+import { sikayetNedenleri, type SikayetNedeni, type IlanKaldirmaNedeni } from '../veri/ilanYonetimi';
 import {
   gorunurSorular,
   goruntulemeKaydet,
@@ -55,6 +59,7 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
   const depoRef = useRef(depo);
   const yuklendi = useRef(false);
   const hesapIsleniyor = useRef(false);
+  const profilIsleniyor = useRef(false);
   const bekleyen = useRef<((eski: Kayit) => Kayit)[]>([]);
   const yazma = useRef<Promise<void>>(Promise.resolve());
   const zamanlayici = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -148,7 +153,7 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
 
   const kayitOl = useCallback(
     async (bilgiler: { ad: string; eposta: string; sifre: string }): Promise<HesapSonucu> => {
-      if (!yuklendi.current || hesapIsleniyor.current)
+      if (!yuklendi.current || hesapIsleniyor.current || profilIsleniyor.current)
         return { basarili: false, hata: 'Biraz bekleyip tekrar dene.' };
       const hata = kayitBilgisiHatasi(bilgiler);
       if (hata) return { basarili: false, hata };
@@ -185,7 +190,7 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
 
   const girisYap = useCallback(
     async ({ eposta, sifre }: { eposta: string; sifre: string }): Promise<HesapSonucu> => {
-      if (!yuklendi.current || hesapIsleniyor.current)
+      if (!yuklendi.current || hesapIsleniyor.current || profilIsleniyor.current)
         return { basarili: false, hata: 'Biraz bekleyip tekrar dene.' };
       const hesap = depoRef.current.hesaplar.find((h) => h.eposta === epostaDuzenle(eposta));
       if (!hesap || !sifre || sifre.length > 128)
@@ -227,7 +232,7 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
         return;
       }
       const { ilan, sahip } = ilanBul(depoRef.current, id);
-      if (!ilan) {
+      if (!ilan || ilan.yayinDurumu === 'kaldirildi') {
         haberVer('Bu ilan artık yayında değil.');
         return;
       }
@@ -302,12 +307,12 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
     [haberVer, depoyuDegistir],
   );
   const ilaniKaydet = useCallback(
-    async (ilan: Ilan, hesapId: string, duzenleme: boolean): Promise<HesapSonucu> => {
+    async (ilan: Ilan, hesapId: string, duzenleme: boolean, oneCikar = false): Promise<HesapSonucu> => {
       if (!yuklendi.current)
         return { basarili: false, hata: 'Hesabın yükleniyor. Biraz bekleyip tekrar dene.' };
       const onceki = aktifKayit(depoRef.current).eklenenler.find((kayitli) => kayitli.id === ilan.id);
       const yeni = duzenleme
-        ? ilanKaydiniGuncelle(depoRef.current, hesapId, ilan)
+        ? ilanKaydiniGuncelle(depoRef.current, hesapId, ilan, oneCikar)
         : ilanKaydiniEkle(depoRef.current, hesapId, ilan);
       if (!yeni)
         return {
@@ -358,8 +363,10 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
           hesapId,
           ilanId: ilan.id,
           tur: duzenleme ? 'duzenleme' : 'yayin',
-          baslik: duzenleme ? 'İlanın güncellendi' : 'İlanın yayında',
-          aciklama: `${ilan.baslik} ${duzenleme ? 'ilanındaki değişiklikler kaydedildi.' : 'ilanını alıcılar görebilir.'}`,
+          baslik: oneCikar ? 'İlanın vitrinde' : duzenleme ? 'İlanın güncellendi' : 'İlanın yayında',
+          aciklama: oneCikar
+            ? `${ilan.baslik} ilanını vitrine ekledin.`
+            : `${ilan.baslik} ${duzenleme ? 'ilanındaki değişiklikler kaydedildi.' : 'ilanını alıcılar görebilir.'}`,
         });
         if (duzenleme && onceki && onceki.fiyat !== ilan.fiyat) {
           for (const hesap of depo.hesaplar)
@@ -374,7 +381,9 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
         }
         return sonuc;
       });
-      haberVer(duzenleme ? 'İlanın güncellendi.' : 'İlanın kaydedildi.');
+      haberVer(
+        oneCikar ? 'İlanın vitrine eklendi.' : duzenleme ? 'İlanın güncellendi.' : 'İlanın kaydedildi.',
+      );
       return { basarili: true };
     },
     [depoyuDegistir, haberVer, sakla, uygula],
@@ -385,6 +394,15 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
   );
   const ilanGuncelle = useCallback(
     (ilan: Ilan, hesapId: string) => ilaniKaydet(ilan, hesapId, true),
+    [ilaniKaydet],
+  );
+  const ilanOneCikar = useCallback(
+    async (id: string, hesapId: string): Promise<HesapSonucu> => {
+      const ilan = aktifKayit(depoRef.current).eklenenler.find((kayitli) => kayitli.id === id);
+      if (!ilan || ilan.yayinDurumu === 'kaldirildi')
+        return { basarili: false, hata: 'Yayındaki kendi ilanlarını öne çıkarabilirsin.' };
+      return ilaniKaydet(ilan, hesapId, true, true);
+    },
     [ilaniKaydet],
   );
   const mesajGonder = useCallback(
@@ -409,7 +427,8 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
       const hesap = depo.hesaplar.find((h) => h.id === depo.aktifHesap);
       if (!hesap) return { basarili: false, hata: 'Soru sormak için giriş yap.' };
       const { ilan, sahip } = ilanBul(depo, ilanId);
-      if (!ilan) return { basarili: false, hata: 'Bu ilan artık yayında değil.' };
+      if (!ilan || ilan.yayinDurumu === 'kaldirildi')
+        return { basarili: false, hata: 'Bu ilan artık yayında değil.' };
       if (sahip?.id === hesap.id) return { basarili: false, hata: 'Kendi ilanına soru soramazsın.' };
       const soru = metin.trim();
       if (soru.length < 5 || soru.length > 600)
@@ -523,7 +542,8 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
     (id: string) => {
       depoyuDegistir((depo) => {
         const { ilan, sahip } = ilanBul(depo, id);
-        if (!ilan || (sahip && sahip.id === depo.aktifHesap)) return depo;
+        if (!ilan || ilan.yayinDurumu === 'kaldirildi' || (sahip && sahip.id === depo.aktifHesap))
+          return depo;
         const etkilesimler = goruntulemeKaydet(
           depo.etkilesimler,
           id,
@@ -563,34 +583,182 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
       ),
     [kayit.eklenenler, depo.etkilesimler.goruntulenmeler, depo.hesaplar, depo.aktifHesap],
   );
+  const saticilar = useMemo<SaticiProfili[]>(
+    () => [
+      ...katalogSaticilari(ilanlar),
+      ...depo.hesaplar.map(({ id, kayit }) => ({
+        id,
+        ad: kayit.profil.ad,
+        konum: kayit.profil.konum,
+        hakkinda: kayit.profil.hakkinda,
+        fotograf: kayit.profil.fotograf,
+        telefon: kayit.profil.telefonGoster ? kayit.profil.telefon : undefined,
+      })),
+    ],
+    [depo.hesaplar],
+  );
   const tumIlanlar = useMemo(
     () => [
       ...depo.hesaplar.flatMap((hesap) =>
-        hesap.kayit.eklenenler.map((ilan) => ({
-          ...ilan,
-          satici: hesap.kayit.profil.ad,
-          saticiId: hesap.id,
-          numara: depo.etkilesimler.ilanNumaralari[ilan.id] ?? ilan.numara,
-          benim: hesap.id === depo.aktifHesap,
-        })),
+        hesap.kayit.eklenenler
+          .filter((ilan) => ilan.yayinDurumu !== 'kaldirildi')
+          .map((ilan) => ({
+            ...ilan,
+            satici: hesap.kayit.profil.ad,
+            saticiId: hesap.id,
+            numara: depo.etkilesimler.ilanNumaralari[ilan.id] ?? ilan.numara,
+            benim: hesap.id === depo.aktifHesap,
+          })),
       ),
-      ...depo.misafir.eklenenler.map((ilan) => ({ ...ilan, benim: false })),
+      ...depo.misafir.eklenenler
+        .filter((ilan) => ilan.yayinDurumu !== 'kaldirildi')
+        .map((ilan) => ({ ...ilan, benim: false })),
       ...ilanlar.map((ilan) => ({
         ...ilan,
+        saticiId: saticiKimligi(ilan.satici),
         numara: depo.etkilesimler.ilanNumaralari[ilan.id],
         benim: false,
       })),
     ],
     [depo.hesaplar, depo.misafir.eklenenler, depo.aktifHesap, depo.etkilesimler.ilanNumaralari],
   );
-  const profilKaydet = useCallback(
-    (profil: Profil) => {
-      if (!depoRef.current.aktifHesap) return;
-      const onceki = aktifKayit(depoRef.current).profil.fotograf;
-      degistir((eski) => ({ ...eski, profil }));
-      if (onceki && onceki !== profil.fotograf) void medyaSil(onceki).catch(() => {});
+  const yayinDegistir = useCallback(
+    async (id: string, neden?: IlanKaldirmaNedeni): Promise<HesapSonucu> => {
+      const depo = depoRef.current;
+      if (!yuklendi.current || !depo.aktifHesap)
+        return { basarili: false, hata: 'İlanını yönetmek için giriş yap.' };
+      const yeni = ilanYayininiDegistir(depo, depo.aktifHesap, id, neden);
+      if (!yeni)
+        return { basarili: false, hata: 'Bu işlem yalnızca uygun durumdaki kendi ilanlarında yapılabilir.' };
+      const ilan = aktifKayit(yeni).eklenenler.find((kayit) => kayit.id === id)!;
+      let sonuc = bildirimEkle(yeni, {
+        hesapId: depo.aktifHesap,
+        ilanId: id,
+        tur: neden ? 'kaldirma' : 'yayin',
+        baslik: neden ? 'İlanın yayından kaldırıldı' : 'İlanın yeniden yayında',
+        aciklama: neden
+          ? `${ilan.baslik} artık ilan listelerinde görünmüyor. İlanın hesabında saklanıyor.`
+          : `${ilan.baslik} yeniden yayınlandı.`,
+      });
+      if (neden)
+        for (const hesap of depo.hesaplar) {
+          if (hesap.id === depo.aktifHesap || !hesap.kayit.favoriler.includes(id)) continue;
+          sonuc = bildirimEkle(sonuc, {
+            hesapId: hesap.id,
+            ilanId: id,
+            tur: 'kaldirma',
+            baslik: 'Favorindeki ilan yayından kaldırıldı',
+            aciklama: `${ilan.baslik} artık yayında değil.`,
+          });
+        }
+      const oncekiBildirimler = new Set(depo.etkilesimler.bildirimler.map((kayit) => kayit.id));
+      const yeniBildirimler = new Set(
+        sonuc.etkilesimler.bildirimler
+          .filter((kayit) => !oncekiBildirimler.has(kayit.id))
+          .map((kayit) => kayit.id),
+      );
+      uygula(sonuc);
+      try {
+        await sakla(sonuc);
+      } catch {
+        const onceki = aktifKayit(depo).eklenenler.find((kayit) => kayit.id === id)!;
+        const geri = {
+          ...depoRef.current,
+          hesaplar: depoRef.current.hesaplar.map((hesap) =>
+            hesap.id === depo.aktifHesap
+              ? {
+                  ...hesap,
+                  kayit: {
+                    ...hesap.kayit,
+                    eklenenler: hesap.kayit.eklenenler.map((kayit) => (kayit === ilan ? onceki : kayit)),
+                  },
+                }
+              : hesap,
+          ),
+          etkilesimler: {
+            ...depoRef.current.etkilesimler,
+            bildirimler: depoRef.current.etkilesimler.bildirimler.filter(
+              (kayit) => !yeniBildirimler.has(kayit.id),
+            ),
+          },
+        };
+        uygula(geri);
+        void sakla(geri).catch(() => {});
+        return { basarili: false, hata: 'İşlem kaydedilemedi. Depolama alanını kontrol edip tekrar dene.' };
+      }
+      haberVer(
+        neden
+          ? 'İlanın yayından kaldırıldı. Hesabından yeniden yayınlayabilirsin.'
+          : 'İlanın yeniden yayında.',
+      );
+      return { basarili: true };
     },
-    [degistir],
+    [haberVer, sakla, uygula],
+  );
+  const ilaniYayindanKaldir = useCallback(
+    (id: string, neden: IlanKaldirmaNedeni) => yayinDegistir(id, neden),
+    [yayinDegistir],
+  );
+  const ilaniYenidenYayinla = useCallback((id: string) => yayinDegistir(id), [yayinDegistir]);
+  const ilanSikayetEt = useCallback(
+    async (id: string, neden: SikayetNedeni, metin: string): Promise<HesapSonucu> => {
+      const depo = depoRef.current;
+      if (!yuklendi.current || !depo.aktifHesap)
+        return { basarili: false, hata: 'Şikayetini iletmek için giriş yap.' };
+      const { ilan, sahip } = ilanBul(depo, id);
+      if (!ilan || ilan.yayinDurumu === 'kaldirildi')
+        return { basarili: false, hata: 'Bu ilan artık yayında değil.' };
+      if (sahip?.id === depo.aktifHesap) return { basarili: false, hata: 'Kendi ilanını şikayet edemezsin.' };
+      const aciklama = metin.trim();
+      if (!sikayetNedenleri.includes(neden) || aciklama.length < 10 || aciklama.length > 1000)
+        return { basarili: false, hata: 'Bir neden seç ve açıklamanı 10–1000 karakter arasında yaz.' };
+      if (depo.sikayetler.some((kayit) => kayit.ilanId === id && kayit.hesapId === depo.aktifHesap))
+        return { basarili: false, hata: 'Bu ilan için şikayetin zaten kaydedilmiş.' };
+      const sikayet = {
+        id: randomUUID(),
+        ilanId: id,
+        hesapId: depo.aktifHesap,
+        neden,
+        aciklama,
+        tarih: new Date().toISOString(),
+      };
+      const yeni = { ...depo, sikayetler: [...depo.sikayetler, sikayet] };
+      uygula(yeni);
+      try {
+        await sakla(yeni);
+      } catch {
+        const geri = {
+          ...depoRef.current,
+          sikayetler: depoRef.current.sikayetler.filter((kayit) => kayit.id !== sikayet.id),
+        };
+        uygula(geri);
+        void sakla(geri).catch(() => {});
+        return { basarili: false, hata: 'Şikayetin kaydedilemedi. Tekrar deneyebilirsin.' };
+      }
+      haberVer('Şikayetin kaydedildi.');
+      return { basarili: true };
+    },
+    [haberVer, sakla, uygula],
+  );
+  const profilKaydet = useCallback(
+    async (profil: Profil): Promise<HesapSonucu> => {
+      const hesapId = depoRef.current.aktifHesap;
+      if (!yuklendi.current || !hesapId)
+        return { basarili: false, hata: 'Profilini kaydetmek için hesabına tekrar giriş yap.' };
+      if (profilIsleniyor.current || hesapIsleniyor.current)
+        return { basarili: false, hata: 'Profilin kaydediliyor. Biraz bekleyip tekrar dene.' };
+      profilIsleniyor.current = true;
+      try {
+        return await profiliKaliciKaydet(
+          { oku: () => depoRef.current, uygula, sakla, medyaSil },
+          hesapId,
+          profil,
+        );
+      } finally {
+        profilIsleniyor.current = false;
+      }
+    },
+    [sakla, uygula],
   );
 
   return (
@@ -613,10 +781,15 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
         kayitOl,
         cikisYap,
         tumIlanlar,
+        saticilar,
         favoriDegistir,
         ilanEkle,
         ilanGuncelle,
+        ilanOneCikar,
         ilanSil,
+        ilaniYayindanKaldir,
+        ilaniYenidenYayinla,
+        ilanSikayetEt,
         mesajGonder,
         haberVer,
         profilKaydet,
