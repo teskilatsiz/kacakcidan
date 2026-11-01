@@ -2,7 +2,13 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Buton } from './Temel';
 
-export type HesapFormuProps = { children: ReactNode; gonder: () => void };
+export type HesapFormuProps = {
+  children: ReactNode;
+  gonder: () => void;
+  /** Şifre adımında tarayıcının doğru hesabı otomatik doldurabilmesi için korunur. */
+  eposta?: string;
+  kayit?: boolean;
+};
 export type HesapGonderProps = {
   children: string;
   gonder: () => void;

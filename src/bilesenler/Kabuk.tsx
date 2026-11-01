@@ -1,6 +1,6 @@
 import { Gorsel } from './Gorsel';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Platform, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Link, useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
 import Check from 'lucide-react-native/icons/check';
@@ -11,14 +11,18 @@ import Home from 'lucide-react-native/icons/house';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import Menu from 'lucide-react-native/icons/menu';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
+import Bell from 'lucide-react-native/icons/bell';
 import Plus from 'lucide-react-native/icons/plus';
 import UserRound from 'lucide-react-native/icons/user-round';
 import LogOut from 'lucide-react-native/icons/log-out';
 import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right';
+import Settings from 'lucide-react-native/icons/settings-2';
+import CircleHelp from 'lucide-react-native/icons/circle-question-mark';
+import Palette from 'lucide-react-native/icons/palette';
 import { usePazar } from '../durum/Pazar';
 import { kategoriler } from '../veri/ilanlar';
 import { iller, ilceSecenekleri, konumuAyir, konumuBirlestir, ulkeler } from '../veri/konumlar';
-import { font, kalin, mobilAltMenuYuksekligi, ortak, renk, useEkran } from '../tasarim/tema';
+import { kalin, mobilAltMenuYuksekligi, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
 import { AraKutusu, Buton, Pencere, SimgeButon, Yazi } from './Temel';
 import { SecimAlani } from './SecimAlani';
@@ -26,8 +30,13 @@ import { Paragraf } from './Paragraf';
 import { Giris, HareketliBas } from './Hareketli';
 import { KlavyeKaydirma } from './KlavyeKaydirma';
 import { KategoriSimgesi } from './KategoriSimgesi';
+import { TemaSecici } from './TemaSecici';
+import { HesapMenusu } from './HesapMenusu';
 
 export function Logo({ acik = false }: { acik?: boolean }) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   return (
     <Link href="/" asChild>
       <HareketliBas
@@ -35,13 +44,13 @@ export function Logo({ acik = false }: { acik?: boolean }) {
         accessibilityLabel="Kaçakçıdan ana sayfa"
         style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }}
       >
-        <Yazi style={[s.logo, { color: acik ? '#fff' : renk.murekkep }]}>
+        <Yazi style={[s.logo, { color: acik ? renk.sabitBeyaz : renk.murekkep }]}>
           Kaçakçı
           <Yazi
             style={[
               s.logo,
               {
-                color: acik ? '#fff' : renk.murekkep,
+                color: acik ? renk.sabitBeyaz : renk.murekkep,
                 textDecorationLine: 'underline',
                 textDecorationColor: renk.sari,
                 textDecorationStyle: 'solid',
@@ -56,44 +65,10 @@ export function Logo({ acik = false }: { acik?: boolean }) {
     </Link>
   );
 }
-function NavBaglanti({
-  yol,
-  children,
-  simge,
-  secili,
-  style,
-}: {
-  yol: string;
-  children: ReactNode;
-  simge?: ReactNode;
-  secili?: boolean;
-  style?: StyleProp<ViewStyle>;
-}) {
-  return (
-    <Link href={yol as '/'} asChild>
-      <HareketliBas
-        style={StyleSheet.flatten([
-          ortak.satir,
-          { minHeight: 44, gap: 8, paddingHorizontal: 8, borderRadius: 8 },
-          style,
-        ])}
-      >
-        {simge}
-        <Yazi
-          style={{
-            fontFamily: secili ? kalin : font,
-            fontWeight: secili ? '700' : '500',
-            fontSize: 13,
-            color: renk.murekkep,
-          }}
-        >
-          {children}
-        </Yazi>
-      </HareketliBas>
-    </Link>
-  );
-}
-export function KonumSecici({ kisa = false }: { kisa?: boolean }) {
+export function KonumSecici({ kisa = false, satir = false }: { kisa?: boolean; satir?: boolean }) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { mobil } = useEkran();
   const { konum, konumSec } = usePazar();
   const [acik, setAcik] = useState(false);
@@ -113,22 +88,39 @@ export function KonumSecici({ kisa = false }: { kisa?: boolean }) {
           setIlce(mevcut.ilce);
           setAcik(true);
         }}
-        style={{
-          minHeight: 44,
-          minWidth: 44,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 5,
-        }}
+        style={
+          satir
+            ? s.menuTercihSatiri
+            : {
+                minHeight: 44,
+                minWidth: 44,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+              }
+        }
       >
-        <MapPin size={17} color={renk.gri} />
-        {!kisa && (
-          <Yazi numberOfLines={1} style={{ maxWidth: mobil ? 116 : 180, fontSize: 12, color: renk.gri }}>
-            {konumEtiketi}
-          </Yazi>
+        <MapPin size={satir ? 20 : 17} color={satir ? renk.murekkep : renk.gri} />
+        {satir ? (
+          <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+            <Yazi style={s.menuSatirBasligi}>Konum</Yazi>
+            <Yazi numberOfLines={1} style={{ fontSize: 12, color: renk.gri }}>
+              {konumEtiketi}
+            </Yazi>
+          </View>
+        ) : (
+          !kisa && (
+            <Yazi numberOfLines={1} style={{ maxWidth: mobil ? 116 : 180, fontSize: 12, color: renk.gri }}>
+              {konumEtiketi}
+            </Yazi>
+          )
         )}
-        {!kisa && <ChevronDown size={12} color={renk.gri} />}
+        {satir ? (
+          <ChevronRight size={17} color={renk.gri} />
+        ) : (
+          !kisa && <ChevronDown size={12} color={renk.gri} />
+        )}
       </HareketliBas>
       <Pencere acik={acik} kapat={() => setAcik(false)} baslik="Konum seç">
         <Yazi style={{ color: renk.gri }}>İlanları görmek istediğin ülke, il ve ilçeyi seç.</Yazi>
@@ -175,8 +167,11 @@ export function KonumSecici({ kisa = false }: { kisa?: boolean }) {
   );
 }
 export function UstMenu() {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { mobil, dar, bosluk, genislik } = useEkran();
-  const { profil, favoriler, tumIlanlar, oturum, cikisYap } = usePazar();
+  const { profil, favoriler, oturum, cikisYap, okunmamisBildirimSayisi } = usePazar();
   const router = useRouter();
   const { q } = useGlobalSearchParams<{ q?: string }>();
   const [arama, setArama] = useState('');
@@ -213,83 +208,78 @@ export function UstMenu() {
             <View
               style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 'auto', gap: mobil ? 4 : 14 }}
             >
-              <KonumSecici kisa={genislik < 375 || (!mobil && genislik < 1280)} />
+              {!mobil && <KonumSecici kisa={genislik < 1280} />}
               {!mobil && (
-                <>
-                  <Link href="/favoriler" asChild>
-                    <HareketliBas
-                      accessibilityLabel={`Favorilerim, ${favoriler.length} ilan`}
-                      style={{
-                        minWidth: 44,
-                        minHeight: 44,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 7,
-                      }}
-                    >
-                      <Heart size={21} color={renk.murekkep} />
-                      {!dar && <Yazi style={{ fontSize: 12 }}>Favoriler</Yazi>}
-                    </HareketliBas>
-                  </Link>
-                  <Link href="/mesajlar" asChild>
-                    <HareketliBas
-                      accessibilityLabel="Mesajlarım"
-                      style={{
-                        minWidth: 44,
-                        minHeight: 44,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 7,
-                      }}
-                    >
-                      <MessageCircle size={21} color={renk.murekkep} />
-                      {!dar && <Yazi style={{ fontSize: 12 }}>Mesajlar</Yazi>}
-                    </HareketliBas>
-                  </Link>
-                  <Link href="/ilan-ver" asChild>
-                    <HareketliBas vurgu="dugme" style={s.ilanButon}>
-                      <Plus size={18} color={renk.murekkep} />
-                      <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 13 }}>İlan ver</Yazi>
-                    </HareketliBas>
-                  </Link>
-                  {!ikiSatir && (
-                    <Link href={oturum ? '/profil' : '/giris'} asChild>
-                      <HareketliBas
-                        accessibilityLabel={oturum ? 'Hesabım' : 'Giriş yap'}
+                <Link href="/favoriler" asChild>
+                  <HareketliBas
+                    accessibilityLabel={`Favorilerim, ${favoriler.length} ilan`}
+                    style={{
+                      minWidth: 44,
+                      minHeight: 44,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 7,
+                    }}
+                  >
+                    <Heart size={21} color={renk.murekkep} />
+                    {!dar && <Yazi style={{ fontSize: 12 }}>Favoriler</Yazi>}
+                  </HareketliBas>
+                </Link>
+              )}
+              <Link href="/bildirimler" asChild>
+                <HareketliBas
+                  accessibilityLabel={`Bildirimler${okunmamisBildirimSayisi ? `, ${okunmamisBildirimSayisi} okunmamış` : ''}`}
+                  style={{
+                    minWidth: 44,
+                    minHeight: 44,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    gap: 7,
+                  }}
+                >
+                  <View>
+                    <Bell size={21} color={renk.murekkep} />
+                    {okunmamisBildirimSayisi > 0 && (
+                      <View
                         style={{
-                          minWidth: 44,
-                          height: 44,
-                          alignItems: 'center',
+                          position: 'absolute',
+                          right: -7,
+                          top: -7,
+                          minWidth: 16,
+                          height: 16,
+                          borderRadius: 8,
+                          backgroundColor: renk.sari,
+                          paddingHorizontal: 3,
                           justifyContent: 'center',
-                          flexDirection: 'row',
-                          gap: 7,
+                          alignItems: 'center',
                         }}
                       >
-                        {oturum ? (
-                          <View style={s.avatar}>
-                            {profil.fotograf ? (
-                              <Gorsel
-                                source={{ uri: profil.fotograf }}
-                                style={{ width: 36, height: 36, borderRadius: 18 }}
-                                accessibilityLabel="Profil fotoğrafın"
-                              />
-                            ) : (
-                              <Yazi style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>
-                                {profil.ad.slice(0, 1).toLocaleUpperCase('tr')}
-                              </Yazi>
-                            )}
-                          </View>
-                        ) : (
-                          <>
-                            <UserRound size={20} color={renk.murekkep} />
-                            <Yazi style={{ fontSize: 12, fontWeight: '600' }}>Giriş yap</Yazi>
-                          </>
-                        )}
-                      </HareketliBas>
-                    </Link>
-                  )}
+                        <Yazi
+                          style={{ color: renk.vurguYazi, fontSize: 9, lineHeight: 13, fontWeight: '700' }}
+                        >
+                          {okunmamisBildirimSayisi > 9 ? '9+' : okunmamisBildirimSayisi}
+                        </Yazi>
+                      </View>
+                    )}
+                  </View>
+                  {!dar && <Yazi style={{ fontSize: 12 }}>Bildirimler</Yazi>}
+                </HareketliBas>
+              </Link>
+              {!mobil && (
+                <>
+                  <Link href="/ilan-ver" asChild>
+                    <HareketliBas vurgu="dugme" style={s.ilanButon}>
+                      <Plus size={18} color={renk.vurguYazi} />
+                      <Yazi
+                        style={{ fontFamily: kalin, fontWeight: '700', fontSize: 13, color: renk.vurguYazi }}
+                      >
+                        İlan ver
+                      </Yazi>
+                    </HareketliBas>
+                  </Link>
+                  {!ikiSatir && <HesapMenusu />}
                 </>
               )}
               {ikiSatir && (
@@ -304,15 +294,15 @@ export function UstMenu() {
       </View>
       <Pencere acik={menu} kapat={() => setMenu(false)} baslik="Menü">
         {!oturum ? (
-          <View style={{ gap: 12 }}>
+          <View style={s.menuHesapKarti}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={s.menuAvatar}>
                 <UserRound size={20} color={renk.murekkep} />
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 15 }}>Hesabına giriş yap</Yazi>
+                <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 16 }}>Hesabım</Yazi>
                 <Yazi style={{ fontSize: 12, color: renk.gri }}>
-                  İlanlarını ve mesajlarını bir arada gör.
+                  İlanların, favorilerin ve mesajların burada.
                 </Yazi>
               </View>
             </View>
@@ -325,8 +315,8 @@ export function UstMenu() {
                     { backgroundColor: renk.sari, borderColor: renk.sari },
                   ])}
                 >
-                  <UserRound size={17} />
-                  <Yazi style={{ fontWeight: '700' }}>Giriş yap</Yazi>
+                  <UserRound size={17} color={renk.vurguYazi} />
+                  <Yazi style={{ fontWeight: '700', color: renk.vurguYazi }}>Giriş yap</Yazi>
                 </HareketliBas>
               </Link>
               <Link href="/kayit" asChild>
@@ -338,16 +328,19 @@ export function UstMenu() {
           </View>
         ) : (
           <Link href="/profil" asChild>
-            <HareketliBas onPress={() => setMenu(false)} style={s.menuHesap}>
-              <View style={s.avatar}>
+            <HareketliBas
+              onPress={() => setMenu(false)}
+              style={StyleSheet.flatten([s.menuHesapKarti, s.menuHesap])}
+            >
+              <View style={s.menuAvatar}>
                 {profil.fotograf ? (
                   <Gorsel
                     source={{ uri: profil.fotograf }}
-                    style={{ width: 42, height: 42, borderRadius: 21 }}
+                    style={{ width: 46, height: 46, borderRadius: 14 }}
                     accessibilityLabel="Profil fotoğrafın"
                   />
                 ) : (
-                  <Yazi style={{ color: '#fff', fontFamily: kalin, fontWeight: '700' }}>
+                  <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 18 }}>
                     {profil.ad.slice(0, 1).toLocaleUpperCase('tr')}
                   </Yazi>
                 )}
@@ -356,28 +349,18 @@ export function UstMenu() {
                 <Yazi numberOfLines={1} style={{ fontFamily: kalin, fontWeight: '700', fontSize: 15 }}>
                   {profil.ad}
                 </Yazi>
-                <Yazi style={{ color: renk.gri, fontSize: 12 }}>Hesap bilgilerini ve ilanlarını gör.</Yazi>
+                <Yazi style={{ color: renk.gri, fontSize: 12 }}>Profilimi ve ilanlarımı gör</Yazi>
               </View>
               <ArrowUpRight size={18} color={renk.gri} />
             </HareketliBas>
           </Link>
         )}
-        <Link href="/ilan-ver" asChild>
-          <HareketliBas
-            vurgu="dugme"
-            onPress={() => setMenu(false)}
-            style={StyleSheet.flatten([s.menuIlanButonu, { width: '100%' }])}
-          >
-            <Plus size={20} color={renk.murekkep} strokeWidth={2.2} />
-            <Yazi style={{ flex: 1, fontFamily: kalin, fontWeight: '700', fontSize: 14 }}>İlan ver</Yazi>
-            <ArrowUpRight size={17} color={renk.murekkep} />
-          </HareketliBas>
-        </Link>
         <View style={s.menuKisayollar}>
           {[
-            { href: '/profil', ad: 'Hesabım', simge: UserRound },
             { href: '/favoriler', ad: 'Favoriler', simge: Heart },
             { href: '/mesajlar', ad: 'Mesajlar', simge: MessageCircle },
+            { href: '/bildirimler', ad: 'Bildirimler', simge: Bell },
+            { href: '/ayarlar', ad: 'Hesap ayarları', simge: Settings },
           ].map(({ href, ad, simge: Simge }) => (
             <Link key={href} href={href as '/'} asChild>
               <HareketliBas onPress={() => setMenu(false)} style={s.menuKisayol}>
@@ -387,6 +370,25 @@ export function UstMenu() {
               </HareketliBas>
             </Link>
           ))}
+        </View>
+        <View style={s.menuTercihler}>
+          <KonumSecici satir />
+          <View style={[s.menuTercihSatiri, s.menuSatirAyirici]}>
+            <Palette size={20} color={renk.murekkep} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <TemaSecici kompakt />
+            </View>
+          </View>
+          <Link href="/nasil-calisir" asChild>
+            <HareketliBas
+              onPress={() => setMenu(false)}
+              style={StyleSheet.flatten([s.menuTercihSatiri, s.menuSatirAyirici])}
+            >
+              <CircleHelp size={20} color={renk.murekkep} />
+              <Yazi style={[s.menuSatirBasligi, { flex: 1 }]}>Nasıl çalışır?</Yazi>
+              <ChevronRight size={17} color={renk.gri} />
+            </HareketliBas>
+          </Link>
         </View>
         <View style={s.menuBolumBasligi}>
           <View style={{ gap: 2 }}>
@@ -414,11 +416,18 @@ export function UstMenu() {
                       <View style={[s.menuKategoriIkon, hovered && { backgroundColor: renk.sari }]}>
                         <KategoriSimgesi kategori={k.id} dolu={hovered} boyut={20} />
                       </View>
-                      <Yazi numberOfLines={2} style={{ flex: 1, minWidth: 0, fontSize: 12, lineHeight: 17 }}>
+                      <Yazi
+                        dataSet={{ 'kategori-yazisi': 'true' }}
+                        numberOfLines={2}
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          fontSize: 12,
+                          lineHeight: 17,
+                          color: hovered ? renk.vurguYazi : renk.murekkep,
+                        }}
+                      >
                         {k.ad}
-                      </Yazi>
-                      <Yazi style={{ color: renk.gri, fontSize: 11 }}>
-                        {tumIlanlar.filter((i) => i.kategori === k.id).length}
                       </Yazi>
                     </>
                   )}
@@ -427,9 +436,6 @@ export function UstMenu() {
             );
           })}
         </View>
-        <NavBaglanti yol="/nasil-calisir" simge={<ArrowUpRight size={16} color={renk.gri} />}>
-          Nasıl çalışır?
-        </NavBaglanti>
         {oturum ? (
           <HareketliBas
             accessibilityLabel="Çıkış yap"
@@ -438,7 +444,7 @@ export function UstMenu() {
               cikisYap();
               router.replace('/');
             }}
-            style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 9 }}
+            style={s.menuTercihSatiri}
           >
             <LogOut size={17} color={renk.gri} />
             <Yazi style={{ color: renk.gri }}>Çıkış yap</Yazi>
@@ -449,6 +455,8 @@ export function UstMenu() {
   );
 }
 export function AltBilgi() {
+  const s = useStiller();
+
   const { bosluk, genislik, mobil } = useEkran();
   const dar = genislik < 1100;
   const { oturum } = usePazar();
@@ -511,6 +519,9 @@ export function AltBilgi() {
   );
 }
 export function MobilMenu() {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { mobil } = useEkran();
   const klavyeAcik = useKlavyeAcik();
   const insets = useSafeAreaInsets();
@@ -532,6 +543,8 @@ export function MobilMenu() {
         <Link href={href as '/'} asChild key={href}>
           <HareketliBas
             accessibilityLabel={ad}
+            accessibilityState={{ selected: yol === href }}
+            aria-current={Platform.OS === 'web' && yol === href ? 'page' : undefined}
             style={{
               flex: 1,
               minWidth: 0,
@@ -550,15 +563,15 @@ export function MobilMenu() {
             >
               <Simge
                 size={href === '/ilan-ver' ? 22 : 20}
-                color={yol === href || href === '/ilan-ver' ? renk.murekkep : '#85897f'}
+                color={href === '/ilan-ver' ? renk.vurguYazi : yol === href ? renk.murekkep : renk.gri}
                 strokeWidth={yol === href ? 2.5 : 1.8}
               />
             </View>
             {href !== '/ilan-ver' && (
               <Yazi
                 style={{
-                  fontSize: 9,
-                  lineHeight: 14,
+                  fontSize: 10,
+                  lineHeight: 16,
                   color: yol === href ? renk.murekkep : renk.gri,
                   fontWeight: yol === href ? '700' : '400',
                 }}
@@ -583,6 +596,9 @@ export function Kabuk({
   altEylem?: ReactNode;
   kaydirilabilir?: boolean;
 }) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { bildirim } = usePazar();
   const { mobil } = useEkran();
   const yol = usePathname();
@@ -612,7 +628,7 @@ export function Kabuk({
     <View
       style={{
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: renk.beyaz,
         minHeight: '100%',
         paddingBottom: Platform.OS !== 'web' && !mobil ? insets.bottom : 0,
       }}
@@ -632,8 +648,12 @@ export function Kabuk({
           style={[s.bildirim, { bottom: mobil ? (urunSayfasi ? 150 : 90) : 28 }]}
         >
           <Giris style={s.bildirimIc}>
-            <Check size={18} color={renk.sari} />
-            <Yazi accessibilityLiveRegion="polite" role="status" style={{ color: '#fff', flexShrink: 1 }}>
+            <Check size={18} color={renk.tersYazi} />
+            <Yazi
+              accessibilityLiveRegion="polite"
+              role="status"
+              style={{ color: renk.tersYazi, flexShrink: 1 }}
+            >
               {bildirim}
             </Yazi>
           </Giris>
@@ -642,181 +662,195 @@ export function Kabuk({
     </View>
   );
 }
-const s = StyleSheet.create({
-  hesapBaglantisi: {
-    flex: 1,
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 9,
-    paddingHorizontal: 10,
-  },
-  menuAvatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: renk.sariSoluk,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuHesap: {
-    minHeight: 62,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 8,
-  },
-  menuIlanButonu: {
-    minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: renk.sari,
-    borderRadius: 11,
-    paddingHorizontal: 16,
-  },
-  menuKisayollar: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  menuKisayol: {
-    flexBasis: '48%',
-    flexGrow: 1,
-    minWidth: 132,
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 9,
-  },
-  menuBolumBasligi: {
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    borderTopWidth: 1,
-    borderColor: renk.cizgi,
-    paddingTop: 12,
-  },
-  menuKategoriler: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  menuKategori: {
-    flexBasis: '48%',
-    flexGrow: 1,
-    minWidth: 132,
-    minHeight: 54,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 9,
-  },
-  menuKategoriIkon: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
-    backgroundColor: renk.acik,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  ust: { backgroundColor: '#fff', zIndex: 10, borderBottomWidth: 1, borderColor: '#edeee9' },
-  logo: { fontFamily: kalin, fontWeight: '800', fontSize: 29, lineHeight: 39, letterSpacing: -1.8 },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: renk.murekkep,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ilanButon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    backgroundColor: renk.sari,
-    minHeight: 45,
-    borderRadius: 9,
-    paddingHorizontal: 18,
-  },
-  altBilgi: { backgroundColor: '#f7f7f5', borderTopWidth: 1, borderColor: renk.cizgi },
-  altIc: { paddingTop: 32, paddingBottom: 22, gap: 24 },
-  altGovde: { flexDirection: 'row', alignItems: 'flex-start', gap: 48 },
-  altGovdeDar: { flexDirection: 'column', gap: 26 },
-  altMarka: { width: 242, flexShrink: 0, gap: 7 },
-  altMarkaDar: { width: '100%' },
-  altAciklama: { color: '#646464', fontSize: 14, lineHeight: 22, maxWidth: 300 },
-  altKolonlar: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    columnGap: 28,
-    rowGap: 24,
-  },
-  altKolonlarDar: { flex: 0, width: '100%', columnGap: 0 },
-  altKolon: { minWidth: 0 },
-  altKategoriKolon: { flex: 2, flexBasis: 250 },
-  altKategoriKolonMobil: { flex: 0, flexBasis: '100%', width: '100%' },
-  altKategoriBaglantilari: { flexDirection: 'row', flexWrap: 'wrap', width: '100%' },
-  altBaglanti: { minHeight: 44, justifyContent: 'center', paddingVertical: 8, paddingRight: 12 },
-  altBaglantiYazi: { fontSize: 14, lineHeight: 22, color: '#454545', flexShrink: 1 },
-  altKategoriBaglanti: { width: '50%', minWidth: 0 },
-  altIkincilKolon: { flex: 1, flexBasis: 110 },
-  altIkincilKolonMobil: { flex: 0, flexBasis: '50%', width: '50%' },
-  altKolonBaslik: {
-    fontFamily: kalin,
-    fontWeight: '700',
-    fontSize: 14,
-    lineHeight: 22,
-    color: renk.murekkep,
-    marginBottom: 8,
-  },
-  altAlt: {
-    borderTopWidth: 1,
-    borderColor: renk.cizgi,
-    paddingTop: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  altAltMobil: { flexDirection: 'column', alignItems: 'flex-start', gap: 4 },
-  altTelif: { color: '#737373', fontSize: 12, lineHeight: 19 },
-  mobilMenu: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderColor: renk.cizgi,
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    zIndex: 20,
-  },
-  bildirim: { position: 'absolute', alignSelf: 'center', width: '92%', maxWidth: 500, zIndex: 100 },
-  bildirimIc: {
-    backgroundColor: renk.murekkep,
-    paddingVertical: 16,
-    paddingHorizontal: 22,
-    borderRadius: 12,
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-    boxShadow: '0 8px 30px #0002',
-  },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    hesapBaglantisi: {
+      flex: 1,
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 9,
+      paddingHorizontal: 10,
+    },
+    menuAvatar: {
+      width: 46,
+      height: 46,
+      borderRadius: 14,
+      backgroundColor: renk.acik,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    menuHesapKarti: {
+      padding: 14,
+      gap: 14,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 12,
+    },
+    menuHesap: {
+      minHeight: 62,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    menuTercihler: {
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+    },
+    menuTercihSatiri: {
+      minHeight: 62,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 8,
+    },
+    menuSatirAyirici: { borderTopWidth: 1, borderColor: renk.cizgi },
+    menuSatirBasligi: { fontSize: 13, fontWeight: '600' },
+    menuKisayollar: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    menuKisayol: {
+      flexBasis: '48%',
+      flexGrow: 1,
+      minWidth: 132,
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 10,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 9,
+    },
+    menuBolumBasligi: {
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+      borderTopWidth: 1,
+      borderColor: renk.cizgi,
+      paddingTop: 12,
+    },
+    menuKategoriler: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    menuKategori: {
+      flexBasis: '48%',
+      flexGrow: 1,
+      minWidth: 132,
+      minHeight: 54,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: 8,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 9,
+    },
+    menuKategoriIkon: {
+      width: 32,
+      height: 32,
+      borderRadius: 9,
+      backgroundColor: renk.acik,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    ust: { backgroundColor: renk.beyaz, zIndex: 10, borderBottomWidth: 1, borderColor: renk.cizgi },
+    logo: { fontFamily: kalin, fontWeight: '800', fontSize: 29, lineHeight: 39, letterSpacing: -1.8 },
+    avatar: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: renk.murekkep,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ilanButon: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+      backgroundColor: renk.sari,
+      minHeight: 45,
+      borderRadius: 9,
+      paddingHorizontal: 18,
+    },
+    altBilgi: { backgroundColor: renk.acik, borderTopWidth: 1, borderColor: renk.cizgi },
+    altIc: { paddingTop: 32, paddingBottom: 22, gap: 24 },
+    altGovde: { flexDirection: 'row', alignItems: 'flex-start', gap: 48 },
+    altGovdeDar: { flexDirection: 'column', gap: 26 },
+    altMarka: { width: 242, flexShrink: 0, gap: 7 },
+    altMarkaDar: { width: '100%' },
+    altAciklama: { color: renk.gri, fontSize: 14, lineHeight: 22, maxWidth: 300 },
+    altKolonlar: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      columnGap: 28,
+      rowGap: 24,
+    },
+    altKolonlarDar: { flex: 0, width: '100%', columnGap: 0 },
+    altKolon: { minWidth: 0 },
+    altKategoriKolon: { flex: 2, flexBasis: 250 },
+    altKategoriKolonMobil: { flex: 0, flexBasis: '100%', width: '100%' },
+    altKategoriBaglantilari: { flexDirection: 'row', flexWrap: 'wrap', width: '100%' },
+    altBaglanti: { minHeight: 44, justifyContent: 'center', paddingVertical: 8, paddingRight: 12 },
+    altBaglantiYazi: { fontSize: 14, lineHeight: 22, color: renk.gri, flexShrink: 1 },
+    altKategoriBaglanti: { width: '50%', minWidth: 0 },
+    altIkincilKolon: { flex: 1, flexBasis: 110 },
+    altIkincilKolonMobil: { flex: 0, flexBasis: '50%', width: '50%' },
+    altKolonBaslik: {
+      fontFamily: kalin,
+      fontWeight: '700',
+      fontSize: 14,
+      lineHeight: 22,
+      color: renk.murekkep,
+      marginBottom: 8,
+    },
+    altAlt: {
+      borderTopWidth: 1,
+      borderColor: renk.cizgi,
+      paddingTop: 18,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    altAltMobil: { flexDirection: 'column', alignItems: 'flex-start', gap: 4 },
+    altTelif: { color: renk.gri, fontSize: 12, lineHeight: 19 },
+    mobilMenu: {
+      flexDirection: 'row',
+      backgroundColor: renk.beyaz,
+      borderTopWidth: 1,
+      borderColor: renk.cizgi,
+      position: 'absolute',
+      bottom: 0,
+      width: '100%',
+      zIndex: 20,
+    },
+    bildirim: { position: 'absolute', alignSelf: 'center', width: '92%', maxWidth: 500, zIndex: 100 },
+    bildirimIc: {
+      backgroundColor: renk.murekkep,
+      paddingVertical: 16,
+      paddingHorizontal: 22,
+      borderRadius: 12,
+      flexDirection: 'row',
+      gap: 12,
+      alignItems: 'center',
+      boxShadow: '0 8px 30px #0002',
+    },
+  }),
+);

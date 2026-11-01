@@ -11,10 +11,13 @@ import { SecimAlani } from './SecimAlani';
 import { usePazar } from '../durum/Pazar';
 import { medyaKaydet, medyaOnizlemesiniBirak, medyaSil } from '../durum/medyaDeposu';
 import { medyaSec } from '../durum/medyaSecici';
-import { kalin, ortak, renk, useEkran } from '../tasarim/tema';
+import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 
 export function ProfilResmi({ ad, fotograf, boyut = 72 }: { ad: string; fotograf?: string; boyut?: number }) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   return (
     <View style={[s.avatar, { width: boyut, height: boyut, borderRadius: boyut / 2 }]}>
       {fotograf ? (
@@ -48,6 +51,9 @@ export function ProfilFormu({
   tamamlaninca?: () => void;
   mesgulDegisti?: (mesgul: boolean) => void;
 }) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { profil, profilKaydet, haberVer, oturum } = usePazar();
   const { mobil } = useEkran();
   const kimlik = useId();
@@ -166,17 +172,23 @@ export function ProfilFormu({
   return (
     <View style={{ gap: kompakt ? 16 : 22 }}>
       <View style={[s.fotografSatiri, !kompakt && { paddingBottom: 20 }]}>
-        <ProfilResmi ad={taslak.ad} fotograf={taslak.fotograf} boyut={kompakt ? 60 : 72} />
+        <ProfilResmi ad={taslak.ad} fotograf={taslak.fotograf} boyut={kompakt || mobil ? 60 : 72} />
         <View style={{ flex: 1, minWidth: 0, gap: 7 }}>
           <View style={[ortak.satir, { flexWrap: 'wrap', gap: 8 }]}>
             <Buton
               ikincil
               onPress={() => void fotografSec()}
               disabled={mesgul}
-              simge={fotografSeciliyor ? <ActivityIndicator size="small" /> : <Camera size={16} />}
+              simge={
+                fotografSeciliyor ? (
+                  <ActivityIndicator size="small" />
+                ) : (
+                  <Camera color={renk.murekkep} size={16} />
+                )
+              }
               style={s.fotografSec}
             >
-              {taslak.fotograf ? 'Fotoğrafı değiştir' : 'Fotoğraf ekle'}
+              {taslak.fotograf ? 'Değiştir' : 'Fotoğraf ekle'}
             </Buton>
             {taslak.fotograf ? (
               <HareketliBas
@@ -260,7 +272,7 @@ export function ProfilFormu({
         </Yazi>
       </View>
       {hata ? (
-        <Yazi accessibilityRole="alert" style={{ color: renk.murekkep, fontSize: 13 }}>
+        <Yazi accessibilityRole="alert" style={{ color: renk.hata, fontSize: 13 }}>
           {hata}
         </Yazi>
       ) : null}
@@ -268,7 +280,9 @@ export function ProfilFormu({
         <Buton
           onPress={() => void kaydet()}
           disabled={mesgul || !degisti}
-          simge={kaydediliyor ? <ActivityIndicator size="small" /> : <Check size={18} />}
+          simge={
+            kaydediliyor ? <ActivityIndicator size="small" /> : <Check color={renk.murekkep} size={18} />
+          }
           style={!mobil && !kompakt ? { minWidth: 220 } : undefined}
         >
           {kaydediliyor ? 'Kaydediliyor…' : 'Değişiklikleri kaydet'}
@@ -287,25 +301,27 @@ export function ProfilDuzenlemePenceresi({ kapat }: { kapat: () => void }) {
   );
 }
 
-const s = StyleSheet.create({
-  avatar: {
-    backgroundColor: renk.murekkep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    flexShrink: 0,
-  },
-  fotografSatiri: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  fotografSec: { minHeight: 44, paddingHorizontal: 12 },
-  fotografKaldir: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: renk.murekkep,
-    borderRadius: 8,
-  },
-  alan: { flexGrow: 1, flexBasis: 0, minWidth: 0 },
-  kaydetSatiri: { gap: 8, paddingTop: 2 },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    avatar: {
+      backgroundColor: renk.sabitKoyu,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+      flexShrink: 0,
+    },
+    fotografSatiri: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+    fotografSec: { minHeight: 44, paddingHorizontal: 12 },
+    fotografKaldir: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: renk.murekkep,
+      borderRadius: 8,
+    },
+    alan: { flexGrow: 1, flexBasis: 0, minWidth: 0 },
+    kaydetSatiri: { gap: 8, paddingTop: 2 },
+  }),
+);

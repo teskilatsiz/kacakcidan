@@ -1,16 +1,28 @@
 import type { Kayit } from './PazarBaglami';
 import type { ParolaKaydi } from './parola.types';
 import type { Ilan } from '../veri/ilanlar';
+import {
+  bosEtkilesimKaydi,
+  etkilesimleriOku,
+  numaralariTamamla,
+  type EtkilesimKaydi,
+} from '../veri/ilanEtkilesimleri.ts';
 
 export type Hesap = { id: string; eposta: string; parola: ParolaKaydi; kayit: Kayit };
-export type HesapDeposu = { surum: 2; misafir: Kayit; hesaplar: Hesap[]; aktifHesap: string | null };
+export type HesapDeposu = {
+  surum: 2;
+  misafir: Kayit;
+  hesaplar: Hesap[];
+  aktifHesap: string | null;
+  etkilesimler: EtkilesimKaydi;
+};
 
 export function bosKayit(ad = ''): Kayit {
   return { favoriler: [], eklenenler: [], mesajlar: {}, profil: { ad, konum: '', hakkinda: '' }, konum: '' };
 }
 
 export function ilkDepo(misafir = bosKayit()): HesapDeposu {
-  return { surum: 2, misafir, hesaplar: [], aktifHesap: null };
+  return { surum: 2, misafir, hesaplar: [], aktifHesap: null, etkilesimler: bosEtkilesimKaydi() };
 }
 
 export function aktifKayit(depo: HesapDeposu): Kayit {
@@ -39,6 +51,10 @@ export function ilanKaydiniGuncelle(depo: HesapDeposu, hesapId: string, ilan: Il
         ? {
             ...ilan,
             id: onceki.id,
+            ...((onceki.numara ?? depo.etkilesimler.ilanNumaralari[onceki.id])
+              ? { numara: onceki.numara ?? depo.etkilesimler.ilanNumaralari[onceki.id] }
+              : {}),
+            saticiId: hesapId,
             zaman: onceki.zaman,
             oneCikan: onceki.oneCikan,
             satici: eski.profil.ad,
@@ -52,9 +68,19 @@ export function ilanKaydiniGuncelle(depo: HesapDeposu, hesapId: string, ilan: Il
 export function ilanKaydiniEkle(depo: HesapDeposu, hesapId: string, ilan: Ilan): HesapDeposu | undefined {
   if (!hesapId || depo.aktifHesap !== hesapId || !depo.hesaplar.some((hesap) => hesap.id === hesapId)) return;
   if (depo.hesaplar.some((hesap) => hesap.kayit.eklenenler.some((kayit) => kayit.id === ilan.id))) return;
-  return kaydiDegistir(depo, (eski) => ({
+  const etkilesimler = numaralariTamamla(depo.etkilesimler, [ilan.id]);
+  return kaydiDegistir({ ...depo, etkilesimler }, (eski) => ({
     ...eski,
-    eklenenler: [{ ...ilan, benim: true, satici: eski.profil.ad }, ...eski.eklenenler],
+    eklenenler: [
+      {
+        ...ilan,
+        numara: etkilesimler.ilanNumaralari[ilan.id],
+        saticiId: hesapId,
+        benim: true,
+        satici: eski.profil.ad,
+      },
+      ...eski.eklenenler,
+    ],
   }));
 }
 
@@ -129,6 +155,7 @@ export function depoyuOku(ham: string | null, eskiHam: string | null): HesapDepo
         surum: 2,
         misafir: veri.misafir,
         hesaplar,
+        etkilesimler: etkilesimleriOku(veri.etkilesimler),
         aktifHesap: hesaplar.some((h) => h.id === veri.aktifHesap) ? String(veri.aktifHesap) : null,
       };
     }

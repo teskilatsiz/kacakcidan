@@ -1,9 +1,12 @@
 import type { HesapFormuProps, HesapGonderProps } from './HesapFormu';
-import { renk } from '../tasarim/tema';
+import { useTema } from '../tasarim/tema';
 
-export function HesapFormu({ children, gonder }: HesapFormuProps) {
+export function HesapFormu({ children, gonder, eposta, kayit }: HesapFormuProps) {
   return (
     <form
+      id={kayit ? 'hesap-kayit-formu' : 'hesap-giris-formu'}
+      name={kayit ? 'kayit' : 'giris'}
+      autoComplete="on"
       noValidate
       onSubmit={(olay) => {
         olay.preventDefault();
@@ -12,13 +15,16 @@ export function HesapFormu({ children, gonder }: HesapFormuProps) {
       aria-label="Hesap bilgileri"
       style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
     >
+      {eposta ? <input type="hidden" name="username" autoComplete="username" value={eposta} /> : null}
       {children}
     </form>
   );
 }
 export function HesapGonder({ children, disabled, calisiyor }: HesapGonderProps) {
+  const { renk } = useTema();
   return (
     <button
+      name="hesap-gonder"
       type="submit"
       disabled={disabled}
       aria-busy={calisiyor}
@@ -29,7 +35,7 @@ export function HesapGonder({ children, disabled, calisiyor }: HesapGonderProps)
         border: `1px solid ${renk.sari}`,
         backgroundColor: renk.sari,
         borderRadius: 10,
-        color: renk.murekkep,
+        color: renk.vurguYazi,
         fontFamily: 'DM Sans, sans-serif',
         fontSize: 14,
         fontWeight: 700,
