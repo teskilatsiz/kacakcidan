@@ -15,16 +15,30 @@ import { DetaySekmeleri, type DetaySekmesi } from '../bilesenler/DetaySekmeleri'
 import { IlanGalerisi } from '../bilesenler/IlanGalerisi';
 import { IlanEtiketleri } from '../bilesenler/IlanEtiketleri';
 import { IlanIzgarasi } from '../bilesenler/IlanKarti';
+import { IlanSorulari } from '../bilesenler/IlanSorulari';
 import { kisiler, usePazar } from '../durum/Pazar';
 import { kategoriler, para } from '../veri/ilanlar';
 import { kategoriYapisi } from '../veri/kategoriler';
-import { kalin, mobilAltMenuYuksekligi, ortak, renk, useEkran } from '../tasarim/tema';
+import { kalin, mobilAltMenuYuksekligi, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
 
 export default function IlanDetayi() {
-  const { id: yolId, kayit } = useLocalSearchParams<{ id: string; kayit?: string }>();
+  const { renk } = useTema();
+  const s = useStiller();
+
+  const { id: yolId, kayit, bolum } = useLocalSearchParams<{ id: string; kayit?: string; bolum?: string }>();
   const id = kayit || yolId;
-  const { tumIlanlar, eklenenler, oturum, favoriler, favoriDegistir, mesajGonder, haberVer } = usePazar();
+  const {
+    tumIlanlar,
+    eklenenler,
+    oturum,
+    favoriler,
+    favoriDegistir,
+    mesajGonder,
+    haberVer,
+    hazir,
+    ilaniGoruntule,
+  } = usePazar();
   const { mobil, tablet, bosluk, genislik } = useEkran();
   const guvenliAlan = useSafeAreaInsets();
   const klavyeAcik = useKlavyeAcik();
@@ -35,11 +49,14 @@ export default function IlanDetayi() {
   const [sekme, setSekme] = useState<DetaySekmesi>('aciklama');
   const sekmeId = useId();
   useEffect(() => {
-    setSekme('aciklama');
+    setSekme(bolum === 'sorular' ? 'sorular' : 'aciklama');
     setTeklifAcik(false);
     setTeklif('');
     setHata('');
-  }, [id]);
+  }, [id, bolum]);
+  useEffect(() => {
+    if (hazir) ilaniGoruntule(id);
+  }, [hazir, id, ilaniGoruntule, oturum?.id]);
   const ilan = tumIlanlar.find((i) => i.id === id);
   if (!ilan)
     return (
@@ -89,13 +106,14 @@ export default function IlanDetayi() {
       : []),
   ];
   const ozellikler = Object.entries({
+    ...(ilan.numara ? { 'İlan no': ilan.numara } : {}),
     Kategori: kategori?.ad ?? ilan.kategori,
     ...(altKategoriAdi ? { 'Ürün türü': altKategoriAdi } : {}),
     ...(markaAdi ? { Marka: markaAdi } : {}),
     ...(modelAdi ? { Model: modelAdi } : {}),
     Durum: ilan.durum,
     ...ilan.ozellikler,
-    Takas: ilan.takas ? 'Değerlendirilebilir' : 'Yok',
+    Takas: ilan.takas ? 'Evet' : 'Hayır',
     Konum: ilan.konum,
   });
   const benzer = [
@@ -141,6 +159,7 @@ export default function IlanDetayi() {
         <MapPin size={14} color={renk.gri} />
         <Yazi style={s.yardimci}>{ilan.konum}</Yazi>
         <Yazi style={s.yardimci}>· {ilan.zaman}</Yazi>
+        {!!ilan.numara && <Yazi style={s.yardimci}>· İlan no {ilan.numara}</Yazi>}
       </View>
       <View style={{ gap: mobil ? 8 : 10, paddingTop: 2 }}>
         <Yazi style={[s.fiyat, { fontSize: mobil ? 30 : 34, lineHeight: mobil ? 38 : 43 }]}>
@@ -205,14 +224,14 @@ export default function IlanDetayi() {
             <ArrowLeft size={15} color={renk.gri} />
             {kirilimlar.map((k, sira) => (
               <View key={`${sira}-${k.ad}`} style={[ortak.satir, { gap: 8 }]}>
-                {sira > 0 && <Yazi style={{ color: '#a3a3a3', fontSize: 12 }}>›</Yazi>}
+                {sira > 0 && <Yazi style={{ color: renk.gri, fontSize: 12 }}>›</Yazi>}
                 <Link href={{ pathname: '/kesfet', params: k.params }}>
                   <Yazi style={{ fontSize: 12, color: renk.gri }}>{k.ad}</Yazi>
                 </Link>
               </View>
             ))}
           </ScrollView>
-          <View style={[ortak.satir, { gap: 2 }]}>
+          <View style={[ortak.satir, { gap: mobil ? 10 : 14 }]}>
             <FavoriDugmesi
               secili={favoriler.includes(ilan.id)}
               onPress={() => favoriDegistir(ilan.id)}
@@ -283,12 +302,22 @@ export default function IlanDetayi() {
           <View
             nativeID={`${sekmeId}-icerik`}
             role="tabpanel"
-            accessibilityLabel={sekme === 'aciklama' ? 'Açıklama' : 'Özellikler'}
+            accessibilityLabel={
+              sekme === 'aciklama' ? 'Açıklama' : sekme === 'sorular' ? 'Soru ve cevap' : 'Özellikler'
+            }
             style={{ minHeight: 128 }}
           >
-            {sekme === 'aciklama' ? (
+            {sekme === 'sorular' ? (
+              <IlanSorulari key={ilan.id} ilan={ilan} />
+            ) : sekme === 'aciklama' ? (
               <Yazi
-                style={{ maxWidth: 860, fontSize: 15, lineHeight: 27, color: '#4d4d4d', paddingBottom: 10 }}
+                style={{
+                  maxWidth: 860,
+                  fontSize: 15,
+                  lineHeight: 27,
+                  color: renk.murekkep,
+                  paddingBottom: 10,
+                }}
               >
                 {ilan.aciklama}
               </Yazi>
@@ -302,7 +331,7 @@ export default function IlanDetayi() {
                       gap: mobil ? 12 : 28,
                       paddingHorizontal: mobil ? 12 : 16,
                       paddingVertical: 12,
-                      backgroundColor: sira % 2 === 0 ? '#f6f6f6' : '#fff',
+                      backgroundColor: sira % 2 === 0 ? renk.zemin : renk.beyaz,
                       borderRadius: 5,
                     }}
                   >
@@ -356,31 +385,33 @@ export default function IlanDetayi() {
   );
 }
 
-const s = StyleSheet.create({
-  yardimci: { fontSize: 12, lineHeight: 20, color: renk.gri },
-  fiyat: { fontFamily: kalin, fontWeight: '700', letterSpacing: -0.8 },
-  satici: { borderWidth: 1, borderColor: renk.cizgi, borderRadius: 12, gap: 14 },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#eeeeee',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  altEylemler: {
-    position: 'absolute',
-    bottom: mobilAltMenuYuksekligi,
-    left: 0,
-    right: 0,
-    zIndex: 30,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderColor: renk.cizgi,
-    paddingVertical: 10,
-    minHeight: 66,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    yardimci: { fontSize: 12, lineHeight: 20, color: renk.gri },
+    fiyat: { fontFamily: kalin, fontWeight: '700', letterSpacing: -0.8 },
+    satici: { borderWidth: 1, borderColor: renk.cizgi, borderRadius: 12, gap: 14 },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: renk.zemin,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    altEylemler: {
+      position: 'absolute',
+      bottom: mobilAltMenuYuksekligi,
+      left: 0,
+      right: 0,
+      zIndex: 30,
+      backgroundColor: renk.beyaz,
+      borderTopWidth: 1,
+      borderColor: renk.cizgi,
+      paddingVertical: 10,
+      minHeight: 66,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+  }),
+);

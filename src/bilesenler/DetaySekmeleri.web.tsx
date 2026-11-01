@@ -1,18 +1,22 @@
+import { useTema } from '../tasarim/tema';
 import { useRef } from 'react';
 import type { DetaySekmeleriProps } from './DetaySekmeleri';
 
 const sekmeler = [
   { id: 'aciklama', ad: 'Açıklama' },
   { id: 'ozellikler', ad: 'Özellikler' },
+  { id: 'sorular', ad: 'Soru & cevap' },
 ] as const;
 
 export function DetaySekmeleri({ secili, degistir, kimlik }: DetaySekmeleriProps) {
+  const { renk } = useTema();
+
   const dugmeler = useRef<(HTMLButtonElement | null)[]>([]);
   return (
     <div
       role="tablist"
       aria-label="İlan bilgileri"
-      style={{ display: 'flex', gap: 24, borderBottom: '1px solid #e6e7e3' }}
+      style={{ display: 'flex', gap: 20, flexWrap: 'wrap', borderBottom: `1px solid ${renk.cizgi}` }}
     >
       {sekmeler.map((sekme, sira) => (
         <button
@@ -45,12 +49,12 @@ export function DetaySekmeleri({ secili, degistir, kimlik }: DetaySekmeleriProps
             minHeight: 48,
             padding: '0 2px',
             border: 0,
-            borderBottom: `2px solid ${secili === sekme.id ? '#17191b' : 'transparent'}`,
+            borderBottom: `2px solid ${secili === sekme.id ? renk.murekkep : 'transparent'}`,
             background: 'transparent',
             font: 'inherit',
             fontSize: 14,
             fontWeight: 700,
-            color: secili === sekme.id ? '#17191b' : '#747870',
+            color: secili === sekme.id ? renk.murekkep : renk.gri,
             cursor: 'pointer',
           }}
         >

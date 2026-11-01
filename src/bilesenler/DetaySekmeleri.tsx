@@ -1,9 +1,9 @@
 import { View } from 'react-native';
 import { HareketliBas } from './Hareketli';
 import { Yazi } from './Temel';
-import { kalin, renk } from '../tasarim/tema';
+import { kalin, useTema } from '../tasarim/tema';
 
-export type DetaySekmesi = 'aciklama' | 'ozellikler';
+export type DetaySekmesi = 'aciklama' | 'ozellikler' | 'sorular';
 export type DetaySekmeleriProps = {
   secili: DetaySekmesi;
   degistir: (sekme: DetaySekmesi) => void;
@@ -12,14 +12,23 @@ export type DetaySekmeleriProps = {
 export const detaySekmeleri = [
   { id: 'aciklama', ad: 'Açıklama' },
   { id: 'ozellikler', ad: 'Özellikler' },
+  { id: 'sorular', ad: 'Soru & cevap' },
 ] as const;
 
 export function DetaySekmeleri({ secili, degistir, kimlik }: DetaySekmeleriProps) {
+  const { renk } = useTema();
+
   return (
     <View
       accessibilityRole="tablist"
       accessibilityLabel="İlan bilgileri"
-      style={{ flexDirection: 'row', gap: 24, borderBottomWidth: 1, borderColor: renk.cizgi }}
+      style={{
+        flexDirection: 'row',
+        gap: 20,
+        borderBottomWidth: 1,
+        borderColor: renk.cizgi,
+        flexWrap: 'wrap',
+      }}
     >
       {detaySekmeleri.map((sekme) => (
         <HareketliBas
