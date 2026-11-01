@@ -28,15 +28,17 @@ export function gorunurAlaniOku(): GorunurAlan {
   const ust = Math.max(0, ekran?.offsetTop ?? 0);
   const sol = Math.max(0, ekran?.offsetLeft ?? 0);
   const girdiOdakta = yaziGirdisiMi(document.activeElement);
+  const yakinlastirilmamis = (ekran?.scale ?? 1) < 1.05;
   if (!kapaliYukseklik || Math.abs(window.innerWidth - oncekiGenislik) > 80) {
     kapaliYukseklik = Math.max(yukseklik, window.innerHeight);
     oncekiGenislik = window.innerWidth;
-  } else if (!girdiOdakta) {
+  } else if (!girdiOdakta && yakinlastirilmamis) {
     kapaliYukseklik = Math.max(kapaliYukseklik, yukseklik);
   }
   const klavyePayi = Math.max(kapaliYukseklik, window.innerHeight) - yukseklik;
-  klavyeAcik =
-    girdiOdakta && (ekran?.scale ?? 1) < 1.05 && klavyePayi > Math.max(100, kapaliYukseklik * 0.15);
+  const klavyePayiVar = yakinlastirilmamis && klavyePayi > Math.max(100, kapaliYukseklik * 0.15);
+  // Odak form adımları veya gönder düğmesi arasında taşınırken klavye kapanmış sayılmaz.
+  klavyeAcik = klavyePayiVar && (girdiOdakta || klavyeAcik);
   const yeni = {
     yukseklik,
     genislik,
@@ -73,6 +75,7 @@ export function gorunurAlaniIzle(guncelle: () => void) {
       });
     };
     window.addEventListener('resize', olc);
+    window.addEventListener('orientationchange', olc);
     document.addEventListener('focusin', olc);
     document.addEventListener('focusout', olc);
     ekran?.addEventListener('resize', olc);
@@ -80,6 +83,7 @@ export function gorunurAlaniIzle(guncelle: () => void) {
     ekran?.addEventListener('scrollend', olc);
     dinlemeyiBirak = () => {
       window.removeEventListener('resize', olc);
+      window.removeEventListener('orientationchange', olc);
       document.removeEventListener('focusin', olc);
       document.removeEventListener('focusout', olc);
       ekran?.removeEventListener('resize', olc);

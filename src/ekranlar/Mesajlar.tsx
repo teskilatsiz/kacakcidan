@@ -18,12 +18,15 @@ import { HesapGerekli } from '../bilesenler/HesapGerekli';
 import { Giris, HareketliBas, useAzaltilmisHareket } from '../bilesenler/Hareketli';
 import { Alan, Baslik, BosDurum, Buton, Pencere, SimgeButon, Yazi } from '../bilesenler/Temel';
 import { kisiler, usePazar } from '../durum/Pazar';
-import { font, kalin, ortak, renk, useEkran } from '../tasarim/tema';
+import { font, kalin, ortak, temaStilleri, useEkran, useTema } from '../tasarim/tema';
 import { ilanYolu, para } from '../veri/ilanlar';
 import { useGorunurAlan } from '../tasarim/gorunurAlan';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
+import { IskeletParcasi, YuklemeIskeleti } from '../bilesenler/YuklemeIskeleti';
 
 export default function Mesajlar() {
+  const { renk, koyu } = useTema();
+  const s = useStiller();
   const { mobil, bosluk, genislik, yukseklik: height } = useEkran();
   const gorunurAlan = useGorunurAlan();
   const klavyeAcik = useKlavyeAcik();
@@ -82,7 +85,7 @@ export default function Mesajlar() {
             ilanId: urun.id,
             son: 'Görüşmeyi başlat.',
             saat: '',
-            renk: '#e4e6dd',
+            renk: renk.acik,
           },
         ]
       : [];
@@ -168,7 +171,73 @@ export default function Mesajlar() {
     haberVer('Teklifin görüşmeye eklendi.');
   };
 
-  if (!hazir || !oturum) {
+  if (!hazir)
+    return (
+      <Kabuk altBilgi={false}>
+        <YuklemeIskeleti
+          etiket="Mesajların yükleniyor"
+          style={[ortak.alan, s.sayfa, { paddingHorizontal: bosluk }]}
+        >
+          <IskeletParcasi genislik={180} yukseklik={36} />
+          <View
+            style={{
+              flexDirection: 'row',
+              borderWidth: 1,
+              borderColor: renk.cizgi,
+              borderRadius: 16,
+              overflow: 'hidden',
+              height: Math.max(260, Math.min(680, pencereYuksekligi - 220)),
+            }}
+          >
+            {!mobil || !kisiParametresi ? (
+              <View
+                style={{
+                  width: mobil ? '100%' : 300,
+                  padding: 18,
+                  gap: 22,
+                  borderRightWidth: mobil ? 0 : 1,
+                  borderColor: renk.cizgi,
+                }}
+              >
+                <IskeletParcasi yukseklik={48} />
+                {Array.from({ length: 4 }, (_, sira) => (
+                  <View key={sira} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <IskeletParcasi genislik={43} yukseklik={43} yaricap={22} />
+                    <View style={{ flex: 1, gap: 8 }}>
+                      <IskeletParcasi genislik="55%" />
+                      <IskeletParcasi yukseklik={14} />
+                      <IskeletParcasi genislik="80%" yukseklik={14} />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+            {!mobil || !!kisiParametresi ? (
+              <View style={{ flex: 1, padding: 18, gap: 18 }}>
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                  <IskeletParcasi genislik={40} yukseklik={40} yaricap={20} />
+                  <View style={{ flex: 1, gap: 8 }}>
+                    <IskeletParcasi genislik="45%" />
+                    <IskeletParcasi genislik="70%" yukseklik={14} />
+                  </View>
+                </View>
+                <View style={{ flex: 1, justifyContent: 'flex-end', gap: 14 }}>
+                  <IskeletParcasi genislik="64%" yukseklik={56} yaricap={12} />
+                  <IskeletParcasi
+                    genislik="55%"
+                    yukseklik={56}
+                    yaricap={12}
+                    style={{ alignSelf: 'flex-end' }}
+                  />
+                </View>
+                <IskeletParcasi yukseklik={52} yaricap={10} />
+              </View>
+            ) : null}
+          </View>
+        </YuklemeIskeleti>
+      </Kabuk>
+    );
+  if (!oturum) {
     const donusParams = new URLSearchParams();
     const donusKisi = Array.isArray(kisiParametresi) ? kisiParametresi[0] : kisiParametresi;
     const donusIlan = Array.isArray(ilanParametresi) ? ilanParametresi[0] : ilanParametresi;
@@ -207,12 +276,12 @@ export default function Mesajlar() {
           </View>
         )}
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           keyboardVerticalOffset={Platform.OS === 'web' ? 0 : panelUst}
-          onLayout={(olay) => {
+          onLayout={() => {
             if (Platform.OS === 'web') return;
-            const panelY = olay.nativeEvent.layout.y;
-            sayfa.current?.measureInWindow((_x, y) => setPanelUst(y + panelY));
+            // KAV kendi yerel y konumunu zaten hesaba katar; yalnız üst kapsayıcının ekran farkı eklenir.
+            sayfa.current?.measureInWindow((_x, y) => setPanelUst(y));
           }}
           style={[
             s.duzen,
@@ -242,9 +311,10 @@ export default function Mesajlar() {
                   nativeID="mesajlar-gorusme-arama"
                   accessibilityLabel="Görüşmelerde kişi veya ilan ara"
                   autoComplete="off"
+                  keyboardAppearance={koyu ? 'dark' : 'light'}
                   returnKeyType="search"
                   placeholder="Kişi veya ilan ara"
-                  placeholderTextColor="#94978f"
+                  placeholderTextColor={renk.gri}
                   value={arama}
                   onChangeText={setArama}
                   style={s.aramaGirdi}
@@ -274,7 +344,7 @@ export default function Mesajlar() {
                       olcek={0.99}
                       style={[s.gorusme, secili && s.seciliGorusme]}
                     >
-                      <View style={[s.avatar, { backgroundColor: k.renk }]}>
+                      <View style={[s.avatar, { backgroundColor: koyu ? renk.acik : k.renk }]}>
                         <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 13 }}>{k.harf}</Yazi>
                       </View>
                       <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
@@ -287,7 +357,7 @@ export default function Mesajlar() {
                         </Yazi>
                         <Yazi
                           numberOfLines={1}
-                          style={{ fontSize: 13, lineHeight: 20, color: secili ? '#474a42' : renk.gri }}
+                          style={{ fontSize: 13, lineHeight: 20, color: secili ? renk.murekkep : renk.gri }}
                         >
                           {son?.benim ? 'Sen: ' : ''}
                           {son?.yazi ?? k.son}
@@ -325,10 +395,15 @@ export default function Mesajlar() {
                       onPress={listeyeDon}
                       style={{ borderWidth: 0, width: 44 }}
                     >
-                      <ArrowLeft size={21} />
+                      <ArrowLeft size={21} color={renk.murekkep} />
                     </SimgeButon>
                   )}
-                  <View style={[s.avatar, { backgroundColor: kisi.renk, width: 40, height: 40 }]}>
+                  <View
+                    style={[
+                      s.avatar,
+                      { backgroundColor: koyu ? renk.acik : kisi.renk, width: 40, height: 40 },
+                    ]}
+                  >
                     <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 12 }}>{kisi.harf}</Yazi>
                   </View>
                   <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
@@ -340,7 +415,7 @@ export default function Mesajlar() {
                   <Link href={ilanYolu(ilan)} asChild>
                     <HareketliBas accessibilityLabel="Görüşülen ilanı aç" style={s.ilanBaglanti}>
                       <Yazi style={{ fontSize: 13, fontWeight: '600' }}>İlanı gör</Yazi>
-                      <ArrowUpRight size={15} />
+                      <ArrowUpRight size={15} color={renk.murekkep} />
                     </HareketliBas>
                   </Link>
                 </View>
@@ -368,7 +443,7 @@ export default function Mesajlar() {
                 )}
                 <ScrollView
                   ref={akis}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, minHeight: 0 }}
                   contentContainerStyle={[s.mesajAkisi, mobil && { paddingHorizontal: 18 }]}
                   onContentSizeChange={() => akis.current?.scrollToEnd({ animated: false })}
                   onLayout={() => akis.current?.scrollToEnd({ animated: false })}
@@ -387,7 +462,7 @@ export default function Mesajlar() {
                     <View
                       style={{ alignItems: 'center', paddingVertical: 35, paddingHorizontal: 15, gap: 10 }}
                     >
-                      <MessageCircle size={28} color="#a7aa9d" />
+                      <MessageCircle size={28} color={renk.gri} />
                       <Yazi style={{ fontSize: 13, fontWeight: '600' }}>İlk mesaj senden gelsin.</Yazi>
                       <Yazi style={{ fontSize: 13, color: renk.gri, textAlign: 'center', maxWidth: 280 }}>
                         Ürünle ilgili merak ettiklerini sorabilir, teslim detaylarını konuşabilirsin.
@@ -415,10 +490,12 @@ export default function Mesajlar() {
                       nativeID={`mesaj-${kisi.id}`}
                       accessibilityLabel={`${kisi.ad} için mesajın`}
                       autoComplete="off"
+                      keyboardAppearance={koyu ? 'dark' : 'light'}
                       placeholder="Mesajını yaz…"
-                      placeholderTextColor="#92968b"
+                      placeholderTextColor={renk.gri}
                       value={taslak}
                       onFocus={() => setMesajOdakta(true)}
+                      onBlur={() => setMesajOdakta(false)}
                       onChangeText={(yazi) => setTaslaklar((eski) => ({ ...eski, [kisi.id]: yazi }))}
                       onSubmitEditing={gonder}
                       returnKeyType="send"
@@ -450,7 +527,7 @@ export default function Mesajlar() {
                       onPress={gonder}
                       style={[s.gonder, (!taslak.trim() || !hazir) && { opacity: 0.4 }]}
                     >
-                      <Send size={18} strokeWidth={1.8} />
+                      <Send size={18} strokeWidth={1.8} color={renk.vurguYazi} />
                     </HareketliBas>
                   </View>
                 </View>
@@ -502,7 +579,7 @@ export default function Mesajlar() {
                     <Buton
                       ikincil
                       onPress={() => router.push(ilanYolu(ilan))}
-                      simge={<ArrowUpRight size={16} />}
+                      simge={<ArrowUpRight size={16} color={renk.murekkep} />}
                       style={{ minHeight: 43 }}
                     >
                       İlanı incele
@@ -511,7 +588,7 @@ export default function Mesajlar() {
                       <ShieldCheck size={20} color={renk.murekkep} />
                       <View style={{ flex: 1, gap: 5 }}>
                         <Yazi style={{ fontSize: 13, fontWeight: '700' }}>Teslim almadan önce</Yazi>
-                        <Yazi style={{ fontSize: 13, lineHeight: 21, color: '#756f55' }}>
+                        <Yazi style={{ fontSize: 13, lineHeight: 21, color: renk.gri }}>
                           Ürünü görüp kontrol et. Teslim detaylarını satıcıyla birlikte netleştir.
                         </Yazi>
                       </View>
@@ -524,7 +601,7 @@ export default function Mesajlar() {
             !mobil && (
               <View style={{ flex: 1, justifyContent: 'center' }}>
                 <BosDurum
-                  simge={<MessageCircle size={30} />}
+                  simge={<MessageCircle size={30} color={renk.murekkep} />}
                   baslik="Sohbet burada başlıyor."
                   aciklama="Bir görüşme seçerek kaldığın yerden devam et."
                 />
@@ -551,7 +628,11 @@ export default function Mesajlar() {
           maxLength={9}
           onSubmitEditing={teklifGonder}
         />
-        <Buton onPress={teklifGonder} disabled={!teklif || !hazir} simge={<Send size={16} />}>
+        <Buton
+          onPress={teklifGonder}
+          disabled={!teklif || !hazir}
+          simge={<Send size={16} color={renk.vurguYazi} />}
+        >
           Teklifi mesaja ekle
         </Buton>
       </Pencere>
@@ -559,194 +640,201 @@ export default function Mesajlar() {
   );
 }
 
-const s = StyleSheet.create({
-  sayfa: { paddingVertical: 22, gap: 18 },
-  duzen: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-  },
-  mobilDuzen: { borderRadius: 0, borderWidth: 0 },
-  liste: { width: 300, borderRightWidth: 1, borderColor: renk.cizgi, backgroundColor: '#fff' },
-  listeBaslik: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-    paddingHorizontal: 22,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
-  kalin: { fontFamily: kalin, fontWeight: '700', fontSize: 14 },
-  adet: {
-    backgroundColor: renk.zemin,
-    color: renk.gri,
-    fontSize: 12,
-    lineHeight: 21,
-    paddingHorizontal: 6,
-    borderRadius: 6,
-  },
-  arama: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 18,
-    paddingLeft: 12,
-    paddingRight: 2,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 8,
-    backgroundColor: '#f5f5f2',
-    height: 48,
-  },
-  aramaGirdi: {
-    flex: 1,
-    minWidth: 0,
-    height: 44,
-    borderWidth: 0,
-    fontFamily: font,
-    fontSize: 13,
-    color: renk.murekkep,
-  },
-  aramaTemizle: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  gorusme: {
-    minHeight: 96,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: 'transparent',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f3ef',
-  },
-  seciliGorusme: { backgroundColor: '#fffae9', borderLeftColor: renk.sari },
-  avatar: { width: 43, height: 43, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  listeAlt: {
-    borderTopWidth: 1,
-    borderColor: renk.cizgi,
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-  sohbet: { flex: 1, minWidth: 0, minHeight: 0, backgroundColor: '#fbfbf9' },
-  sohbetBaslik: {
-    minHeight: 72,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderColor: renk.cizgi,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  ilanBaglanti: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44 },
-  urunSeridi: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderColor: renk.cizgi,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  urunMinik: { width: 42, height: 42, borderRadius: 7, backgroundColor: renk.zemin },
-  mesajAkisi: {
-    paddingHorizontal: 24,
-    paddingTop: 18,
-    paddingBottom: 18,
-    gap: 14,
-    flexGrow: 1,
-    justifyContent: 'flex-end',
-  },
-  tarih: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 15, marginBottom: 4 },
-  tarihCizgi: { width: 38, height: 1, backgroundColor: '#e8e9e2' },
-  mesajSatiri: { width: '100%' },
-  balon: {
-    maxWidth: '86%',
-    paddingHorizontal: 15,
-    paddingTop: 11,
-    paddingBottom: 7,
-    borderRadius: 12,
-    minWidth: 85,
-  },
-  benimBalon: { backgroundColor: '#fff1b8', borderBottomRightRadius: 3 },
-  karsiBalon: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e9eae4', borderBottomLeftRadius: 3 },
-  saat: { alignSelf: 'flex-end', color: '#717365', fontSize: 11, lineHeight: 16, marginTop: 3 },
-  yazmaAlani: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 10,
-    borderTopWidth: 1,
-    borderColor: renk.cizgi,
-  },
-  mesajGirdisi: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f1',
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 10,
-    paddingLeft: 12,
-    paddingRight: 4,
-    gap: 6,
-  },
-  mesajGirdi: {
-    flex: 1,
-    minWidth: 0,
-    height: 52,
-    borderWidth: 0,
-    fontFamily: font,
-    fontSize: 14,
-    color: renk.murekkep,
-  },
-  gonder: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: renk.sari,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  teklifKisa: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 8,
-    gap: 6,
-    minHeight: 44,
-    minWidth: 44,
-  },
-  ilanPaneli: {
-    width: 250,
-    backgroundColor: '#fff',
-    borderLeftWidth: 1,
-    borderColor: renk.cizgi,
-    padding: 20,
-  },
-  kucukBaslik: { fontSize: 11, letterSpacing: 0.8, color: renk.gri, fontWeight: '600' },
-  urunGorseli: { width: '100%', height: 140, borderRadius: 10, backgroundColor: renk.zemin },
-  detaylar: {
-    paddingVertical: 16,
-    gap: 11,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: renk.cizgi,
-  },
-  detayEtiket: { fontSize: 13, color: renk.gri },
-  ipucu: {
-    padding: 14,
-    marginTop: 6,
-    borderRadius: 10,
-    backgroundColor: '#faf8ed',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    sayfa: { paddingVertical: 22, gap: 18 },
+    duzen: {
+      flexDirection: 'row',
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 16,
+      overflow: 'hidden',
+      backgroundColor: renk.beyaz,
+    },
+    mobilDuzen: { borderRadius: 0, borderWidth: 0 },
+    liste: { width: 300, borderRightWidth: 1, borderColor: renk.cizgi, backgroundColor: renk.beyaz },
+    listeBaslik: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 9,
+      paddingHorizontal: 22,
+      paddingTop: 20,
+      paddingBottom: 16,
+    },
+    kalin: { fontFamily: kalin, fontWeight: '700', fontSize: 14 },
+    adet: {
+      backgroundColor: renk.zemin,
+      color: renk.gri,
+      fontSize: 12,
+      lineHeight: 21,
+      paddingHorizontal: 6,
+      borderRadius: 6,
+    },
+    arama: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginHorizontal: 18,
+      paddingLeft: 12,
+      paddingRight: 2,
+      gap: 8,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 8,
+      backgroundColor: renk.zemin,
+      height: 48,
+    },
+    aramaGirdi: {
+      flex: 1,
+      minWidth: 0,
+      height: 44,
+      borderWidth: 0,
+      fontFamily: font,
+      fontSize: 13,
+      color: renk.murekkep,
+    },
+    aramaTemizle: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+    gorusme: {
+      minHeight: 96,
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      borderLeftWidth: 3,
+      borderLeftColor: 'transparent',
+      borderBottomWidth: 1,
+      borderBottomColor: renk.cizgi,
+    },
+    seciliGorusme: { backgroundColor: renk.sariSoluk, borderLeftColor: renk.sari },
+    avatar: { width: 43, height: 43, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+    listeAlt: {
+      borderTopWidth: 1,
+      borderColor: renk.cizgi,
+      padding: 18,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 10,
+    },
+    sohbet: { flex: 1, minWidth: 0, minHeight: 0, backgroundColor: renk.zemin },
+    sohbetBaslik: {
+      minHeight: 72,
+      backgroundColor: renk.beyaz,
+      borderBottomWidth: 1,
+      borderColor: renk.cizgi,
+      paddingHorizontal: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    ilanBaglanti: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44 },
+    urunSeridi: {
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      backgroundColor: renk.beyaz,
+      borderBottomWidth: 1,
+      borderColor: renk.cizgi,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    urunMinik: { width: 42, height: 42, borderRadius: 7, backgroundColor: renk.zemin },
+    mesajAkisi: {
+      paddingHorizontal: 24,
+      paddingTop: 18,
+      paddingBottom: 18,
+      gap: 14,
+      flexGrow: 1,
+      justifyContent: 'flex-end',
+    },
+    tarih: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 15, marginBottom: 4 },
+    tarihCizgi: { width: 38, height: 1, backgroundColor: renk.cizgi },
+    mesajSatiri: { width: '100%' },
+    balon: {
+      maxWidth: '86%',
+      paddingHorizontal: 15,
+      paddingTop: 11,
+      paddingBottom: 7,
+      borderRadius: 12,
+      minWidth: 85,
+    },
+    benimBalon: { backgroundColor: renk.sariSoluk, borderBottomRightRadius: 3 },
+    karsiBalon: {
+      backgroundColor: renk.beyaz,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderBottomLeftRadius: 3,
+    },
+    saat: { alignSelf: 'flex-end', color: renk.gri, fontSize: 11, lineHeight: 16, marginTop: 3 },
+    yazmaAlani: {
+      backgroundColor: renk.beyaz,
+      paddingHorizontal: 20,
+      paddingTop: 10,
+      paddingBottom: 10,
+      borderTopWidth: 1,
+      borderColor: renk.cizgi,
+    },
+    mesajGirdisi: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: renk.zemin,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 10,
+      paddingLeft: 12,
+      paddingRight: 4,
+      gap: 6,
+    },
+    mesajGirdi: {
+      flex: 1,
+      minWidth: 0,
+      height: 52,
+      borderWidth: 0,
+      fontFamily: font,
+      fontSize: 14,
+      color: renk.murekkep,
+    },
+    gonder: {
+      width: 44,
+      height: 44,
+      borderRadius: 8,
+      backgroundColor: renk.sari,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    teklifKisa: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 8,
+      gap: 6,
+      minHeight: 44,
+      minWidth: 44,
+    },
+    ilanPaneli: {
+      width: 250,
+      backgroundColor: renk.beyaz,
+      borderLeftWidth: 1,
+      borderColor: renk.cizgi,
+      padding: 20,
+    },
+    kucukBaslik: { fontSize: 11, letterSpacing: 0.8, color: renk.gri, fontWeight: '600' },
+    urunGorseli: { width: '100%', height: 140, borderRadius: 10, backgroundColor: renk.zemin },
+    detaylar: {
+      paddingVertical: 16,
+      gap: 11,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: renk.cizgi,
+    },
+    detayEtiket: { fontSize: 13, color: renk.gri },
+    ipucu: {
+      padding: 14,
+      marginTop: 6,
+      borderRadius: 10,
+      backgroundColor: renk.acik,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 10,
+    },
+  }),
+);

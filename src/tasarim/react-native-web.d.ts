@@ -5,4 +5,7 @@ declare module 'react-native' {
     dataSet?: Record<string, string>;
     'aria-pressed'?: boolean | 'mixed';
   }
+  interface TextProps {
+    dataSet?: Record<string, string>;
+  }
 }

@@ -7,10 +7,10 @@
   box-sizing: border-box;
   margin: auto;
   padding: 0;
-  border: 1px solid #e6e6e6;
+  border: 1px solid var(--renk-cizgi);
   border-radius: 18px;
-  background: #fff;
-  color: #17191b;
+  background: var(--renk-beyaz);
+  color: var(--renk-murekkep);
   overflow: hidden;
   font-family: 'DM Sans', Arial, sans-serif;
 }
@@ -54,9 +54,9 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border: 1px solid #e6e6e6;
+  border: 1px solid var(--renk-cizgi);
   border-radius: 10px;
-  background: #fff;
+  background: var(--renk-beyaz);
   color: inherit;
   cursor: pointer;
 }
@@ -87,8 +87,8 @@
   flex-shrink: 0;
   gap: 12px;
   padding: 16px 24px;
-  border-top: 1px solid #eeeeee;
-  background: #fff;
+  border-top: 1px solid var(--renk-cizgi);
+  background: var(--renk-beyaz);
 }
 @keyframes pencere-acilisi {
   from {
@@ -115,7 +115,7 @@
     height: 4px;
     margin: 10px auto 0;
     border-radius: 4px;
-    background: #d3d3d3;
+    background: var(--renk-cizgi);
     flex-shrink: 0;
   }
   .pazar-pencere-baslik {

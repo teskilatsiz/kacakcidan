@@ -7,9 +7,8 @@ export function useKlavyeAcik() {
     const gorundu = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () =>
       setAcik(true),
     );
-    const kapandi = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () =>
-      setAcik(false),
-    );
+    // Alt gezinme klavye tamamen kapandıktan sonra döner; kapanışta klavyenin üstüne sıçramaz.
+    const kapandi = Keyboard.addListener('keyboardDidHide', () => setAcik(false));
     return () => {
       gorundu.remove();
       kapandi.remove();
