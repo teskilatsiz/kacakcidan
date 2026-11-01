@@ -3,7 +3,7 @@
 <p align="center"><strong>Mal burada, pazarlık sende.</strong></p>
 
 <p align="center">
-  İkinci el ürünleri bulmayı, değerlendirmeyi ve satışa çıkarmayı kolaylaştırmak için geliştirdiğim kişiden kişiye (C2C) alışveriş arayüzü.
+  Expo, React Native ve TypeScript ile geliştirdiğim ikinci el alışveriş pazaryeri. Web, iOS ve Android için ortak kod tabanı.
 </p>
 
 <p align="center">
@@ -21,37 +21,59 @@
   <img src="screenshots/anasayfa-mobil.png" alt="Kaçakçıdan ana sayfasının mobil görünümü" width="25.2%" />
 </p>
 
-Masaüstü görünümünde beş sütunlu ilan ızgarası, mobilde kategori şeridi, iki sütunlu kartlar ve alt gezinme yer alıyor.
+Masaüstü ana sayfasında beş sütunlu ilan ızgarası var. Mobilde yatay kategori şeridi, iki sütunlu ilan kartları ve alt gezinme yer alıyor. İlan arama ekranında ise masaüstü kategori ağacı ile sonuçlar yan yana açılıyor.
 
 ## Proje hakkında
 
-Bu projede odağım, kullanıcıyı aradığı ilana kısa ve anlaşılır bir yoldan ulaştırmak. Kategori seçmekten satıcıya mesaj göndermeye ve ilan oluşturmaya kadar temel alışveriş akışlarını web, iOS ve Android ekranlarına uyarladım.
+Kaçakçıdan’ı geliştirirken en çok ilan arama ve ilan verme akışlarına zaman ayırdım. Bir telefona bakarken depolama kapasitesini bulmak, alt kategoriler arasında geri dönmek ya da klavye açıkken mesaj göndermek kolay olmalı. Ekran düzenini bu işler üzerinden kurdum.
 
-Arayüzü tasarlarken özellikle şu noktalara dikkat ettim:
+Proje ön yüzü kapsıyor. Hesaplar ve ilan etkileşimlerine ait kayıtlar cihazda tutuluyor; veri saklama sınırlarını aşağıda ayrıca anlattım.
 
-- **Kategorilerde kaybolmamak:** Ana kategoriden alt kategoriye, markaya ve modele kadar seçimleri görünür ve anlaşılır bir sırada sunmak.
-- **Aramayı yön bulma aracı olarak kullanmak:** Yazarken ilan başlıklarının yanı sıra anahtar kelime, kategori, marka ve model önerileri göstermek.
-- **İlanı hızlı değerlendirmek:** Fiyatı, ürün durumunu, takas bilgisini, teknik özellikleri ve satıcıyla iletişimi kolay bulunur tutmak. Fotoğraf galerisi; küçük görseller, büyütme, yakınlaştırma ve video desteği içerir.
-- **İlan vermeyi parçalara ayırmak:** Kategori ve ürüne göre değişen alanlar, seçim listeleri, fotoğraf ekleme ve önizleme ile kullanıcıya her adımda ne yapacağını göstermek.
-- **Küçük ekranları gözetmek:** Menü, filtre, seçim alanı ve formları mobil ekrana göre düzenlemek; klavye açıldığında yazılan alanın görünür kalmasına dikkat etmek.
-- **Etkileşimi anlaşılır kılmak:** Başarı ve hata bildirimleri, favori işlemleri ve hareket tercihleri için tutarlı geri bildirim kullanmak.
+## Kullanıcı deneyimi için verdiğim kararlar
+
+### Kategoriye ulaşmak
+
+Ana sayfada kategoriler ve ilanlar doğrudan görünüyor. İlk kategori şeridini kısa tuttum, kalan kategoriler “Daha fazla” ile açılıyor. Yatay kaydırılabilen alanların kenarındaki gölge, devamında içerik olduğunu gösteriyor.
+
+Kategori seçildiğinde o seviyenin alt kategorileri açılıyor. Seçilen yol görünür kalıyor, kullanıcı üst seviyeye dönebiliyor. Bu yapı mobilde de ilanların üzerinde bulunuyor; alt kategoriye ulaşmak için filtre penceresini açmak gerekmiyor. Marka ve model seçimleri kategoriye bağlı. Telefon için seçilen marka, mobilyaya geçildiğinde taşınmıyor.
+
+### Arama ve filtreler
+
+Yazarken ilan, anahtar kelime ve kategori önerileri çıkıyor. Arama Türkçe karakterleri, marka ve model adlarını da dikkate alıyor. Klavyeyle öneriler arasında ilerlemek ve aramayı Enter ile göndermek mümkün.
+
+Teknik özellikleri kategoriye göre tanımladım. Telefonda depolama ve ekran bilgileri, araçta yakıt ve vites, giyimde beden gibi ilgili alanlar gösteriliyor. İl ve ilçe birbirine bağlı seçim listeleri kullanıyor. Uygulanan filtreler sonuçların üstünde görülebiliyor ve tek tek kaldırılabiliyor.
+
+### İlanı değerlendirmek
+
+İlan detayında fiyat, ürün durumu ve satıcıya ulaşma eylemi ilk bakışta bulunabiliyor. Fotoğraf alanını açıklama ve özellikleri aşağı itecek kadar büyük tutmadım. Küçük görsellerle fotoğraf değiştirmek, galeriyi tam ekranda açıp yakınlaştırmak ve video izlemek mümkün. Mobilde fiyat ile mesaj düğmesi alt gezinmenin hemen üzerinde kalıyor.
+
+Mesajlaşmanın yanında ilana soru sorma alanı var. İlan sahibi yanıt verebiliyor, yanıtın herkese görünmesini ya da gizlenmesini seçebiliyor. Soru ve yanıt bildirimleri doğrudan ilgili ilana götürüyor. İlan numarası düzenlemede korunuyor, görüntülenme ve favori sayıları ise sahibinin ilan yönetiminde gösteriliyor.
+
+### Formları tamamlamak
+
+İlan oluşturma ve düzenleme aynı adımlı formu kullanıyor. Kategori seçimine göre alanlar değişiyor, önceki adımlara dönüldüğünde girilen bilgiler korunuyor. Hesap oluşturma da kısa adımlara ayrılmış durumda. Hatalar ilgili alanın yanında gösteriliyor.
+
+Mobil tarayıcıda klavyenin açılması ekran yüksekliğini değiştiriyor. Formlarda ve mesaj kutusunda görünen ekran alanını takip ediyor, yazılan alanın görünür kalması için kaydırmayı ayarlıyorum. Yerel uygulamada iOS ve Android’in klavye davranışlarını ayrı ele aldım. Seçim pencereleri de kullanılabilir yüksekliğe göre boyutlanıyor.
+
+### Hesap ve görünüm
+
+Hesap bilgileri mobil menünün en üstünde. Profilde ilan yönetimi, ayarlarda profil bilgileri ve hesap tercihleri bulunuyor. Profil fotoğrafı eklenebiliyor, e-posta adresi profil kartında gösterilmiyor. Favoriye eklemek ve soru göndermek giriş gerektiriyor.
+
+Açık ve koyu temalar ortak renk tanımlarıyla çalışıyor. Sistem görünümünü izlemek veya ayrı tercih kaydetmek mümkün. Sarı düğmelerde yazı ve simge rengi iki temada da koyu. Odak göstergeleri, klavyeyle gezinme ve sistemin azaltılmış hareket tercihi ortak bileşenlerde ele alınıyor.
 
 ## Performans yaklaşımı
 
-- İlk ekranda görünen ilan görsellerini önceliklendirip aşağıdaki görselleri ihtiyaç anına kadar erteliyorum.
-- Görseller için yer ayırarak yükleme sırasında kart düzeninin sıçramasını önlüyorum; önbelleklemeden yararlanıyorum.
-- Arama sonuçları ve ilan kartları gibi tekrar kullanılan alanlarda gereksiz yeniden hesaplama ve çizimleri azaltıyorum.
-- Hareketleri kısa tutuyor, sistemde azaltılmış hareket tercihi açık olduğunda animasyonları sınırlıyorum.
-- Aynı proje yapısını web, iOS ve Android’de kullanırken platforma özgü davranışları gereken bileşenlerde ayrı ele alıyorum.
+Performans tarafında görsel yükleme, arama sırasında yapılan hesaplamalar ve ekran hareketleri üzerinde durdum.
 
-## Öne çıkan akışlar
+| Alan               | Uygulama                                                                                                                                                                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| İlan görselleri    | İlk görünen görseller öncelikli, aşağıdaki görseller gecikmeli yükleniyor. Kartlarda en boy oranı baştan ayrılıyor. Yerel uygulamada bellek ve disk önbelleği kullanılıyor.                                     |
+| Galeri ve video    | Galeride yakın görseller önceden hazırlanıyor. Video seçilene kadar oynatıcı ekrana eklenmiyor, küçük görsel olarak ayrı bir kapak kullanılıyor. Görsel değişince video durduruluyor.                           |
+| Arama ve sonuçlar  | Öneriler ve filtre sonuçları bağımlılıklarına göre hesaplanıyor. Sonuç ekranında sorgu `useDeferredValue` ile erteleniyor, ilan kartları `memo` kullanıyor.                                                     |
+| Kaydırma ve klavye | Tarayıcıdaki görünür alan değişiklikleri `requestAnimationFrame` ile birleştiriliyor. Kategori şeridi, kenar gölgesi değişmediği sürece her kaydırma olayında yeniden çizilmiyor.                               |
+| Hareket ve yükleme | Geçişler kısa, animasyonlar ağırlıklı olarak saydamlık ve dönüşüm üzerinden çalışıyor. Bekleyen içerik kendi düzenine uygun yükleme iskeletiyle gösteriliyor. Azaltılmış hareket açıkken iskelet sabit kalıyor. |
 
-- Kategori, alt kategori, marka ve model üzerinden ilan keşfi
-- Türkçe karakterlere uyumlu arama ve yazarken öneriler
-- Kategoriye göre değişen teknik özellik filtreleri, fiyat ve konum seçimi
-- İlan detayında fotoğraf galerisi, yakınlaştırma, video, özellikler ve satıcıya mesaj
-- Adımlı ilan oluşturma ve mevcut ilanı düzenleme
-- Hesap oluşturma, giriş, profil fotoğrafı, favoriler ve mesajlar
+Webde tarayıcının kendi iletişim kutusu ve açılır pencere davranışlarından yararlanıyorum. Yerel uygulamada aynı işi React Native bileşenleri üstleniyor. Bu ayrım, tek bileşene bütün platformların davranışlarını yüklememeyi sağlıyor.
 
 ## Yerelde çalıştırma
 
@@ -75,12 +97,12 @@ npm run build
 npm run preview
 ```
 
-## Denetim komutları
+## Kontroller
 
 ```bash
-npm run typecheck
+npm run check
 npm run format:check
-npm run doctor
+npm run build
 ```
 
 ## Proje yapısı
@@ -98,11 +120,13 @@ screenshots/            README’de kullanılan masaüstü ve mobil görüntüle
 scripts/                Web derleme araçları
 ```
 
-Web ile yerel platformlarda farklı davranması gereken bileşenler `.web.tsx` uzantılı dosyalarda ayrılır.
+Webe özgü bileşenler `.web.tsx` uzantısıyla ayrılıyor. Kategori ağacı ve teknik özellik tanımları, arama ile ilan formunun kullandığı ortak veri yapılarında tutuluyor.
 
 ## Veri saklama
 
-Bu sürümde hesap, ilan, favori ve mesaj bilgileri cihazda saklanır. Webde seçilen fotoğraf ve videolar tarayıcının IndexedDB alanında tutulur. Sunucu tarafında hesap, uzaktan mesajlaşma veya ödeme altyapısı bu projeye dahil değildir.
+Hesap, ilan, favori, mesaj, soru-cevap ve bildirim kayıtları cihazda saklanıyor. Webde seçilen fotoğraf ve videolar IndexedDB’de tutuluyor. Yerel uygulamada seçicinin verdiği dosya adresleri kaydediliyor, dosyalar ayrı bir kalıcı dizine kopyalanmıyor. İlan numaraları ve istatistikler de bu kayıtlar üzerinden çalışıyor.
+
+Farklı cihazlar arasında hesap eşitleme, gerçek zamanlı uzaktan mesajlaşma ve ödeme için sunucu bağlantısı gerekiyor. Bu depoda sunucu uygulaması bulunmuyor. Tarayıcı veya uygulama verilerini temizlemek yerel kayıtları da siliyor.
 
 ## Lisans
 
