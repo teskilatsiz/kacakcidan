@@ -33,6 +33,7 @@ import {
   type KesifSecimi,
 } from '../veri/kategoriler';
 import { ozellikFiltreAlanlari, type OzellikAlani } from '../veri/ozellikler';
+import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
@@ -99,12 +100,30 @@ export default function Kesfet() {
   const [filtreAcik, setFiltreAcik] = useState(false);
   const [siralaAcik, setSiralaAcik] = useState(false);
   const [teknikAcik, setTeknikAcik] = useState(false);
+  const urunIlani = urunKategorisiMi(secim.kategori);
+  const isIlani = secim.kategori === 'is-ilanlari';
+  const ozellikBasligi = isIlani
+    ? 'Çalışma koşulları'
+    : secim.kategori === 'hizmetler'
+      ? 'Hizmet ayrıntıları'
+      : secim.kategori === 'emlak'
+        ? 'Emlak özellikleri'
+        : 'Teknik özellikler';
+  useEffect(() => {
+    if (!urunIlani) {
+      setDurum('');
+      setTakas(false);
+    }
+  }, [urunIlani]);
   useEffect(() => {
     if (!hazir || parametreler.filtre !== '1') return;
     if (tablet) setFiltreAcik(true);
     router.setParams({ filtre: '' });
   }, [hazir, parametreler.filtre, tablet, router]);
-  useEffect(() => setTakas(hazir && parametreler.takas === '1'), [hazir, parametreler.takas]);
+  useEffect(
+    () => setTakas(urunIlani && hazir && parametreler.takas === '1'),
+    [hazir, parametreler.takas, urunIlani],
+  );
   useEffect(() => setEnCok(firsat ? '20000' : ''), [firsat]);
   const sorgu = useDeferredValue(q);
   const alanlar = useMemo(() => {
@@ -150,8 +169,8 @@ export default function Kesfet() {
         konum,
         enAz,
         enCok,
-        durum,
-        takas,
+        durum: urunIlani ? durum : '',
+        takas: urunIlani && takas,
       }),
     [
       tumIlanlar,
@@ -165,6 +184,7 @@ export default function Kesfet() {
       enCok,
       durum,
       takas,
+      urunIlani,
     ],
   );
   const sonuc = useMemo(
@@ -318,7 +338,25 @@ export default function Kesfet() {
         <KategoriAgaci ilanlar={tumIlanlar} secim={secim} sec={sec} />
       </View>
       <View style={s.filtreBolum}>
-        <Yazi style={s.filtreBaslik}>Fiyat aralığı</Yazi>
+        <Yazi style={s.filtreBaslik}>Konum</Yazi>
+        <SecimAlani
+          etiket="İl"
+          deger={seciliKonum.il}
+          ipucu="Türkiye"
+          secenekler={iller}
+          degistir={(il) => konumSec(konumuBirlestir(il))}
+        />
+        <SecimAlani
+          etiket="İlçe"
+          deger={seciliKonum.ilce}
+          ipucu={seciliKonum.il ? 'Tüm ilçeler' : 'Önce il seç'}
+          secenekler={ilceSecenekleri(seciliKonum.il)}
+          degistir={(ilce) => konumSec(konumuBirlestir(seciliKonum.il, ilce))}
+          disabled={!seciliKonum.il}
+        />
+      </View>
+      <View style={s.filtreBolum}>
+        <Yazi style={s.filtreBaslik}>{isIlani ? 'Ücret aralığı' : 'Fiyat aralığı'}</Yazi>
         <View style={[ortak.satir, { alignItems: 'flex-end', gap: 8 }]}>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Alan
@@ -349,11 +387,14 @@ export default function Kesfet() {
         <View style={s.filtreBolum}>
           <HareketliBas
             onPress={() => setTeknikAcik(!teknikAcik)}
-            accessibilityLabel="Teknik özellik filtreleri"
+            accessibilityLabel={`${ozellikBasligi} filtreleri`}
             accessibilityState={{ expanded: teknikAcik }}
             style={[ortak.aralikli, { minHeight: 44 }]}
           >
-            <Yazi style={s.filtreBaslik}>Teknik özellikler{ozellikSayisi ? ` (${ozellikSayisi})` : ''}</Yazi>
+            <Yazi style={s.filtreBaslik}>
+              {ozellikBasligi}
+              {ozellikSayisi ? ` (${ozellikSayisi})` : ''}
+            </Yazi>
             <ChevronDown
               size={17}
               color={renk.murekkep}
@@ -364,7 +405,9 @@ export default function Kesfet() {
             <>
               {!secim.model && (
                 <Yazi style={{ fontSize: 12, lineHeight: 18, color: renk.gri }}>
-                  Daha ayrıntılı özellikler için ürün türünü veya modelini seç.
+                  {isIlani
+                    ? 'Pozisyon seçerek aramanı daraltabilirsin.'
+                    : 'Daha ayrıntılı özellikler için alt kategoriyi seç.'}
                 </Yazi>
               )}
               {teknikAlanlar.map((alan) => (
@@ -386,7 +429,7 @@ export default function Kesfet() {
         </Yazi>
       ) : !secim.altKategori ? (
         <Yazi style={{ fontSize: 12, color: renk.gri, lineHeight: 19 }}>
-          Ürün özellikleri için bir alt kategori seç.
+          İlan özellikleri için bir alt kategori seç.
         </Yazi>
       ) : !secim.model ? (
         <Yazi style={{ fontSize: 12, color: renk.gri, lineHeight: 19 }}>
@@ -394,42 +437,31 @@ export default function Kesfet() {
         </Yazi>
       ) : null}
       <View style={s.filtreBolum}>
-        <SecimAlani
-          etiket="İl"
-          deger={seciliKonum.il}
-          ipucu="Türkiye"
-          secenekler={iller}
-          degistir={(il) => konumSec(konumuBirlestir(il))}
-        />
-        <SecimAlani
-          etiket="İlçe"
-          deger={seciliKonum.ilce}
-          ipucu={seciliKonum.il ? 'Tüm ilçeler' : 'Önce il seç'}
-          secenekler={ilceSecenekleri(seciliKonum.il)}
-          degistir={(ilce) => konumSec(konumuBirlestir(seciliKonum.il, ilce))}
-          disabled={!seciliKonum.il}
-        />
-        <SecimAlani
-          etiket="Ürünün durumu"
-          deger={durum}
-          ipucu="Fark etmez"
-          secenekler={durumlar.map((deger) => ({ id: deger, ad: deger }))}
-          degistir={setDurum}
-        />
-        <HareketliBas
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: takas }}
-          onPress={() => {
-            setTakas(!takas);
-            router.setParams({ takas: takas ? '' : '1' });
-          }}
-          style={[ortak.satir, { minHeight: 44 }]}
-        >
-          <View style={[s.kutu, takas && { backgroundColor: renk.sari, borderColor: renk.sari }]}>
-            {takas ? <Check size={13} color={renk.vurguYazi} /> : null}
-          </View>
-          <Yazi style={{ fontSize: 13 }}>Takasa açık ilanlar</Yazi>
-        </HareketliBas>
+        {urunIlani ? (
+          <SecimAlani
+            etiket="Ürünün durumu"
+            deger={durum}
+            ipucu="Fark etmez"
+            secenekler={durumlar.map((deger) => ({ id: deger, ad: deger }))}
+            degistir={setDurum}
+          />
+        ) : null}
+        {urunIlani ? (
+          <HareketliBas
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: takas }}
+            onPress={() => {
+              setTakas(!takas);
+              router.setParams({ takas: takas ? '' : '1' });
+            }}
+            style={[ortak.satir, { minHeight: 44 }]}
+          >
+            <View style={[s.kutu, takas && { backgroundColor: renk.sari, borderColor: renk.sari }]}>
+              {takas ? <Check size={13} color={renk.vurguYazi} /> : null}
+            </View>
+            <Yazi style={{ fontSize: 13 }}>Takasa açık ilanlar</Yazi>
+          </HareketliBas>
+        ) : null}
       </View>
     </View>
   );

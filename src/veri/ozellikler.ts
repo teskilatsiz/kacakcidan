@@ -1,6 +1,7 @@
 import type { Kategori } from './ilanlar.ts';
 import { ekOzellikAlanlari } from './ekOzellikler.ts';
 import { kategoriAgaci } from './kategoriler.ts';
+import { ilanOzellikAlanlari } from './ilanOzellikleri.ts';
 
 export type OzellikAlani = {
   ad: string;
@@ -245,6 +246,22 @@ const modelYili = alan(
   Array.from({ length: 67 }, (_, i) => `${2026 - i}`),
 );
 const kilometre = sayisalAlan('Kilometre', 2000000, 'km', kmAraliklari);
+const aracKaydi = [
+  alan('Kimden', ['Sahibinden', 'Galeriden', 'Yetkili bayiden']),
+  alan('Ağır hasar kayıtlı', ['Hayır', 'Evet', 'Bilinmiyor']),
+  alan('Boya durumu', ['Boyasız', 'Lokal boyalı', 'Boyalı', 'Belirtilmemiş']),
+  alan('Değişen parça', ['Yok', 'Var', 'Bilinmiyor']),
+  alan('Plaka durumu', ['Türkiye plakalı', 'Yabancı plakalı', 'Mavi plakalı', 'Plakasız']),
+];
+const motorGucu = sayisalAlan('Motor gücü', 2000, 'bg', [
+  [1, 75, '75 bg ve altı'],
+  [76, 100, '76 - 100 bg'],
+  [101, 125, '101 - 125 bg'],
+  [126, 150, '126 - 150 bg'],
+  [151, 200, '151 - 200 bg'],
+  [201, 300, '201 - 300 bg'],
+  [301, null, '301 bg ve üzeri'],
+]);
 const islemciler = [
   'Intel Core i3',
   'Intel Core i5',
@@ -719,6 +736,24 @@ function yaziciAlanlari(model = ''): OzellikAlani[] {
 }
 
 function bilgisayarAlanlari({ altKategori, marka, model = '' }: UrunSecimi): OzellikAlani[] {
+  if (altKategori === 'oyun-bilgisayari')
+    return [
+      alan(
+        'İşlemci',
+        islemciler.filter((ad) => !ad.startsWith('Apple')),
+      ),
+      alan('Bellek', bellekler),
+      alan('Ekran kartı', [
+        'NVIDIA GeForce RTX',
+        'NVIDIA GeForce GTX',
+        'AMD Radeon RX',
+        'Intel Arc',
+        'Diğer',
+      ]),
+      alan('Ekran', ['14 inç', '15,6 inç', '16 inç', '17,3 inç', '18 inç', 'Masaüstü']),
+      alan('Depolama', suruculer),
+      ...elektronikBelgeleri,
+    ];
   if (altKategori === 'bilgisayar-parcalari') return bilgisayarParcasiAlanlari(marka, model);
   if (altKategori === 'cevre-birimleri') return cevreBirimiAlanlari(marka, model);
   if (altKategori === 'yazici-tarayici') return yaziciAlanlari(model);
@@ -888,24 +923,6 @@ function bilgisayarAlanlari({ altKategori, marka, model = '' }: UrunSecimi): Oze
 }
 
 function oyunAlanlari({ altKategori, marka, model = '' }: UrunSecimi): OzellikAlani[] {
-  if (altKategori === 'oyun-bilgisayari')
-    return [
-      alan(
-        'İşlemci',
-        islemciler.filter((ad) => !ad.startsWith('Apple')),
-      ),
-      alan('Bellek', bellekler),
-      alan('Ekran kartı', [
-        'NVIDIA GeForce RTX',
-        'NVIDIA GeForce GTX',
-        'AMD Radeon RX',
-        'Intel Arc',
-        'Diğer',
-      ]),
-      alan('Ekran', ['14 inç', '15,6 inç', '16 inç', '17,3 inç', '18 inç', 'Masaüstü']),
-      alan('Depolama', suruculer),
-      ...elektronikBelgeleri,
-    ];
   if (altKategori === 'bilgisayar-oyunu' || altKategori === 'konsol-oyunu')
     return [
       alan(
@@ -1503,6 +1520,7 @@ function otomotivAlanlari({ altKategori, marka, model = '' }: UrunSecimi): Ozell
       varYok('ABS'),
       alan('Soğutma', ['Hava soğutmalı', 'Sıvı soğutmalı']),
       renk,
+      ...aracKaydi.filter((alan) => alan.ad !== 'Boya durumu'),
     ];
   if (altKategori === 'deniz-araci')
     return [
@@ -1538,7 +1556,9 @@ function otomotivAlanlari({ altKategori, marka, model = '' }: UrunSecimi): Ozell
       ]),
       alan('Şarj girişi', ['CCS2', 'Type 2', 'CHAdeMO', 'Diğer']),
       alan('Çekiş', ['Önden çekiş', 'Arkadan itiş', 'Dört tekerlekten çekiş']),
+      motorGucu,
       renk,
+      ...aracKaydi,
     ];
   return [
     modelYili,
@@ -1554,7 +1574,9 @@ function otomotivAlanlari({ altKategori, marka, model = '' }: UrunSecimi): Ozell
     alan('Motor hacmi', ['0 - 1.3 L', '1.4 - 1.6 L', '1.7 - 2.0 L', '2.1 L ve üzeri']),
     alan('Çekiş', ['Önden çekiş', 'Arkadan itiş', '4×4']),
     alan('Hasar kaydı', ['Yok', 'Var', 'Bilinmiyor']),
+    motorGucu,
     renk,
+    ...aracKaydi,
   ];
 }
 
@@ -2011,6 +2033,10 @@ export function ozellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
       return evAlanlari(secim);
     case 'koleksiyon':
       return koleksiyonAlanlari(secim);
+    case 'is-ilanlari':
+    case 'emlak':
+    case 'hizmetler':
+      return ilanOzellikAlanlari(secim);
     default:
       return ekOzellikAlanlari(secim);
   }

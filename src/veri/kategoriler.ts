@@ -1,5 +1,6 @@
 import { kategoriler, type Ilan, type Kategori } from './ilanlar.ts';
 import { ekKategoriler } from './ekKategoriler.ts';
+import { ilanKategorileri } from './ilanKategorileri.ts';
 
 export type KategoriSecenegi = { id: string; ad: string };
 type Marka = KategoriSecenegi & { modeller: KategoriSecenegi[] };
@@ -22,6 +23,21 @@ const kategoriBasliklari: Record<
   Kategori,
   { altKategoriBasligi: string; markaBasligi: string; modelBasligi: string }
 > = {
+  'is-ilanlari': {
+    altKategoriBasligi: 'İş alanları',
+    markaBasligi: 'Pozisyon grupları',
+    modelBasligi: 'Pozisyonlar',
+  },
+  emlak: {
+    altKategoriBasligi: 'Emlak grupları',
+    markaBasligi: 'İlan türleri',
+    modelBasligi: 'Emlak türleri',
+  },
+  hizmetler: {
+    altKategoriBasligi: 'Hizmet alanları',
+    markaBasligi: 'Hizmet grupları',
+    modelBasligi: 'Hizmet türleri',
+  },
   telefon: { altKategoriBasligi: 'Alt kategoriler', markaBasligi: 'Markalar', modelBasligi: 'Modeller' },
   bilgisayar: {
     altKategoriBasligi: 'Alt kategoriler',
@@ -88,6 +104,7 @@ const kategoriBasliklari: Record<
 
 export const kategoriAgaci: KategoriAgaci = {
   ...ekKategoriler,
+  ...ilanKategorileri,
   telefon: [
     {
       id: 'cep-telefonu',
@@ -559,13 +576,16 @@ kategoriAgaci.bilgisayar.push(
   ),
 );
 
-kategoriAgaci.oyun.push(
+kategoriAgaci.bilgisayar.push(
   dal('oyun-bilgisayari', 'Oyun bilgisayarı', [
     marka('asus', 'ASUS', urunler(['rog-laptop', 'ROG'], ['tuf-gaming', 'TUF Gaming'])),
     marka('lenovo', 'Lenovo', urunler(['legion', 'Legion'], ['loq', 'LOQ'])),
     marka('msi', 'MSI', urunler(['katana', 'Katana'], ['raider', 'Raider'])),
     marka('toplama', 'Toplama sistem', urunler(['masaustu-oyun', 'Masaüstü'], ['dizustu-oyun', 'Dizüstü'])),
   ]),
+);
+
+kategoriAgaci.oyun.push(
   dal(
     'oyun-ekipmanlari',
     'Oyun ekipmanları',
@@ -1984,6 +2004,25 @@ kataloguGenislet(
     marka('diger', 'Diğer', urunler(['dolmakalem', 'Dolmakalem'], ['mekanik-kalem', 'Mekanik kalem'])),
   ]),
 );
+
+// Önce binek araçlar görünür; parça ve ekipman dalları aynı katalogda korunur.
+const aracSirasi = [
+  'otomobil',
+  'suv-pickup',
+  'elektrikli-arac',
+  'motosiklet',
+  'minivan-panelvan',
+  'ticari-arac',
+  'karavan',
+  'deniz-araci',
+  'atv',
+  'yedek-parca',
+  'lastik-jant',
+  'oto-aksesuar',
+  'motosiklet-ekipmani',
+  'romork',
+];
+kategoriAgaci.otomotiv.sort((a, b) => aracSirasi.indexOf(a.id) - aracSirasi.indexOf(b.id));
 
 export function kategoriYapisi(kategori: Kategori, altKategori?: string) {
   const altKategoriler = kategoriAgaci[kategori] ?? [];

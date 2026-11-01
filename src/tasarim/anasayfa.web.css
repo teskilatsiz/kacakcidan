@@ -1,0 +1,207 @@
+/* Ana sayfa, JavaScript ekran ölçüsünü okumadan ilk HTML'de yerleşir. */
+[data-kategori-ana-alan] {
+  padding: 8px 48px !important;
+  gap: 8px !important;
+}
+[data-kategori-web-baslik],
+[data-kategori-web-adet],
+[data-kategori-web-ok],
+[data-kategori-web-tumu-yazi='mobil'],
+[data-anasayfa-vitrin-eylemi='mobil'],
+[data-kesif-yerlesimi='alt'] {
+  display: none !important;
+}
+[data-kategori-web-kaydirma] {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+[data-kategori-web-kaydirma]::-webkit-scrollbar {
+  display: none;
+}
+[data-kategori-web-satir] {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  flex-wrap: nowrap !important;
+  gap: 6px !important;
+  padding: 3px 0;
+}
+[data-kategori-web-satir] > [data-kategori-web-karti],
+[data-kategori-web-satir] > [data-kategori-web-tumu] {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  width: auto !important;
+  padding: 0 12px !important;
+  gap: 9px !important;
+  border-width: 0 !important;
+  border-radius: 9px !important;
+}
+[data-kategori-web-satir] > [data-kategori-web-tumu] {
+  flex-grow: 1.15 !important;
+}
+[data-kategori-web-satir] [data-kategori-web-adi] {
+  font-size: 13px !important;
+  line-height: 21px !important;
+  white-space: nowrap !important;
+  -webkit-line-clamp: 1 !important;
+}
+[data-kategori-web-satir] [aria-expanded='true'] [data-kategori-web-ok] {
+  display: flex !important;
+  transform: rotate(-90deg);
+}
+[data-kategori-web-tumu-yazi] {
+  font: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+}
+[data-anasayfa-alani] {
+  padding: 22px 48px 44px !important;
+  gap: 24px !important;
+}
+[data-anasayfa-vitrin] {
+  gap: 20px !important;
+}
+[data-anasayfa-vitrin-basligi] [aria-level='1'] {
+  font-size: 32px !important;
+  line-height: 40px !important;
+}
+[data-kategori-kesif-bandi] {
+  animation: none !important;
+}
+@media (min-width: 1100px) and (max-width: 1259px) {
+  [data-kategori-web-satir] > [data-kategori-web-karti],
+  [data-kategori-web-satir] > [data-kategori-web-tumu] {
+    padding-inline: 6px !important;
+    gap: 6px !important;
+  }
+  [data-kategori-web-satir] [data-kategori-web-adi] {
+    font-size: 12px !important;
+  }
+}
+@media (min-width: 700px) and (max-width: 1099px) {
+  [data-kategori-ana-alan] {
+    padding-inline: 28px !important;
+  }
+  [data-kategori-web-satir] {
+    min-width: 100%;
+    width: max-content;
+  }
+  [data-kategori-web-satir] > [data-kategori-web-karti] {
+    flex: 0 0 148px !important;
+    width: 148px !important;
+  }
+  [data-kategori-web-satir] > [data-kategori-web-tumu] {
+    flex: 0 0 160px !important;
+    width: 160px !important;
+  }
+  [data-kategori-web-kaydirma] {
+    background:
+      linear-gradient(to right, var(--renk-beyaz) 30%, transparent) left / 28px 100% local no-repeat,
+      linear-gradient(to left, var(--renk-beyaz) 30%, transparent) right / 28px 100% local no-repeat,
+      linear-gradient(to right, var(--renk-cizgi), transparent) left / 12px 100% scroll no-repeat,
+      linear-gradient(to left, var(--renk-cizgi), transparent) right / 12px 100% scroll no-repeat;
+  }
+  [data-anasayfa-alani] {
+    padding-inline: 28px !important;
+  }
+}
+@media (min-width: 700px) and (max-width: 1079px) {
+  [data-kesif-yerlesimi='ust'] [data-kesif-bant-icerigi] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  [data-kesif-yerlesimi='ust'] [data-kesif-bant-metni] {
+    flex: none !important;
+  }
+  [data-kesif-yerlesimi='ust'] [data-vurgu='dugme'] {
+    margin-right: 0 !important;
+  }
+}
+@media (max-width: 699px) {
+  [data-kategori-ana-alan] {
+    padding: 19px 20px 20px !important;
+    gap: 16px !important;
+  }
+  [data-kategori-web-baslik],
+  [data-kategori-web-adet],
+  [data-kategori-web-ok],
+  [data-kategori-web-tumu-yazi='mobil'],
+  [data-anasayfa-vitrin-eylemi='mobil'],
+  [data-kesif-yerlesimi='alt'] {
+    display: flex !important;
+  }
+  [data-kategori-web-tumu-yazi='masaustu'],
+  [data-anasayfa-vitrin-eylemi='masaustu'],
+  [data-anasayfa-vitrin-altbaslik],
+  [data-kesif-yerlesimi='ust'] {
+    display: none !important;
+  }
+  [data-kategori-web-kaydirma] {
+    overflow: visible;
+  }
+  [data-kategori-web-satir] {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px !important;
+    padding: 0;
+  }
+  [data-kategori-web-satir] > [data-kategori-web-karti],
+  [data-kategori-web-satir] > [data-kategori-web-tumu] {
+    width: 100% !important;
+    min-height: 68px !important;
+    height: 68px !important;
+    padding: 6px 10px !important;
+    gap: 8px !important;
+    border-width: 1px !important;
+    border-radius: 12px !important;
+  }
+  [data-kategori-web-satir] [data-kategori-web-adi] {
+    font-size: 13px !important;
+    line-height: 18px !important;
+    white-space: normal !important;
+    -webkit-line-clamp: 2 !important;
+  }
+  [data-kategori-web-satir] [data-kategori-web-adet] {
+    font-size: 12px !important;
+    line-height: 16px !important;
+  }
+  [data-kategori-web-satir] [data-kategori-simgesi],
+  [data-kategori-web-satir] [data-kategori-simgesi] > svg,
+  [data-kategori-web-satir] > [data-kategori-web-tumu] > svg {
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0;
+  }
+  [data-kategori-web-satir] [aria-expanded='true'] [data-kategori-web-ok] {
+    transform: none;
+  }
+  [data-anasayfa-alani] {
+    padding: 4px 20px 28px !important;
+    gap: 26px !important;
+  }
+  [data-anasayfa-vitrin] {
+    gap: 16px !important;
+  }
+  [data-anasayfa-vitrin-basligi] [aria-level='1'] {
+    font-size: 27px !important;
+    line-height: 35px !important;
+  }
+}
+@media (max-width: 359px) {
+  [data-kategori-web-satir] > [data-kategori-web-karti],
+  [data-kategori-web-satir] > [data-kategori-web-tumu] {
+    padding-inline: 7px !important;
+    gap: 6px !important;
+  }
+  [data-kategori-web-satir] [data-kategori-simgesi],
+  [data-kategori-web-satir] [data-kategori-simgesi] > svg,
+  [data-kategori-web-satir] > [data-kategori-web-tumu] > svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}

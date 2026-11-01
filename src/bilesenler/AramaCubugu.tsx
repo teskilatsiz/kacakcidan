@@ -9,7 +9,7 @@ import { usePazar } from '../durum/Pazar';
 import { font, useTema, temaStilleri } from '../tasarim/tema';
 import { aramaOnerileri, type AramaOnerisi, type AramaKutusuProps } from '../veri/arama';
 import { kategoriAgaci } from '../veri/kategoriler';
-import { ilanYolu, kategoriler, para } from '../veri/ilanlar';
+import { ilanBedeli, ilanYolu, kategoriler } from '../veri/ilanlar';
 import { gorselKaynagi } from '../veri/gorseller';
 import { HareketliBas } from './Hareketli';
 
@@ -19,6 +19,7 @@ export function AraKutusu({
   ara,
   buyuk = false,
   inline = false,
+  sade = false,
   secildi,
 }: AramaKutusuProps) {
   const { renk } = useTema();
@@ -93,16 +94,18 @@ export function AraKutusu({
             <X color={renk.murekkep} size={17} />
           </Pressable>
         )}
-        <HareketliBas
-          vurgu="dugme"
-          accessibilityRole="button"
-          accessibilityLabel="İlan ara"
-          onPress={() => tamamla()}
-          style={s.ara}
-        >
-          <Text style={s.araYazi}>Ara</Text>
-          <Search size={17} color={renk.vurguYazi} />
-        </HareketliBas>
+        {!sade && (
+          <HareketliBas
+            vurgu="dugme"
+            accessibilityRole="button"
+            accessibilityLabel="İlan ara"
+            onPress={() => tamamla()}
+            style={s.ara}
+          >
+            <Text style={s.araYazi}>Ara</Text>
+            <Search size={17} color={renk.vurguYazi} />
+          </HareketliBas>
+        )}
       </View>
       {acik && (sorgu.length > 0 || oneriler.length > 0) && (
         <View style={[s.panel, inline && s.inline]}>
@@ -146,7 +149,7 @@ export function AraKutusu({
                   </Text>
                   <Text numberOfLines={1} style={s.aciklama}>
                     {oneri.tur === 'ilan'
-                      ? `${para(oneri.ilan.fiyat)} · ${oneri.ilan.konum}`
+                      ? `${ilanBedeli(oneri.ilan)} · ${oneri.ilan.konum}`
                       : oneri.tur === 'kategori'
                         ? `${oneri.seviye} · ${oneri.adet} ilan`
                         : `Arama önerisi · ${oneri.adet} ilan`}

@@ -9,7 +9,7 @@ import { useMedyaAdresi } from '../durum/medyaDeposu';
 import { useTema, temaStilleri } from '../tasarim/tema';
 import { aramaOnerileri, type AramaOnerisi, type AramaKutusuProps } from '../veri/arama';
 import { kategoriAgaci } from '../veri/kategoriler';
-import { ilanYolu, kategoriler, para } from '../veri/ilanlar';
+import { ilanBedeli, ilanYolu, kategoriler } from '../veri/ilanlar';
 
 type Satir = AramaOnerisi | { id: 'tum-sonuclar'; tur: 'tum'; baslik: string; sorgu: string };
 
@@ -26,6 +26,7 @@ export function AraKutusu({
   ara,
   buyuk = false,
   inline = false,
+  sade = false,
   secildi,
 }: AramaKutusuProps) {
   const { renk } = useTema();
@@ -152,7 +153,9 @@ export function AraKutusu({
           autoComplete="off"
           enterKeyHint="search"
           maxLength={150}
-          placeholder={buyuk ? 'Ne arıyorsun? iPhone, koltuk, bisiklet…' : 'İlanlarda ara'}
+          placeholder={
+            sade ? 'Ne arıyorsun?' : buyuk ? 'Ne arıyorsun? iPhone, koltuk, bisiklet…' : 'İlanlarda ara'
+          }
           value={deger}
           onChange={(olay) => {
             degistir(olay.target.value);
@@ -181,17 +184,19 @@ export function AraKutusu({
             <X size={17} />
           </button>
         )}
-        <button
-          type="button"
-          aria-label="İlan ara"
-          data-vurgu="dugme"
-          data-arama-dugmesi
-          style={{ ...s.ara, ...(buyuk ? { minHeight: 44 } : {}) }}
-          onClick={() => tamamla()}
-        >
-          <span>Ara</span>
-          <Search size={17} color={renk.vurguYazi} aria-hidden />
-        </button>
+        {!sade && (
+          <button
+            type="button"
+            aria-label="İlan ara"
+            data-vurgu="dugme"
+            data-arama-dugmesi
+            style={{ ...s.ara, ...(buyuk ? { minHeight: 44 } : {}) }}
+            onClick={() => tamamla()}
+          >
+            <span>Ara</span>
+            <Search size={17} color={renk.vurguYazi} aria-hidden />
+          </button>
+        )}
       </div>
       {gorunur && (
         <div style={{ ...s.panel, ...(inline ? s.inline : {}) }}>
@@ -240,7 +245,7 @@ export function AraKutusu({
                   </span>
                   {satir.tur === 'ilan' && (
                     <span style={s.aciklama}>
-                      {para(satir.ilan.fiyat)} <span style={{ color: renk.gri }}>· {satir.ilan.konum}</span>
+                      {ilanBedeli(satir.ilan)} <span style={{ color: renk.gri }}>· {satir.ilan.konum}</span>
                     </span>
                   )}
                   {satir.tur === 'kategori' && (

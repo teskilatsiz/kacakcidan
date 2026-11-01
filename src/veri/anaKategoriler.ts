@@ -1,11 +1,11 @@
 const anaKategoriler = [
+  { id: 'otomotiv', ad: 'Otomotiv', simge: 'CarFront' },
   { id: 'telefon', ad: 'Telefon', simge: 'Smartphone' },
   { id: 'bilgisayar', ad: 'Bilgisayar', simge: 'Laptop' },
   { id: 'oyun', ad: 'Oyun & konsol', simge: 'Gamepad2' },
   { id: 'ev', ad: 'Ev & yaşam', simge: 'Armchair' },
   { id: 'moda', ad: 'Moda', simge: 'Shirt' },
   { id: 'fotograf', ad: 'Fotoğraf', simge: 'Camera' },
-  { id: 'otomotiv', ad: 'Otomotiv', simge: 'CarFront' },
   { id: 'koleksiyon', ad: 'Koleksiyon', simge: 'Disc3' },
   { id: 'spor', ad: 'Spor & outdoor', simge: 'Bike' },
   { id: 'anne-bebek', ad: 'Anne & bebek', simge: 'Baby' },
@@ -17,9 +17,15 @@ const anaKategoriler = [
   { id: 'teknik-elektronik', ad: 'Teknik elektronik', simge: 'CircuitBoard' },
   { id: 'ofis', ad: 'Ofis & kırtasiye', simge: 'BriefcaseBusiness' },
   { id: 'antika', ad: 'Antika', simge: 'Landmark' },
+  { id: 'emlak', ad: 'Emlak', simge: 'House' },
+  { id: 'is-ilanlari', ad: 'İş ilanları', simge: 'UserRoundSearch' },
+  { id: 'hizmetler', ad: 'Ustalar & hizmetler', simge: 'Wrench' },
 ] as const;
 
 export type Kategori = (typeof anaKategoriler)[number]['id'];
+export function urunKategorisiMi(kategori: string) {
+  return !['is-ilanlari', 'emlak', 'hizmetler'].includes(kategori);
+}
 export const kategoriler: { id: Kategori; ad: string; simge: string }[] = anaKategoriler.map((kategori) => ({
   ...kategori,
 }));

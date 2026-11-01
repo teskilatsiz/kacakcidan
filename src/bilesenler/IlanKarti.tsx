@@ -1,10 +1,11 @@
-import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { memo, type ReactNode } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Gorsel as Image } from './Gorsel';
 import { gorselKaynagi } from '../veri/gorseller';
 import { Link } from 'expo-router';
 import MapPin from 'lucide-react-native/icons/map-pin';
-import { type Ilan, para, ilanYolu } from '../veri/ilanlar';
+import { type Ilan, ilanBedeli, ilanYolu } from '../veri/ilanlar';
+import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { usePazar } from '../durum/Pazar';
 import { FavoriDugmesi, HareketliBas } from './Hareketli';
 import { Yazi } from './Temel';
@@ -15,10 +16,12 @@ export const IlanKarti = memo(function IlanKarti({
   ilan,
   liste = false,
   priority,
+  vitrin = false,
 }: {
   ilan: Ilan;
   liste?: boolean;
   priority?: 'high' | 'normal';
+  vitrin?: boolean;
 }) {
   const { renk } = useTema();
   const s = useStiller();
@@ -26,11 +29,14 @@ export const IlanKarti = memo(function IlanKarti({
   const { favoriler, favoriDegistir } = usePazar();
   const { mobil } = useEkran();
   return (
-    <View style={[s.kart, liste && s.liste]} dataSet={{ 'ilan-karti': 'true' }}>
+    <View
+      style={[s.kart, liste && s.liste]}
+      dataSet={{ 'ilan-karti': 'true', 'vitrin-karti': String(vitrin), 'liste-karti': String(liste) }}
+    >
       <Link href={ilanYolu(ilan)} asChild>
         <HareketliBas
           olcek={0.99}
-          accessibilityLabel={`${ilan.baslik}, ${para(ilan.fiyat)}, ${ilan.durum}${ilan.takas ? ', takasa açık' : ''}, ${ilan.konum}`}
+          accessibilityLabel={`${ilan.baslik}, ${ilanBedeli(ilan)}${urunKategorisiMi(ilan.kategori) ? `, ${ilan.durum}${ilan.takas ? ', takasa açık' : ''}` : ''}, ${ilan.konum}`}
           style={StyleSheet.flatten([{ flex: 1 }, liste && { flexDirection: 'row' }])}
         >
           <View
@@ -75,21 +81,31 @@ export const IlanKarti = memo(function IlanKarti({
               liste && { flex: 1, minWidth: 0, justifyContent: 'center', paddingHorizontal: mobil ? 12 : 24 },
             ]}
           >
-            <IlanEtiketleri durum={ilan.durum} takas={ilan.takas} kucuk />
+            {urunKategorisiMi(ilan.kategori) && (Platform.OS === 'web' || !vitrin || !mobil) && (
+              <View dataSet={{ 'ilan-etiketleri': 'true' }}>
+                <IlanEtiketleri durum={ilan.durum} takas={ilan.takas} kucuk />
+              </View>
+            )}
             <Yazi numberOfLines={2} style={s.baslik}>
               {ilan.baslik}
             </Yazi>
             <Yazi style={[s.fiyat, liste && mobil && { fontSize: 19, lineHeight: 28 }]}>
-              {para(ilan.fiyat)}
+              {ilanBedeli(ilan)}
             </Yazi>
-            <View style={[s.konum, mobil && { flexDirection: 'column', alignItems: 'stretch', gap: 2 }]}>
+            <View
+              dataSet={{ 'ilan-konumu': 'true' }}
+              style={[
+                s.konum,
+                Platform.OS !== 'web' && mobil && { flexDirection: 'column', alignItems: 'stretch', gap: 2 },
+              ]}
+            >
               <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 3,
                   minWidth: 0,
-                  flex: mobil ? undefined : 1,
+                  flex: Platform.OS === 'web' || !mobil ? 1 : undefined,
                 }}
               >
                 <MapPin size={12} color={renk.gri} />
@@ -131,36 +147,51 @@ export function IlanIzgarasi({
   liste = false,
   sikisik = false,
   oncelikli = false,
+  vitrin = false,
+  araya,
+  arayaSira = 4,
 }: {
   ilanlar: Ilan[];
   liste?: boolean;
   sikisik?: boolean;
   oncelikli?: boolean;
+  vitrin?: boolean;
+  araya?: ReactNode;
+  arayaSira?: number;
 }) {
   const { genislik, mobil } = useEkran();
   const sutun = liste ? 1 : mobil ? 2 : genislik < 1000 ? 3 : sikisik ? 3 : genislik < 1250 ? 4 : 5;
+  const hucreStili = {
+    width: liste
+      ? ('100%' as const)
+      : (`${100 / sutun - (mobil ? 2 : sutun === 5 ? 1.3 : 1.6)}%` as `${number}%`),
+    flexGrow: 0,
+    flexShrink: 0,
+  };
+  const kartlar = ilanlar.map((ilan, index) => (
+    <View key={ilan.id} style={hucreStili} dataSet={{ 'ilan-hucresi': 'true' }}>
+      <IlanKarti
+        ilan={ilan}
+        liste={liste}
+        vitrin={vitrin}
+        priority={oncelikli && index === 0 ? 'high' : oncelikli && index < sutun ? 'normal' : undefined}
+      />
+    </View>
+  ));
+  if (araya)
+    kartlar.splice(
+      Math.min(arayaSira, kartlar.length),
+      0,
+      <View key="ilanini-one-cikar" style={hucreStili} dataSet={{ 'ilan-hucresi': 'true' }}>
+        {araya}
+      </View>,
+    );
   return (
     <View
       style={{ flexDirection: 'row', flexWrap: 'wrap', gap: mobil ? 12 : 20 }}
       dataSet={{ 'ilan-izgarasi': liste ? 'liste' : sikisik ? 'sik' : 'normal' }}
     >
-      {ilanlar.map((ilan, index) => (
-        <View
-          key={ilan.id}
-          style={{
-            width: liste ? '100%' : `${100 / sutun - (mobil ? 2 : sutun === 5 ? 1.3 : 1.6)}%`,
-            flexGrow: 0,
-            flexShrink: 0,
-          }}
-          dataSet={{ 'ilan-hucresi': 'true' }}
-        >
-          <IlanKarti
-            ilan={ilan}
-            liste={liste}
-            priority={oncelikli && index === 0 ? 'high' : oncelikli && index < sutun ? 'normal' : undefined}
-          />
-        </View>
-      ))}
+      {kartlar}
     </View>
   );
 }

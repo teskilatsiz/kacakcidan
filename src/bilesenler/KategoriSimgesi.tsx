@@ -17,6 +17,9 @@ import Sparkles from 'lucide-react-native/icons/sparkles';
 import CircuitBoard from 'lucide-react-native/icons/circuit-board';
 import BriefcaseBusiness from 'lucide-react-native/icons/briefcase-business';
 import Landmark from 'lucide-react-native/icons/landmark';
+import House from 'lucide-react-native/icons/house';
+import UserRoundSearch from 'lucide-react-native/icons/user-round-search';
+import Wrench from 'lucide-react-native/icons/wrench';
 import { useTema } from '../tasarim/tema';
 import type { Kategori } from '../veri/ilanlar';
 
@@ -39,6 +42,9 @@ const simgeler = {
   'teknik-elektronik': CircuitBoard,
   ofis: BriefcaseBusiness,
   antika: Landmark,
+  emlak: House,
+  'is-ilanlari': UserRoundSearch,
+  hizmetler: Wrench,
 };
 
 /** Vurgu, simgenin iç boşluklarını kapatmadan çizgi kalınlığını artırır. */

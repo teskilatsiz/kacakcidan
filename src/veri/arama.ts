@@ -8,6 +8,7 @@ export type AramaKutusuProps = {
   ara: (sorgu?: string) => void;
   buyuk?: boolean;
   inline?: boolean;
+  sade?: boolean;
   secildi?: () => void;
 };
 export type AramaOnerisi =

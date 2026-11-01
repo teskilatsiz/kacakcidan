@@ -1,25 +1,29 @@
-import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Link } from 'expo-router';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
+import Grid2X2 from 'lucide-react-native/icons/grid-2x2';
 import SlidersHorizontal from 'lucide-react-native/icons/sliders-horizontal';
-import Plus from 'lucide-react-native/icons/plus';
 import Search from 'lucide-react-native/icons/search';
 import { Baslik, BosDurum, Buton, Yazi } from '../bilesenler/Temel';
-import { Paragraf } from '../bilesenler/Paragraf';
 import { Kabuk } from '../bilesenler/Kabuk';
-import { HareketliBas } from '../bilesenler/Hareketli';
+import { Giris, HareketliBas } from '../bilesenler/Hareketli';
 import { IlanIzgarasi } from '../bilesenler/IlanKarti';
+import { IlaniOneCikar } from '../bilesenler/IlaniOneCikar';
 import { Gorsel } from '../bilesenler/Gorsel';
 import { IkonluKategoriler } from '../bilesenler/IkonluKategoriler';
 import { usePazar } from '../durum/Pazar';
 import { gorselKaynagi } from '../veri/gorseller';
 import { konumEslesir } from '../veri/konumlar';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
+import '../tasarim/anasayfa.web.css';
 
 const vitrinSirasi = [
+  'renault-clio-2018',
   'iphone-15-pro',
+  'fiat-egea-2021',
   'playstation-5',
+  'toyota-corolla-hibrit',
   'macbook-air',
   'fujifilm-x100v',
   'sari-masa-lambasi',
@@ -31,183 +35,241 @@ const vitrinSirasi = [
 export default function AnaSayfa() {
   const { renk } = useTema();
   const s = useStiller();
-
-  const { mobil, bosluk } = useEkran();
+  const { mobil, bosluk, genislik } = useEkran();
+  const web = Platform.OS === 'web';
   const { tumIlanlar, konum, konumSec } = usePazar();
-  const konumdakiler = useMemo(
-    () => tumIlanlar.filter((i) => konumEslesir(i.konum, konum)),
-    [tumIlanlar, konum],
-  );
+  const [tumunuAc, setTumunuAc] = useState(0);
   const vitrin = useMemo(
     () =>
-      [...konumdakiler].sort((a, b) => {
-        const sira = (id: string) =>
-          id.startsWith('yerel-') ? -1 : vitrinSirasi.includes(id) ? vitrinSirasi.indexOf(id) : 100;
-        return sira(a.id) - sira(b.id);
-      }),
-    [konumdakiler],
+      tumIlanlar
+        .filter((ilan) => konumEslesir(ilan.konum, konum))
+        .sort((a, b) => {
+          const sira = (id: string) =>
+            id.startsWith('yerel-') ? -1 : vitrinSirasi.includes(id) ? vitrinSirasi.indexOf(id) : 100;
+          return sira(a.id) - sira(b.id);
+        }),
+    [tumIlanlar, konum],
   );
-  const sifirla = () => konumSec('');
-  const kesfetYolu = '/kesfet' as const;
-  const filtreBaglantisi = (
-    <Link href={{ pathname: '/kesfet', params: { filtre: '1' } }} asChild>
-      <HareketliBas
-        style={{
-          minHeight: 44,
-          paddingHorizontal: 12,
-          borderWidth: 1,
-          borderColor: renk.cizgi,
-          borderRadius: 8,
-          backgroundColor: renk.beyaz,
-          flexDirection: 'row',
-          gap: 6,
-          alignItems: 'center',
-        }}
+  const kesifBandi = (kucuk: boolean) => (
+    <Giris style={[s.kesifBandi, kucuk && s.kesifBandiMobil]} dataSet={{ 'kategori-kesif-bandi': 'true' }}>
+      <View
+        style={[s.bantGorseli, kucuk && { width: '40%', opacity: 0.45 }]}
+        pointerEvents="none"
+        dataSet={{ 'kesif-bant-gorseli': 'true' }}
       >
-        <Yazi style={{ fontSize: 12, fontWeight: '600' }}>{mobil ? 'Filtrele' : 'Detaylı ara'}</Yazi>
-        <SlidersHorizontal size={17} color={renk.murekkep} />
-      </HareketliBas>
-    </Link>
+        <Gorsel
+          source={gorselKaynagi('/gorseller/kategorilerde-kesfet.webp')}
+          style={StyleSheet.absoluteFill}
+          accessibilityLabel="Ahşap masa üzerinde dizüstü bilgisayar, telefon ve kulaklık"
+        />
+      </View>
+      <View
+        dataSet={{ 'kesif-bant-icerigi': 'true' }}
+        style={[
+          s.bantIcerigi,
+          {
+            padding: kucuk ? 20 : 26,
+            flexDirection: kucuk || (!web && genislik < 1080) ? 'column' : 'row',
+            alignItems: kucuk || (!web && genislik < 1080) ? 'flex-start' : 'center',
+          },
+        ]}
+      >
+        <View
+          dataSet={{ 'kesif-bant-metni': 'true' }}
+          style={{
+            flex: kucuk || (!web && genislik < 1080) ? undefined : 1,
+            minWidth: 0,
+            gap: 6,
+            maxWidth: kucuk ? '88%' : 650,
+          }}
+        >
+          <Yazi
+            role="heading"
+            aria-level={2}
+            style={[s.bantBasligi, kucuk && { fontSize: 20, lineHeight: 27 }]}
+          >
+            Kategorilerde keşfet,{kucuk ? '\n' : ' '}aradığını hemen bul.
+          </Yazi>
+          {!kucuk && (
+            <Yazi style={{ color: renk.gri, fontSize: 13, lineHeight: 21 }}>
+              Otomobil, emlak, iş, hizmet ve ikinci el ürün ilanları bir arada.
+            </Yazi>
+          )}
+        </View>
+        <HareketliBas
+          vurgu="dugme"
+          onPress={() => setTumunuAc((sayac) => sayac + 1)}
+          style={[s.bantButonu, { marginRight: kucuk || (!web && genislik < 1080) ? 0 : '18%' }]}
+        >
+          <Grid2X2 size={18} color={renk.vurguYazi} />
+          <Yazi style={{ color: renk.vurguYazi, fontWeight: '700', fontSize: kucuk ? 12 : 13 }}>
+            {kucuk ? 'Kategorileri keşfet' : 'Tüm kategorileri keşfet'}
+          </Yazi>
+          <ArrowRight size={18} color={renk.vurguYazi} />
+        </HareketliBas>
+      </View>
+    </Giris>
   );
-
   return (
     <Kabuk>
-      <IkonluKategoriler />
-      <View style={{ backgroundColor: renk.zemin }}>
-        <View
-          style={[
-            ortak.alan,
-            {
-              paddingHorizontal: bosluk,
-              paddingTop: mobil ? 18 : 25,
-              paddingBottom: 32,
-              gap: mobil ? 16 : 20,
-            },
-          ]}
-        >
-          <View style={[ortak.aralikli, { alignItems: 'flex-end', gap: 10 }]}>
-            <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+      <IkonluKategoriler tumunuAc={tumunuAc} />
+      <View
+        dataSet={{ 'anasayfa-alani': 'true' }}
+        style={[
+          ortak.alan,
+          {
+            paddingHorizontal: bosluk,
+            paddingTop: mobil ? 4 : 22,
+            paddingBottom: mobil ? 28 : 44,
+            gap: mobil ? 26 : 24,
+          },
+        ]}
+      >
+        {web ? (
+          <View dataSet={{ 'kesif-yerlesimi': 'ust' }}>{kesifBandi(false)}</View>
+        ) : (
+          !mobil && kesifBandi(false)
+        )}
+        <View dataSet={{ 'anasayfa-vitrin': 'true' }} style={{ gap: mobil ? 16 : 20 }}>
+          <View dataSet={{ 'anasayfa-vitrin-basligi': 'true' }} style={[ortak.aralikli, { gap: 12 }]}>
+            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
               <Baslik
                 buyuk
-                style={{ fontSize: mobil ? 26 : 32, lineHeight: mobil ? 34 : 40, letterSpacing: -0.9 }}
+                style={{ fontSize: mobil ? 27 : 32, lineHeight: mobil ? 35 : 40, letterSpacing: -0.9 }}
               >
                 Vitrin
               </Baslik>
-              <View style={mobil ? ortak.aralikli : undefined}>
-                <Yazi style={{ color: renk.gri, fontSize: 12 }} accessibilityLiveRegion="polite">
-                  {konum || 'Türkiye'} · {vitrin.length} ilan
+              {(web || !mobil) && (
+                <Yazi
+                  dataSet={{ 'anasayfa-vitrin-altbaslik': 'true' }}
+                  style={{ color: renk.gri, fontSize: 12 }}
+                >
+                  {konum ? `${konum} konumundan ilanlar` : 'Türkiye’den öne çıkan ilanlar'}
                 </Yazi>
-                {mobil && filtreBaglantisi}
-              </View>
+              )}
             </View>
-            {!mobil && filtreBaglantisi}
+            {web ? (
+              <>
+                <View dataSet={{ 'anasayfa-vitrin-eylemi': 'mobil' }}>
+                  <Link href="/kesfet" asChild>
+                    <HareketliBas style={s.vitrinBaglantisi}>
+                      <Yazi style={{ fontSize: 12, fontWeight: '600' }}>Tüm ilanlar</Yazi>
+                      <ArrowRight size={18} color={renk.murekkep} />
+                    </HareketliBas>
+                  </Link>
+                </View>
+                <View dataSet={{ 'anasayfa-vitrin-eylemi': 'masaustu' }}>
+                  <Link href={{ pathname: '/kesfet', params: { filtre: '1' } }} asChild>
+                    <HareketliBas
+                      style={StyleSheet.flatten([
+                        s.vitrinBaglantisi,
+                        { borderWidth: 1, borderColor: renk.cizgi, paddingHorizontal: 12 },
+                      ])}
+                    >
+                      <Yazi style={{ fontSize: 12, fontWeight: '600' }}>Detaylı ara</Yazi>
+                      <SlidersHorizontal size={17} color={renk.murekkep} />
+                    </HareketliBas>
+                  </Link>
+                </View>
+              </>
+            ) : (
+              <Link href={mobil ? '/kesfet' : { pathname: '/kesfet', params: { filtre: '1' } }} asChild>
+                <HareketliBas
+                  style={StyleSheet.flatten([
+                    s.vitrinBaglantisi,
+                    !mobil && { borderWidth: 1, borderColor: renk.cizgi, paddingHorizontal: 12 },
+                  ])}
+                >
+                  <Yazi style={{ fontSize: 12, fontWeight: '600' }}>
+                    {mobil ? 'Tüm ilanlar' : 'Detaylı ara'}
+                  </Yazi>
+                  {mobil ? (
+                    <ArrowRight size={18} color={renk.murekkep} />
+                  ) : (
+                    <SlidersHorizontal size={17} color={renk.murekkep} />
+                  )}
+                </HareketliBas>
+              </Link>
+            )}
           </View>
-          {vitrin.length ? (
-            <IlanIzgarasi ilanlar={vitrin} oncelikli />
+          {vitrin.length > 0 ? (
+            <IlanIzgarasi
+              ilanlar={vitrin}
+              oncelikli
+              vitrin
+              araya={<IlaniOneCikar />}
+              arayaSira={web ? 3 : mobil ? 3 : 4}
+            />
           ) : (
             <BosDurum
               simge={<Search color={renk.murekkep} size={28} />}
-              baslik="Bu filtrelerde ilan yok."
-              aciklama="Bir filtreyi kaldırabilir ya da başka bir kategoriye bakabilirsin."
-              eylem={<Buton onPress={sifirla}>Tüm ilanları göster</Buton>}
+              baslik="Bu konumda henüz ilan yok."
+              aciklama="Diğer şehirlerdeki ilanlara da bakabilirsin."
+              eylem={<Buton onPress={() => konumSec('')}>Türkiye’deki ilanları göster</Buton>}
             />
           )}
-          <View style={{ alignItems: 'center', paddingTop: 5 }}>
-            <Link href={kesfetYolu} asChild>
-              <HareketliBas
-                style={{
-                  minHeight: 46,
-                  borderWidth: 1,
-                  borderColor: renk.cizgi,
-                  backgroundColor: renk.beyaz,
-                  borderRadius: 9,
-                  paddingHorizontal: 22,
-                  flexDirection: 'row',
-                  gap: 12,
-                  alignItems: 'center',
-                }}
-              >
-                <Yazi style={{ fontSize: 13, fontWeight: '600' }}>İlanların tümünü gör</Yazi>
-                <ArrowRight color={renk.murekkep} size={17} />
-              </HareketliBas>
-            </Link>
-          </View>
+          <Link href="/kesfet" asChild>
+            <HareketliBas style={s.tumIlanlar}>
+              <Yazi style={{ fontSize: 13, fontWeight: '600' }}>Tüm ilanları gör</Yazi>
+              <ArrowRight size={17} color={renk.murekkep} />
+            </HareketliBas>
+          </Link>
         </View>
-      </View>
-
-      <View style={[ortak.alan, { paddingHorizontal: bosluk, paddingVertical: mobil ? 24 : 40 }]}>
-        <View style={[s.ilanCagrisi, mobil && s.ilanCagrisiMobil]} dataSet={{ 'ilan-cagrisi': 'true' }}>
-          <View style={[s.cagriMetni, mobil && s.cagriMetniMobil, { padding: mobil ? 24 : 36 }]}>
-            <Yazi
-              role="heading"
-              aria-level={2}
-              style={[s.cagriBaslik, mobil && { fontSize: 26, lineHeight: 33 }]}
-            >
-              Mal burada, pazarlık sende.
-            </Yazi>
-            <Paragraf style={s.cagriAciklama}>
-              Kullanmadıkların bir başkasının aradığı olabilir. Fotoğrafını ekle, fiyatını belirle, alıcıyla
-              konuş.
-            </Paragraf>
-            <Link href="/ilan-ver" asChild>
-              <HareketliBas style={s.cagriButonu} vurgu="dugme">
-                <Plus size={19} color={renk.vurguYazi} />
-                <Yazi style={{ fontWeight: '700', fontSize: 14, color: renk.vurguYazi }}>
-                  Ücretsiz ilan ver
-                </Yazi>
-              </HareketliBas>
-            </Link>
-          </View>
-          <View style={[s.cagriGorseli, mobil && s.cagriGorseliMobil]}>
-            <Gorsel
-              source={gorselKaynagi('/gorseller/kapak.webp')}
-              style={s.cagriFotografi}
-              contentFit="cover"
-              contentPosition="right center"
-              accessibilityLabel="İkinci el bir fotoğraf makinesi, sarı masa lambası ve plaklar"
-            />
-          </View>
-        </View>
+        {web ? (
+          <View dataSet={{ 'kesif-yerlesimi': 'alt' }}>{kesifBandi(true)}</View>
+        ) : (
+          mobil && kesifBandi(true)
+        )}
       </View>
     </Kabuk>
   );
 }
+
 const useStiller = temaStilleri((renk) =>
   StyleSheet.create({
-    ilanCagrisi: {
-      flexDirection: 'row',
+    kesifBandi: {
       overflow: 'hidden',
-      borderRadius: 12,
-      backgroundColor: renk.sabitKoyu,
-      minHeight: 252,
+      borderRadius: 14,
+      backgroundColor: renk.acik,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      minHeight: 112,
     },
-    ilanCagrisiMobil: { flexDirection: 'column-reverse', minHeight: 0 },
-    cagriMetni: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, gap: 12, justifyContent: 'center' },
-    cagriMetniMobil: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
-    cagriBaslik: {
-      fontFamily: kalin,
-      fontWeight: '700',
-      color: '#fff',
-      fontSize: 32,
-      lineHeight: 40,
-      letterSpacing: -0.8,
-      maxWidth: 470,
+    kesifBandiMobil: { minHeight: 156, borderRadius: 12 },
+    bantGorseli: { position: 'absolute', right: 0, top: 0, bottom: 0, width: '32%', opacity: 0.85 },
+    bantIcerigi: { flex: 1, justifyContent: 'space-between', gap: 16, zIndex: 1 },
+    bantBasligi: { fontFamily: kalin, fontWeight: '700', fontSize: 26, lineHeight: 34, letterSpacing: -0.8 },
+    bantButonu: {
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 9,
+      paddingHorizontal: 16,
+      backgroundColor: renk.sari,
+      borderRadius: 8,
+      flexShrink: 0,
     },
-    cagriAciklama: { color: '#d5d5d6', fontSize: 14, lineHeight: 23, maxWidth: 450 },
-    cagriButonu: {
-      alignSelf: 'flex-start',
+    vitrinBaglantisi: {
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      borderRadius: 8,
+      flexShrink: 0,
+    },
+    tumIlanlar: {
       minHeight: 46,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
-      paddingHorizontal: 18,
-      marginTop: 5,
+      gap: 10,
+      alignSelf: 'center',
+      paddingHorizontal: 22,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
       borderRadius: 8,
-      backgroundColor: renk.sari,
+      marginTop: 8,
     },
-    cagriGorseli: { width: '43%', minHeight: 252, overflow: 'hidden', backgroundColor: '#25221d' },
-    cagriGorseliMobil: { width: '100%', minHeight: 0, height: 156 },
-    cagriFotografi: { position: 'absolute', top: 0, right: 0, width: '150%', height: '100%' },
   }),
 );
