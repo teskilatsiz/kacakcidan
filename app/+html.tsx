@@ -29,11 +29,19 @@ export default function Html({ children }: PropsWithChildren) {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/png" />
-        <meta property="og:image:alt" content="Kaçakçıdan. Mal burada, pazarlık sende." />
+        <meta
+          property="og:image:alt"
+          content="Kaçakçıdan ana sayfasında ilan arama, kategoriler ve vitrin."
+        />
         <meta name="twitter:image" content={paylasimGorseli} />
-        <meta name="twitter:image:alt" content="Kaçakçıdan. Mal burada, pazarlık sende." />
+        <meta
+          name="twitter:image:alt"
+          content="Kaçakçıdan ana sayfasında ilan arama, kategoriler ve vitrin."
+        />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="preload" href="/fonts/dm-sans-400.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/dm-sans-700.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
         {headNodes}
       </head>
       <body {...bodyAttributes}>

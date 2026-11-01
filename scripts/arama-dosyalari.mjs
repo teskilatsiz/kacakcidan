@@ -44,7 +44,9 @@ export async function aramaDosyalariniYaz({ siteUrl, noindex, klasor = 'dist' })
     .filter(
       (adres) =>
         ['/', '/kesfet', '/nasil-calisir'].includes(adres) ||
-        (adres.startsWith('/ilan/') && adres !== '/ilan/yerel' && !/[\[\]]/.test(adres)),
+        ((adres.startsWith('/ilan/') || /^\/satici\/satici-[a-z0-9-]+$/.test(adres)) &&
+          !['/ilan/yerel', '/satici/yerel'].includes(adres) &&
+          !/[\[\]]/.test(adres)),
     )
     .sort();
   const sitemap =
