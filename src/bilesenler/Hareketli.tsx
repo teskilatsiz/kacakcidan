@@ -23,7 +23,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useAzaltilmisHareket } from './HareketTercihi';
-import { renk } from '../tasarim/tema';
+import { useTema, temaStilleri } from '../tasarim/tema';
 
 export { useAzaltilmisHareket } from './HareketTercihi';
 
@@ -53,6 +53,8 @@ export const HareketliBas = memo(
     },
     ref,
   ) {
+    const { renk } = useTema();
+
     const azHareket = useAzaltilmisHareket();
     const olcekDegeri = useSharedValue(1);
     const [basili, basiliAyarla] = useState(false);
@@ -183,6 +185,9 @@ export const FavoriDugmesi = memo(function FavoriDugmesi({
   style,
   accessibilityLabel,
 }: FavoriDugmesiProps) {
+  const { renk } = useTema();
+  const stiller = useHareketStilleri();
+
   const azHareket = useAzaltilmisHareket();
   const olcek = useSharedValue(1);
   const hareket = useAnimatedStyle(() => ({ transform: [{ scale: olcek.value }] }));
@@ -216,21 +221,28 @@ export const FavoriDugmesi = memo(function FavoriDugmesi({
       style={[stiller.favori, kucuk && stiller.kucukFavori, secili && stiller.seciliFavori, style]}
     >
       <Animated.View style={hareket} pointerEvents="none">
-        <Heart size={kucuk ? 18 : 20} color="#101113" fill={secili ? '#101113' : 'none'} strokeWidth={1.8} />
+        <Heart
+          size={kucuk ? 18 : 20}
+          color={secili ? renk.vurguYazi : renk.murekkep}
+          fill={secili ? renk.vurguYazi : 'none'}
+          strokeWidth={1.8}
+        />
       </Animated.View>
     </HareketliBas>
   );
 });
 
-const stiller = StyleSheet.create({
-  favori: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  kucukFavori: { width: 36, height: 36, borderRadius: 18 },
-  seciliFavori: { backgroundColor: '#ffd02b' },
-});
+const useHareketStilleri = temaStilleri((renk) =>
+  StyleSheet.create({
+    favori: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: renk.beyaz,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    kucukFavori: { width: 36, height: 36, borderRadius: 18 },
+    seciliFavori: { backgroundColor: renk.sari },
+  }),
+);

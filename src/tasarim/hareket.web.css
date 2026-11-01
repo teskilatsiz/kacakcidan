@@ -8,7 +8,9 @@
   transition: transform 180ms ease-out;
 }
 [data-kategori-simgesi] > svg {
-  transition: fill 180ms ease-out;
+  transition:
+    stroke 180ms ease-out,
+    stroke-width 180ms ease-out;
 }
 [data-arama-dugmesi] {
   transition:
@@ -69,4 +71,9 @@
   [data-favori-nabiz] {
     animation: none !important;
   }
+}
+[data-vurgu='kategori']:focus-visible [data-kategori-simgesi] > svg,
+[data-vurgu='kategori']:focus-visible > svg {
+  color: var(--renk-vurguYazi) !important;
+  stroke: var(--renk-vurguYazi) !important;
 }

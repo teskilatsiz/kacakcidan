@@ -1,16 +1,32 @@
-import { useSyncExternalStore } from 'react';
+import { createContext, useContext, useSyncExternalStore } from 'react';
 import { Dimensions, Platform, StyleSheet } from 'react-native';
 
-export const renk = {
-  murekkep: '#17191b',
-  sari: '#ffd12f',
-  sariSoluk: '#fff7d9',
-  zemin: '#f7f7f7',
-  cizgi: '#e5e5e5',
-  gri: '#737373',
-  acik: '#fafafa',
-  beyaz: '#ffffff',
-};
+import { acikRenkler, type Renkler } from './palet';
+export { acikRenkler, koyuRenkler, type Renkler } from './palet';
+
+const webRenkler = Object.fromEntries(
+  Object.keys(acikRenkler).map((ad) => [ad, `var(--renk-${ad})`]),
+) as Renkler;
+export const renk = Platform.OS === 'web' ? webRenkler : acikRenkler;
+export type TemaTercihi = 'sistem' | 'acik' | 'koyu';
+export const TEMA_ANAHTARI = 'kacakcidan-gorunum';
+export const TemaBaglami = createContext({
+  renk,
+  koyu: false,
+  tercih: 'sistem' as TemaTercihi,
+  temaSec: (_tercih: TemaTercihi) => {},
+});
+export const useTema = () => useContext(TemaBaglami);
+
+/** Stiller yalnızca palet değiştiğinde yeniden üretilir. */
+export function temaStilleri<T>(olustur: (renkler: Renkler) => T) {
+  const onbellek = new WeakMap<Renkler, T>();
+  return function useTemaStilleri(): T {
+    const { renk: palet } = useTema();
+    if (!onbellek.has(palet)) onbellek.set(palet, olustur(palet));
+    return onbellek.get(palet)!;
+  };
+}
 export const font = Platform.OS === 'web' ? 'DM Sans' : 'DMSans_400Regular';
 export const kalin = Platform.OS === 'web' ? 'DM Sans' : 'DMSans_700Bold';
 export const mobilAltMenuYuksekligi = 64;

@@ -8,8 +8,10 @@ import ShieldCheck from 'lucide-react-native/icons/shield-check';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { Baslik, Yazi } from '../bilesenler/Temel';
 import { HareketliBas } from '../bilesenler/Hareketli';
-import { kalin, ortak, renk, useEkran } from '../tasarim/tema';
+import { kalin, ortak, useEkran, useTema } from '../tasarim/tema';
 export default function NasilCalisir() {
+  const { renk } = useTema();
+
   const { mobil, bosluk } = useEkran();
   return (
     <Kabuk>
@@ -46,7 +48,7 @@ export default function NasilCalisir() {
           ].map((o) => (
             <View
               key={o.no}
-              style={[ortak.kart, { flex: 1, padding: 24, gap: 16, backgroundColor: '#fafbf7' }]}
+              style={[ortak.kart, { flex: 1, padding: 24, gap: 16, backgroundColor: renk.acik }]}
             >
               <View style={ortak.aralikli}>
                 <o.simge size={27} strokeWidth={1.3} />
@@ -63,18 +65,18 @@ export default function NasilCalisir() {
           style={{ backgroundColor: renk.sariSoluk, padding: mobil ? 24 : 34, borderRadius: 13, gap: 13 }}
         >
           <View style={ortak.satir}>
-            <ShieldCheck size={24} />
+            <ShieldCheck color={renk.murekkep} size={24} />
             <Baslik style={{ fontSize: 23 }}>Teslimden önce</Baslik>
           </View>
           <View style={{ gap: 10, maxWidth: 900 }}>
-            <Yazi style={{ color: '#6d6548', lineHeight: 24 }}>
+            <Yazi style={{ color: renk.gri, lineHeight: 24 }}>
               Kalabalık ve aydınlık bir yerde buluş. Ürünü gör, çalışmasını ve ilandaki bilgilerle eşleştiğini
               kontrol et.
             </Yazi>
-            <Yazi style={{ color: '#6d6548', lineHeight: 24 }}>
+            <Yazi style={{ color: renk.gri, lineHeight: 24 }}>
               Ürünü görmeden kapora gönderme. Teslim ve ödeme ayrıntılarını karşı tarafla önceden netleştir.
             </Yazi>
-            <Yazi style={{ color: '#6d6548', lineHeight: 24 }}>
+            <Yazi style={{ color: renk.gri, lineHeight: 24 }}>
               Görüşmelerini mesajlarda tut. Kart şifreni, tek kullanımlık kodları ve kimlik fotoğrafını
               paylaşma.
             </Yazi>
@@ -119,7 +121,7 @@ export default function NasilCalisir() {
               gap: 20,
             }}
           >
-            <Yazi style={{ color: '#fff', fontWeight: '700' }}>İlanları keşfet</Yazi>
+            <Yazi style={{ color: renk.tersYazi, fontWeight: '700' }}>İlanları keşfet</Yazi>
             <ArrowUpRight size={18} color={renk.sari} />
           </HareketliBas>
         </Link>

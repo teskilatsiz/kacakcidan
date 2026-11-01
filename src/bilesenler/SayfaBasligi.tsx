@@ -18,6 +18,11 @@ const sayfalar: Record<string, [string, string, boolean?]> = {
   '/kesfet': ['İlanları keşfet | Kaçakçıdan', kesfetAciklamasi],
   '/favoriler': ['Favorilerim | Kaçakçıdan', 'Aklının kaldığı keşifler bir arada.', true],
   '/mesajlar': ['Mesajlarım | Kaçakçıdan', 'İlanlar hakkında doğrudan konuş.', true],
+  '/bildirimler': [
+    'Bildirimler | Kaçakçıdan',
+    'İlanlarına gelen soruları, cevapları ve güncellemeleri takip et.',
+    true,
+  ],
   '/profil': ['Profilim | Kaçakçıdan', 'İlanlarını, favorilerini ve profil bilgilerini yönet.', true],
   '/ayarlar': ['Hesap ayarları | Kaçakçıdan', 'Hesap ve iletişim bilgilerini yönet.', true],
   '/giris': ['Giriş yap | Kaçakçıdan', 'Hesabına giriş yap, kaldığın yerden devam et.', true],

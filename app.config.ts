@@ -8,7 +8,7 @@ const config: ExpoConfig = {
   version: '1.0.0',
   scheme: 'kacakcidan',
   orientation: 'default',
-  userInterfaceStyle: 'light',
+  userInterfaceStyle: 'automatic',
   platforms: ['ios', 'android', 'web'],
   android: { softwareKeyboardLayoutMode: 'resize' },
   web: {
@@ -23,6 +23,7 @@ const config: ExpoConfig = {
     backgroundColor: '#f6f6f3',
   },
   plugins: [
+    ['expo-video', { supportsPictureInPicture: true, supportsBackgroundPlayback: false }],
     [
       'expo-router',
       {

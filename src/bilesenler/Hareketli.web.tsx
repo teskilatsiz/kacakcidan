@@ -1,3 +1,4 @@
+import { useTema, temaStilleri } from '../tasarim/tema';
 // Reacticx uyarlamalarının tarayıcı sürümü.
 // Copyright (c) 2026 rit3zh, Reacticx uyarlaması, MIT lisansı.
 import { forwardRef, memo, useEffect, useState } from 'react';
@@ -37,6 +38,8 @@ export const HareketliBas = memo(
     },
     ref,
   ) {
+    const s = useStiller();
+
     const azHareket = useAzaltilmisHareket();
     const rol = diger.role ?? accessibilityRole;
     const webDurumu = {
@@ -111,6 +114,9 @@ export const FavoriDugmesi = memo(function FavoriDugmesi({
   style,
   accessibilityLabel,
 }: FavoriDugmesiProps) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const azHareket = useAzaltilmisHareket();
   const [nabiz, setNabiz] = useState(0);
 
@@ -135,32 +141,39 @@ export const FavoriDugmesi = memo(function FavoriDugmesi({
       style={[s.favori, kucuk && s.kucukFavori, secili && s.seciliFavori, style]}
     >
       <View key={nabiz} dataSet={{ 'favori-nabiz': nabiz > 0 ? 'true' : 'false' }} pointerEvents="none">
-        <Heart size={kucuk ? 18 : 20} color="#101113" fill={secili ? '#101113' : 'none'} strokeWidth={1.8} />
+        <Heart
+          size={kucuk ? 18 : 20}
+          color={secili ? renk.vurguYazi : renk.murekkep}
+          fill={secili ? renk.vurguYazi : 'none'}
+          strokeWidth={1.8}
+        />
       </View>
     </HareketliBas>
   );
 });
 
-const s = StyleSheet.create({
-  basma: {
-    transitionProperty: 'transform, background-color, border-color, box-shadow',
-    transitionDuration: '100ms',
-    transitionTimingFunction: 'ease-out',
-  },
-  birakma: {
-    transitionProperty: 'transform, background-color, border-color, box-shadow',
-    transitionDuration: '180ms',
-    transitionTimingFunction: 'ease-out',
-  },
-  durgun: { transitionProperty: 'none' },
-  favori: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  kucukFavori: { width: 36, height: 36, borderRadius: 18 },
-  seciliFavori: { backgroundColor: '#ffd02b' },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    basma: {
+      transitionProperty: 'transform, background-color, border-color, box-shadow',
+      transitionDuration: '100ms',
+      transitionTimingFunction: 'ease-out',
+    },
+    birakma: {
+      transitionProperty: 'transform, background-color, border-color, box-shadow',
+      transitionDuration: '180ms',
+      transitionTimingFunction: 'ease-out',
+    },
+    durgun: { transitionProperty: 'none' },
+    favori: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: renk.beyaz,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    kucukFavori: { width: 36, height: 36, borderRadius: 18 },
+    seciliFavori: { backgroundColor: renk.sari },
+  }),
+);

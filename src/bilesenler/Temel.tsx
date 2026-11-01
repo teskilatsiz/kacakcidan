@@ -1,4 +1,4 @@
-import { useId, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { cloneElement, isValidElement, useId, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -11,10 +11,12 @@ import {
   type ViewStyle,
 } from 'react-native';
 import Search from 'lucide-react-native/icons/search';
-import { font, kalin, renk, useEkran } from '../tasarim/tema';
+import { font, kalin, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { HareketliBas } from './Hareketli';
 
 export function Yazi({ style, ...props }: TextProps) {
+  const { renk } = useTema();
+
   return (
     <Text
       {...props}
@@ -70,6 +72,13 @@ export function Buton({
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
+  const { renk } = useTema();
+  const s = useStiller();
+  const icerikRengi = koyu ? renk.tersYazi : ikincil ? renk.murekkep : renk.vurguYazi;
+  const dugmeSimgesi = isValidElement<{ color?: string }>(simge)
+    ? cloneElement(simge, { color: icerikRengi })
+    : simge;
+
   return (
     <HareketliBas
       accessibilityRole="button"
@@ -85,8 +94,14 @@ export function Buton({
         style,
       ]}
     >
-      {simge}
-      <Yazi style={{ fontFamily: kalin, fontWeight: '700', color: koyu ? '#fff' : renk.murekkep }}>
+      {dugmeSimgesi}
+      <Yazi
+        style={{
+          fontFamily: kalin,
+          fontWeight: '700',
+          color: icerikRengi,
+        }}
+      >
         {children}
       </Yazi>
     </HareketliBas>
@@ -103,6 +118,8 @@ export function SimgeButon({
   etiket: string;
   style?: StyleProp<ViewStyle>;
 }) {
+  const s = useStiller();
+
   return (
     <HareketliBas
       accessibilityLabel={etiket}
@@ -127,6 +144,9 @@ export function Alan({
   'aria-invalid'?: boolean;
   'aria-describedby'?: string;
 }) {
+  const { renk, koyu } = useTema();
+  const s = useStiller();
+
   const kimlik = useId();
   const { mobil } = useEkran();
   const alanKimligi = props.id ?? props.nativeID ?? `alan-${kimlik}`;
@@ -137,7 +157,8 @@ export function Alan({
       <TextInput
         ref={ref}
         accessibilityLabel={etiket || props.placeholder}
-        placeholderTextColor="#94978f"
+        placeholderTextColor={renk.gri}
+        keyboardAppearance={koyu ? 'dark' : 'light'}
         {...props}
         nativeID={alanKimligi}
         aria-invalid={props['aria-invalid'] ?? !!hata}
@@ -148,12 +169,12 @@ export function Alan({
           s.girdi,
           mobil && { fontSize: 16 },
           props.multiline && { height: 128, paddingTop: 14, textAlignVertical: 'top' },
-          hata && { borderColor: '#b64432' },
+          hata && { borderColor: renk.hataCizgi },
           style,
         ]}
       />
       {!!hata && (
-        <Yazi nativeID={hataKimligi} accessibilityRole="alert" style={{ color: '#a63327', fontSize: 12 }}>
+        <Yazi nativeID={hataKimligi} accessibilityRole="alert" style={{ color: renk.hata, fontSize: 12 }}>
           {hata}
         </Yazi>
       )}
@@ -175,19 +196,40 @@ export function BosDurum({
   aciklama: string;
   eylem?: ReactNode;
 }) {
+  const { renk } = useTema();
+  const { mobil } = useEkran();
+  const bosSimge = isValidElement<{ color?: string; size?: number; strokeWidth?: number; fill?: string }>(
+    simge,
+  ) ? (
+    cloneElement(simge, { color: renk.murekkep, size: 28, strokeWidth: 1.6, fill: 'none' })
+  ) : (
+    <Search color={renk.murekkep} size={28} strokeWidth={1.6} />
+  );
   return (
-    <View style={{ alignItems: 'center', paddingVertical: 70, paddingHorizontal: 24, gap: 16 }}>
+    <View
+      style={{
+        alignItems: 'center',
+        alignSelf: 'center',
+        width: '100%',
+        maxWidth: 560,
+        paddingVertical: mobil ? 44 : 64,
+        paddingHorizontal: 20,
+        gap: 14,
+      }}
+    >
       <View
         style={{
-          width: 76,
-          height: 76,
-          borderRadius: 38,
+          width: 64,
+          height: 64,
+          borderRadius: 18,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: renk.sariSoluk,
+          backgroundColor: renk.acik,
+          borderWidth: 1,
+          borderColor: renk.cizgi,
         }}
       >
-        {simge || <Search size={30} />}
+        {bosSimge}
       </View>
       <Baslik style={{ textAlign: 'center' }}>{baslik}</Baslik>
       <Yazi style={{ textAlign: 'center', color: renk.gri, maxWidth: 390 }}>{aciklama}</Yazi>
@@ -204,6 +246,9 @@ export function Secenek({
   children: ReactNode;
   onPress: () => void;
 }) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   return (
     <HareketliBas
       accessibilityRole="button"
@@ -211,53 +256,57 @@ export function Secenek({
       onPress={onPress}
       style={[s.secenek, secili && { borderColor: renk.murekkep, backgroundColor: renk.murekkep }]}
     >
-      <Yazi style={{ fontSize: 13, color: secili ? '#fff' : renk.gri, fontWeight: '500' }}>{children}</Yazi>
+      <Yazi style={{ fontSize: 13, color: secili ? renk.tersYazi : renk.gri, fontWeight: '500' }}>
+        {children}
+      </Yazi>
     </HareketliBas>
   );
 }
-const s = StyleSheet.create({
-  buton: {
-    minHeight: 48,
-    paddingHorizontal: 22,
-    borderRadius: 10,
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: renk.sari,
-    borderWidth: 1,
-    borderColor: renk.sari,
-  },
-  ikincil: { backgroundColor: '#fff', borderColor: renk.cizgi },
-  simgeButon: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-  },
-  girdi: {
-    fontFamily: font,
-    fontSize: 14,
-    color: renk.murekkep,
-    height: 50,
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    backgroundColor: '#fff',
-    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : {}),
-  },
-  secenek: {
-    borderWidth: 1,
-    borderColor: renk.cizgi,
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    minHeight: 44,
-    backgroundColor: '#fff',
-  },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    buton: {
+      minHeight: 48,
+      paddingHorizontal: 22,
+      borderRadius: 10,
+      flexDirection: 'row',
+      gap: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: renk.sari,
+      borderWidth: 1,
+      borderColor: renk.sari,
+    },
+    ikincil: { backgroundColor: renk.beyaz, borderColor: renk.cizgi },
+    simgeButon: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 10,
+      backgroundColor: renk.beyaz,
+    },
+    girdi: {
+      fontFamily: font,
+      fontSize: 14,
+      color: renk.murekkep,
+      height: 50,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      backgroundColor: renk.beyaz,
+      ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : {}),
+    },
+    secenek: {
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 24,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      minHeight: 44,
+      backgroundColor: renk.beyaz,
+    },
+  }),
+);
