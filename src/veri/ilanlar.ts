@@ -1,11 +1,13 @@
 import { aramaIcinDuzelt } from './arama.ts';
 import { konumEslesir } from './konumlar.ts';
+import { kategoriler, type Kategori } from './anaKategoriler.ts';
 
-export type Kategori =
-  'telefon' | 'bilgisayar' | 'oyun' | 'ev' | 'moda' | 'fotograf' | 'otomotiv' | 'koleksiyon';
+export { kategoriler, type Kategori } from './anaKategoriler.ts';
 
 export interface Ilan {
   id: string;
+  numara?: string;
+  saticiId?: string;
   baslik: string;
   fiyat: number;
   kategori: Kategori;
@@ -23,19 +25,9 @@ export interface Ilan {
   model?: string;
   fotografler?: string[];
   video?: string;
+  videoPoster?: string;
   ozellikler?: Record<string, string>;
 }
-
-export const kategoriler: { id: Kategori; ad: string; simge: string }[] = [
-  { id: 'telefon', ad: 'Telefon', simge: 'Smartphone' },
-  { id: 'bilgisayar', ad: 'Bilgisayar', simge: 'Laptop' },
-  { id: 'oyun', ad: 'Oyun & konsol', simge: 'Gamepad2' },
-  { id: 'ev', ad: 'Ev & yaşam', simge: 'Armchair' },
-  { id: 'moda', ad: 'Moda', simge: 'Shirt' },
-  { id: 'fotograf', ad: 'Fotoğraf', simge: 'Camera' },
-  { id: 'otomotiv', ad: 'Otomotiv', simge: 'CarFront' },
-  { id: 'koleksiyon', ad: 'Koleksiyon', simge: 'Disc3' },
-];
 
 const gorsel = (ad: string) => `/gorseller/${ad}.webp`;
 
@@ -238,6 +230,7 @@ const vitrinIlanlari: Ilan[] = [
 const ayrintilar: Record<string, Partial<Ilan>> = {
   'iphone-15-pro': {
     video: '/videolar/iphone-15-pro.mp4',
+    videoPoster: '/gorseller/iphone-15-pro-video.webp',
     altKategori: 'cep-telefonu',
     marka: 'apple',
     model: 'iphone-15-pro',

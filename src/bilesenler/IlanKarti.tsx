@@ -9,7 +9,7 @@ import { usePazar } from '../durum/Pazar';
 import { FavoriDugmesi, HareketliBas } from './Hareketli';
 import { Yazi } from './Temel';
 import { IlanEtiketleri } from './IlanEtiketleri';
-import { kalin, renk, useEkran } from '../tasarim/tema';
+import { kalin, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
 export const IlanKarti = memo(function IlanKarti({
   ilan,
@@ -20,6 +20,9 @@ export const IlanKarti = memo(function IlanKarti({
   liste?: boolean;
   priority?: 'high' | 'normal';
 }) {
+  const { renk } = useTema();
+  const s = useStiller();
+
   const { favoriler, favoriDegistir } = usePazar();
   const { mobil } = useEkran();
   return (
@@ -52,7 +55,15 @@ export const IlanKarti = memo(function IlanKarti({
             />
             {ilan.oneCikan && (
               <View style={s.rozet}>
-                <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 10, lineHeight: 18 }}>
+                <Yazi
+                  style={{
+                    fontFamily: kalin,
+                    fontWeight: '700',
+                    fontSize: 10,
+                    lineHeight: 18,
+                    color: renk.vurguYazi,
+                  }}
+                >
                   ÖNE ÇIKAN
                 </Yazi>
               </View>
@@ -71,15 +82,28 @@ export const IlanKarti = memo(function IlanKarti({
             <Yazi style={[s.fiyat, liste && mobil && { fontSize: 19, lineHeight: 28 }]}>
               {para(ilan.fiyat)}
             </Yazi>
-            <View style={s.konum}>
-              <MapPin size={12} color={renk.gri} />
+            <View style={[s.konum, mobil && { flexDirection: 'column', alignItems: 'stretch', gap: 2 }]}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 3,
+                  minWidth: 0,
+                  flex: mobil ? undefined : 1,
+                }}
+              >
+                <MapPin size={12} color={renk.gri} />
+                <Yazi
+                  numberOfLines={1}
+                  style={{ color: renk.gri, fontSize: 11, lineHeight: 17, flexShrink: 1 }}
+                >
+                  {ilan.konum}
+                </Yazi>
+              </View>
               <Yazi
                 numberOfLines={1}
-                style={{ color: renk.gri, fontSize: 11, lineHeight: 18, flexShrink: 1 }}
+                style={{ color: renk.gri, fontSize: 10, lineHeight: 16, flexShrink: 0 }}
               >
-                {ilan.konum}
-              </Yazi>
-              <Yazi style={{ color: '#737373', fontSize: 10, lineHeight: 18, marginLeft: 'auto' }}>
                 {ilan.zaman}
               </Yazi>
             </View>
@@ -140,51 +164,53 @@ export function IlanIzgarasi({
     </View>
   );
 }
-const s = StyleSheet.create({
-  kart: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e5e5',
-    backgroundColor: '#fff',
-    overflow: 'hidden',
-    position: 'relative',
-    height: '100%',
-  },
-  liste: { minHeight: 144 },
-  resim: { width: '100%', aspectRatio: 1.32, backgroundColor: '#eeeeee', overflow: 'hidden' },
-  rozet: {
-    position: 'absolute',
-    left: 10,
-    top: 10,
-    backgroundColor: renk.sari,
-    borderRadius: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  icerik: { padding: 14, gap: 4 },
-  baslik: {
-    fontFamily: kalin,
-    fontWeight: '700',
-    fontSize: 14,
-    lineHeight: 20,
-    letterSpacing: -0.2,
-    minHeight: 40,
-  },
-  fiyat: {
-    fontFamily: kalin,
-    fontWeight: '700',
-    fontSize: 21,
-    lineHeight: 31,
-    letterSpacing: -0.6,
-    marginBottom: 7,
-  },
-  konum: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f1f1',
-    paddingTop: 9,
-  },
-  favori: { position: 'absolute', right: 9, top: 9 },
-});
+const useStiller = temaStilleri((renk) =>
+  StyleSheet.create({
+    kart: {
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      backgroundColor: renk.beyaz,
+      overflow: 'hidden',
+      position: 'relative',
+      height: '100%',
+    },
+    liste: { minHeight: 144 },
+    resim: { width: '100%', aspectRatio: 1.32, backgroundColor: renk.acik, overflow: 'hidden' },
+    rozet: {
+      position: 'absolute',
+      left: 10,
+      top: 10,
+      backgroundColor: renk.sari,
+      borderRadius: 5,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    icerik: { padding: 14, gap: 4 },
+    baslik: {
+      fontFamily: kalin,
+      fontWeight: '700',
+      fontSize: 14,
+      lineHeight: 20,
+      letterSpacing: -0.2,
+      minHeight: 40,
+    },
+    fiyat: {
+      fontFamily: kalin,
+      fontWeight: '700',
+      fontSize: 21,
+      lineHeight: 31,
+      letterSpacing: -0.6,
+      marginBottom: 7,
+    },
+    konum: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      borderTopWidth: 1,
+      borderTopColor: renk.cizgi,
+      paddingTop: 9,
+    },
+    favori: { position: 'absolute', right: 9, top: 9 },
+  }),
+);

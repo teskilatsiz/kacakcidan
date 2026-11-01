@@ -1,4 +1,13 @@
 const dosyalar: Record<string, number> = {
+  '/gorseller/iphone-15-pro-arka-kucuk.webp': require('../../public/gorseller/iphone-15-pro-arka-kucuk.webp'),
+  '/gorseller/iphone-15-pro-arka-onizleme.webp': require('../../public/gorseller/iphone-15-pro-arka-onizleme.webp'),
+  '/gorseller/iphone-15-pro-ekran-kucuk.webp': require('../../public/gorseller/iphone-15-pro-ekran-kucuk.webp'),
+  '/gorseller/iphone-15-pro-ekran-onizleme.webp': require('../../public/gorseller/iphone-15-pro-ekran-onizleme.webp'),
+  '/gorseller/playstation-5-detay-kucuk.webp': require('../../public/gorseller/playstation-5-detay-kucuk.webp'),
+  '/gorseller/playstation-5-detay-onizleme.webp': require('../../public/gorseller/playstation-5-detay-onizleme.webp'),
+  '/gorseller/macbook-air-kapak-kucuk.webp': require('../../public/gorseller/macbook-air-kapak-kucuk.webp'),
+  '/gorseller/macbook-air-kapak-onizleme.webp': require('../../public/gorseller/macbook-air-kapak-onizleme.webp'),
+  '/gorseller/iphone-15-pro-video.webp': require('../../public/gorseller/iphone-15-pro-video.webp'),
   '/gorseller/playstation-5-detay.webp': require('../../public/gorseller/playstation-5-detay.webp'),
   '/gorseller/macbook-air-kapak.webp': require('../../public/gorseller/macbook-air-kapak.webp'),
   '/gorseller/macbook-air.webp': require('../../public/gorseller/macbook-air.webp'),

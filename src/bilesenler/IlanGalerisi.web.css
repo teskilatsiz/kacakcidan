@@ -10,6 +10,7 @@
   border-color: #a89135;
 }
 .ilan-goruntuleyici {
+  box-sizing: border-box;
   width: min(1120px, calc(100vw - 32px));
   height: min(820px, calc(100dvh - 32px));
   max-width: none;
@@ -22,12 +23,21 @@
   color: #fff;
   overflow: hidden;
   font-family: 'DM Sans', sans-serif;
+  overscroll-behavior: contain;
 }
 .ilan-goruntuleyici::backdrop {
   background: #090b0de8;
 }
 .ilan-goruntuleyici button {
   color: #fff;
+}
+.ilan-goruntuleyici button:focus-visible {
+  outline: 2px solid #ffd12f;
+  outline-offset: -2px;
+}
+.ilan-goruntuleyici [aria-label='Galeride medya seç'] {
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
 }
 .ilan-goruntuleyici button:hover {
   background: #ffffff20;
@@ -41,5 +51,7 @@
     height: 100dvh;
     border: 0;
     border-radius: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
