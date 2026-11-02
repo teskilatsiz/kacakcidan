@@ -1,5 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useState, type ComponentProps } from 'react';
+import { Link, type Href } from 'expo-router';
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  type GestureResponderEvent,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import ArrowLeft from 'lucide-react-native/icons/arrow-left';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import { HareketliBas } from './Hareketli';
@@ -9,16 +17,46 @@ import { type Ilan } from '../veri/ilanlar';
 import { kategoriGezintisi, type KesifSecimi } from '../veri/kategoriler';
 import { kalin, useTema, temaStilleri } from '../tasarim/tema';
 
+function AgacBaglantisi({
+  href,
+  onPress,
+  style,
+  ...props
+}: Omit<ComponentProps<typeof HareketliBas>, 'style'> & { href?: Href; style?: StyleProp<ViewStyle> }) {
+  const baglantiStili = StyleSheet.flatten(style);
+  return href ? (
+    <Link
+      href={href}
+      asChild
+      onPress={(olay) => {
+        if (
+          'button' in olay &&
+          (olay.button !== 0 || olay.metaKey || olay.ctrlKey || olay.shiftKey || olay.altKey)
+        )
+          return;
+        olay.preventDefault();
+        onPress?.(olay as GestureResponderEvent);
+      }}
+    >
+      <HareketliBas {...props} style={baglantiStili} />
+    </Link>
+  ) : (
+    <HareketliBas {...props} style={baglantiStili} onPress={onPress} />
+  );
+}
+
 /** Ebeveynler sabit kalır; kaydırılan bölüm yalnız bir sonraki seviyeyi içerir. */
 export function KategoriAgaci({
   ilanlar,
   secim,
   sec,
+  adres,
   gorunum = 'yan',
 }: {
   ilanlar: Ilan[];
   secim: KesifSecimi;
   sec: (alan: keyof KesifSecimi, deger: string) => void;
+  adres?: (alan: keyof KesifSecimi, deger: string) => Href;
   gorunum?: 'yan' | 'mobil';
 }) {
   const { renk } = useTema();
@@ -42,7 +80,8 @@ export function KategoriAgaci({
     return (
       <View style={s.mobilKutu} dataSet={{ 'mobil-kategoriler': 'true' }}>
         {seciliDal ? (
-          <HareketliBas
+          <AgacBaglantisi
+            href={adres?.(ustDal?.alan ?? 'kategori', ustDal?.id ?? '')}
             accessibilityLabel={ustDal ? `${ustDal.ad} seçeneklerine dön` : 'Tüm kategorilere dön'}
             onPress={() => (ustDal ? sec(ustDal.alan, ustDal.id) : sec('kategori', ''))}
             style={{ flexDirection: 'row', alignItems: 'center', minHeight: 44, gap: 8 }}
@@ -50,7 +89,7 @@ export function KategoriAgaci({
             <ArrowLeft size={17} color={renk.murekkep} />
             <Yazi style={{ flex: 1, fontSize: 13, fontWeight: '600' }}>{seciliDal.ad}</Yazi>
             <Yazi style={s.sayac}>{seciliDal.sayi} ilan</Yazi>
-          </HareketliBas>
+          </AgacBaglantisi>
         ) : null}
         {gezinti.alan ? (
           <Yazi style={s.baslik}>{gezinti.baslik}</Yazi>
@@ -69,8 +108,9 @@ export function KategoriAgaci({
         <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" style={{ maxHeight: 220 }}>
           <View style={s.mobilSecenekler}>
             {secenekler.map((dal) => (
-              <HareketliBas
+              <AgacBaglantisi
                 key={dal.id}
+                href={gezinti.alan ? adres?.(gezinti.alan, dal.id) : undefined}
                 onPress={() => gezinti.alan && sec(gezinti.alan, dal.id)}
                 accessibilityLabel={`${dal.ad}, ${dal.sayi} ilan, seç`}
                 style={s.mobilSecenek}
@@ -80,7 +120,7 @@ export function KategoriAgaci({
                 </Yazi>
                 <Yazi style={s.sayac}>{dal.sayi}</Yazi>
                 <ChevronRight size={15} color={renk.gri} />
-              </HareketliBas>
+              </AgacBaglantisi>
             ))}
           </View>
           {gezinti.alan && secenekler.length === 0 && (
@@ -95,9 +135,9 @@ export function KategoriAgaci({
     <View style={{ gap: 10 }} accessibilityLabel="Kategori seçimi" dataSet={{ 'kategori-agaci': 'true' }}>
       <Yazi style={s.baslik}>Kategori</Yazi>
       <View style={s.kutu}>
-        <HareketliBas
+        <AgacBaglantisi
+          href={adres?.('kategori', '')}
           onPress={() => sec('kategori', '')}
-
           accessibilityLabel="Tüm kategorileri göster"
           accessibilityState={{ selected: gezinti.yol.length === 0 }}
           style={s.satir}
@@ -115,7 +155,7 @@ export function KategoriAgaci({
             {gezinti.yol.length ? 'Tüm kategoriler' : 'Tüm ilanlar'}
           </Yazi>
           <Yazi style={s.sayac}>{ilanlar.length}</Yazi>
-        </HareketliBas>
+        </AgacBaglantisi>
         {gezinti.yol.map((dal, sira) => {
           const son = sira === gezinti.yol.length - 1;
           const icerik = (
@@ -137,14 +177,15 @@ export function KategoriAgaci({
               {icerik}
             </View>
           ) : (
-            <HareketliBas
+            <AgacBaglantisi
               key={dal.alan}
+              href={adres?.(dal.alan, dal.id)}
               onPress={() => sec(dal.alan, dal.id)}
               accessibilityLabel={`${dal.ad}, alt seçenekleri göster`}
               style={[s.satir, { paddingLeft: 10 + sira * 10 }]}
             >
               {icerik}
-            </HareketliBas>
+            </AgacBaglantisi>
           );
         })}
         {gezinti.alan && gezinti.secenekler.length > 0 ? (
@@ -170,8 +211,9 @@ export function KategoriAgaci({
               contentContainerStyle={{ gap: 1 }}
             >
               {secenekler.map((dal) => (
-                <HareketliBas
+                <AgacBaglantisi
                   key={dal.id}
+                  href={gezinti.alan ? adres?.(gezinti.alan, dal.id) : undefined}
                   onPress={() => gezinti.alan && sec(gezinti.alan, dal.id)}
                   accessibilityLabel={`${dal.ad}, ${dal.sayi} ilan`}
                   style={s.satir}
@@ -181,7 +223,7 @@ export function KategoriAgaci({
                   </Yazi>
                   <Yazi style={s.sayac}>{dal.sayi}</Yazi>
                   <ChevronRight size={13} color={renk.gri} />
-                </HareketliBas>
+                </AgacBaglantisi>
               ))}
               {secenekler.length === 0 ? (
                 <Yazi style={{ padding: 10, fontSize: 12, lineHeight: 18, color: renk.gri }}>

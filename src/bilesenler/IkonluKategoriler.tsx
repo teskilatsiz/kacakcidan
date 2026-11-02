@@ -1,12 +1,13 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View, type ViewInstance } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, type Href } from 'expo-router';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import ChevronUp from 'lucide-react-native/icons/chevron-up';
 import Grid2X2 from 'lucide-react-native/icons/grid-2x2';
 import { kategoriler, type Kategori } from '../veri/ilanlar';
 import { kategoriYapisi } from '../veri/kategoriler';
+import { kategoriAdresi } from '../veri/kategoriSayfalari';
 import { usePazar } from '../durum/Pazar';
 import { HareketliBas, Giris } from './Hareketli';
 import { Baslik, Yazi } from './Temel';
@@ -340,7 +341,7 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
         genis
         altlik={
           pencere === 'kategori' && secim ? (
-            <Link href={{ pathname: '/kesfet', params: { ...secim } }} asChild>
+            <Link href={kategoriAdresi(secim) as Href} asChild>
               <HareketliBas vurgu="dugme" onPress={kapat} style={s.sonucButonu}>
                 <Yazi numberOfLines={2} style={{ flex: 1, fontWeight: '700', color: renk.vurguYazi }}>
                   {sonucAdi} ilanlarını gör

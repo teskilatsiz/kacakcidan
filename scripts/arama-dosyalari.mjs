@@ -1,5 +1,6 @@
 import { readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { kategoriSayfalari } from '../src/veri/kategoriSayfalari.ts';
 
 const xml = (value) =>
   value.replace(
@@ -40,10 +41,12 @@ export async function aramaDosyalariniYaz({ siteUrl, noindex, klasor = 'dist' })
     return;
   }
 
+  const kategoriYollari = new Set(kategoriSayfalari.map(({ yol }) => `/kategori/${yol.join('/')}`));
   const sayfalar = (await htmlYollari(klasor))
     .filter(
       (adres) =>
-        ['/', '/kesfet', '/nasil-calisir'].includes(adres) ||
+        ['/', '/nasil-calisir'].includes(adres) ||
+        kategoriYollari.has(adres) ||
         ((adres.startsWith('/ilan/') || /^\/satici\/satici-[a-z0-9-]+$/.test(adres)) &&
           !['/ilan/yerel', '/satici/yerel'].includes(adres) &&
           !/[\[\]]/.test(adres)),

@@ -3,6 +3,7 @@ import { ilanlar, type Ilan } from '../veri/ilanlar.ts';
 import { ilanPaylasimGorselleri } from '../veri/ilanPaylasimGorselleri.ts';
 import { kategoriler, type Kategori } from '../veri/anaKategoriler.ts';
 import { bosSecim, kategoriYapisi, kesifSeciminiTamamla, type KesifSecimi } from '../veri/kategoriler.ts';
+import { kategoriAdresi, kategoriYolundanSayfa } from '../veri/kategoriSayfalari.ts';
 import type { SaticiProfili } from '../veri/saticilar';
 
 export const siteAdresi = (process.env.EXPO_PUBLIC_SITE_URL || 'https://kacakcidan.netlify.app').replace(
@@ -125,16 +126,81 @@ export function kesfetSayfaBilgisi(
     : kategori
       ? `${etiket} için güncel seçenekleri Kaçakçıdan’da incele. Konum, fiyat ve ${secim.kategori === 'is-ilanlari' ? 'çalışma biçimine' : 'kategoriye özel özelliklere'} göre ara; ilan ayrıntılarını gör.`
       : kesfetAciklamasi;
-  const sorgu = new URLSearchParams();
-  for (const alan of ['kategori', 'altKategori', 'marka', 'model'] as const)
-    if (secim[alan]) sorgu.set(alan, secim[alan]);
-  if (q) sorgu.set('q', q);
+  const kategoriYolu = kategoriAdresi(secim);
   return {
     baslik: `${baslik} | Kaçakçıdan`,
     aciklama: kisaAciklama(aciklama),
-    yol: `/kesfet${sorgu.size ? `?${sorgu}` : ''}`,
-    kisisel: !!q,
+    yol: kategoriYolu.startsWith('/kategori/') ? kategoriYolu : '/kesfet',
+    // Serbest arama ve özellik kombinasyonları ayrı birer açılış sayfası değildir.
+    kisisel: true,
     secim,
+  };
+}
+
+export function kategoriSayfaBilgisi(
+  yol?: string | string[],
+  parametreler: AramaParametreleri = {},
+): SayfaBilgisi & { secim: KesifSecimi } {
+  const sayfa = kategoriYolundanSayfa(yol);
+  if (!sayfa)
+    return {
+      baslik: 'Kategori bulunamadı | Kaçakçıdan',
+      aciklama: 'Bu kategori bağlantısı bulunamadı. Yayındaki ilanları kategorilerden inceleyebilirsin.',
+      yol: '/kesfet',
+      kisisel: true,
+      secim: { ...bosSecim },
+    };
+  const bilgi = kesfetSayfaBilgisi(sayfa.secim);
+  const sorguVar =
+    parametreler instanceof URLSearchParams
+      ? [...parametreler].some(([ad, deger]) => !ad.startsWith('utm_') && ad !== 'gclid' && !!deger)
+      : Object.entries(parametreler).some(
+          ([ad, deger]) => !['yol'].includes(ad) && !ad.startsWith('utm_') && ad !== 'gclid' && !!deger,
+        );
+  return { ...bilgi, yol: `/kategori/${sayfa.yol.join('/')}`, kisisel: sorguVar, secim: sayfa.secim };
+}
+
+/** Yalnız fiyatı ve satışa açık durumu görünen ürün ilanları Product/Offer olarak işaretlenir. */
+export function ilanUrunVerisi(ilan?: Ilan) {
+  if (
+    !ilan ||
+    ilan.yayinDurumu === 'kaldirildi' ||
+    ['is-ilanlari', 'emlak', 'hizmetler'].includes(ilan.kategori) ||
+    ilan.fiyatGorusulur ||
+    !Number.isFinite(ilan.fiyat) ||
+    ilan.fiyat <= 0 ||
+    !ilanPaylasimAdresi(ilan)
+  )
+    return undefined;
+  const adres = ilanPaylasimAdresi(ilan)!;
+  const yapi = kategoriYapisi(ilan.kategori, ilan.altKategori);
+  const markaAdi = yapi.markaGirisi ? yapi.markalar.find(({ id }) => id === ilan.marka)?.ad : undefined;
+  const modelAdi =
+    yapi.modelGirisi && ilan.marka
+      ? yapi.modeller[ilan.marka]?.find(({ id }) => id === ilan.model)?.ad
+      : undefined;
+  const durum = `https://schema.org/${ilan.durum === 'Sıfır' ? 'NewCondition' : 'UsedCondition'}`;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    '@id': `${adres}#urun`,
+    url: adres,
+    name: ilan.baslik,
+    description: ilan.aciklama,
+    image: new URL(ilan.gorsel, `${siteAdresi}/`).href,
+    sku: ilan.numara ?? ilan.id,
+    ...(markaAdi ? { brand: { '@type': 'Brand', name: markaAdi } } : {}),
+    ...(modelAdi ? { model: modelAdi } : {}),
+    itemCondition: durum,
+    offers: {
+      '@type': 'Offer',
+      url: adres,
+      price: ilan.fiyat,
+      priceCurrency: 'TRY',
+      itemCondition: durum,
+      availability: 'https://schema.org/InStock',
+      seller: { '@type': 'Person', name: ilan.satici },
+    },
   };
 }
 

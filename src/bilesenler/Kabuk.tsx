@@ -2,7 +2,7 @@ import { Gorsel } from './Gorsel';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { DeviceEventEmitter, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Link, useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
+import { Link, useGlobalSearchParams, usePathname, useRouter, type Href } from 'expo-router';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Heart from 'lucide-react-native/icons/heart';
@@ -20,6 +20,7 @@ import CircleHelp from 'lucide-react-native/icons/circle-question-mark';
 import Palette from 'lucide-react-native/icons/palette';
 import { usePazar } from '../durum/Pazar';
 import { kategoriler } from '../veri/ilanlar';
+import { kategoriAdresi } from '../veri/kategoriSayfalari';
 import { iller, ilceSecenekleri, konumuAyir, konumuBirlestir, ulkeler } from '../veri/konumlar';
 import { kalin, mobilAltMenuYuksekligi, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
@@ -447,7 +448,7 @@ export function UstMenu() {
         <View style={s.menuKategoriler}>
           {kategoriler.map((k) => {
             return (
-              <Link key={k.id} href={{ pathname: '/kesfet', params: { kategori: k.id } }} asChild>
+              <Link key={k.id} href={kategoriAdresi({ kategori: k.id }) as Href} asChild>
                 <HareketliBas
                   vurgu="kategori"
                   onPress={() => setMenu(false)}
@@ -542,7 +543,7 @@ export function AltBilgi() {
               </Yazi>
               <View style={s.altKategoriBaglantilari}>
                 {kategoriler.map((kategori) =>
-                  baglanti(kategori.ad, `/kesfet?kategori=${kategori.id}`, true),
+                  baglanti(kategori.ad, kategoriAdresi({ kategori: kategori.id }), true),
                 )}
               </View>
             </View>

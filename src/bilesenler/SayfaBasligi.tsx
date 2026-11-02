@@ -9,7 +9,9 @@ import {
   ilanAciklamasi,
   ilanSayfaBasligi,
   ilanPaylasimGorseli,
+  ilanUrunVerisi,
   kesfetSayfaBilgisi,
+  kategoriSayfaBilgisi,
   saticiSayfaBilgisi,
   nasilCalisirAciklamasi,
   siteAdresi,
@@ -63,9 +65,11 @@ export function SayfaBasligi() {
       }
     : yol === '/kesfet'
       ? kesfetSayfaBilgisi(parametreler)
-      : yol.startsWith('/satici/')
-        ? saticiSayfaBilgisi(satici, yol === '/satici/yerel' || !!hesap)
-        : { baslik: varsayilanBaslik, aciklama: varsayilanAciklama, yol, kisisel: !!kisisel };
+      : yol.startsWith('/kategori/')
+        ? kategoriSayfaBilgisi(yol.slice('/kategori/'.length), parametreler)
+        : yol.startsWith('/satici/')
+          ? saticiSayfaBilgisi(satici, yol === '/satici/yerel' || !!hesap)
+          : { baslik: varsayilanBaslik, aciklama: varsayilanAciklama, yol, kisisel: !!kisisel };
   const { baslik, aciklama } = bilgi;
   const paylasimBasligi = ilan?.baslik ?? baslik;
   const {
@@ -78,6 +82,8 @@ export function SayfaBasligi() {
   const adres = `${siteAdresi}${bilgi.yol}`;
   const noindex = bilgi.kisisel || process.env.EXPO_PUBLIC_NOINDEX === 'true';
   const robotlar = noindex ? 'noindex, follow' : 'index, follow';
+  const urunVerisi = ilanUrunVerisi(ilan);
+  const urunMetni = urunVerisi ? JSON.stringify(urunVerisi) : '';
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
@@ -116,6 +122,14 @@ export function SayfaBasligi() {
       guncelle(`meta[property="${property}"]`, 'meta', { property, content });
     }
     guncelle('link[rel="canonical"]', 'link', { rel: 'canonical', href: adres });
+    const oncekiUrun = document.getElementById('ilan-urun-verisi');
+    if (urunMetni) {
+      const etiket = oncekiUrun ?? document.createElement('script');
+      etiket.id = 'ilan-urun-verisi';
+      etiket.setAttribute('type', 'application/ld+json');
+      etiket.textContent = urunMetni;
+      if (!oncekiUrun) document.head.appendChild(etiket);
+    } else oncekiUrun?.remove();
   }, [
     baslik,
     paylasimBasligi,
@@ -127,6 +141,7 @@ export function SayfaBasligi() {
     width,
     height,
     type,
+    urunMetni,
   ]);
 
   if (Platform.OS === 'web') return null;

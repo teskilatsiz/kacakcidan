@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
-import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ArrowLeft from 'lucide-react-native/icons/arrow-left';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
@@ -28,6 +28,7 @@ import { kisiler, usePazar } from '../durum/Pazar';
 import { kategoriler, para, ilanBedeli } from '../veri/ilanlar';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { kategoriYapisi } from '../veri/kategoriler';
+import { kategoriAdresi } from '../veri/kategoriSayfalari';
 import { kalin, mobilAltMenuYuksekligi, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
 import { ilanPaylasimAdresi } from '../tasarim/seo';
@@ -361,7 +362,7 @@ export default function IlanDetayi() {
             {kirilimlar.map((k, sira) => (
               <View key={`${sira}-${k.ad}`} style={[ortak.satir, { gap: 8 }]}>
                 {sira > 0 && <Yazi style={{ color: renk.gri, fontSize: 12 }}>›</Yazi>}
-                <Link href={{ pathname: '/kesfet', params: k.params }}>
+                <Link href={kategoriAdresi(k.params) as Href}>
                   <Yazi style={{ fontSize: 12, color: renk.gri }}>{k.ad}</Yazi>
                 </Link>
               </View>

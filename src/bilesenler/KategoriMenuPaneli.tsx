@@ -1,11 +1,12 @@
 import { useMemo, useState, type ComponentProps, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, type Href } from 'expo-router';
 import ArrowLeft from 'lucide-react-native/icons/arrow-left';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import { kategoriYapisi, type KategoriSecenegi } from '../veri/kategoriler';
+import { kategoriAdresi } from '../veri/kategoriSayfalari';
 import { kategoriler, ilanYolu, ilanBedeli, type Ilan, type Kategori } from '../veri/ilanlar';
 import { gorselKaynagi } from '../veri/gorseller';
 import { usePazar } from '../durum/Pazar';
@@ -62,11 +63,8 @@ export function KategoriMenuPaneli({ secim, degistir, mobil, tumunuAc }: Props) 
       '';
     degistir({ kategori, altKategori: id, marka: mobil ? '' : ilkMarka });
   };
-  const altBaglantisi = (id: string) => ({
-    pathname: '/kesfet' as const,
-    params: { kategori, altKategori: id },
-  });
-  const modelBaglantisi = (id: string) => ({ pathname: '/kesfet' as const, params: { ...secim, model: id } });
+  const altBaglantisi = (id: string) => kategoriAdresi({ kategori, altKategori: id }) as Href;
+  const modelBaglantisi = (id: string) => kategoriAdresi({ ...secim, model: id }) as Href;
 
   if (mobil) {
     const alan = !altKategori ? 'altKategori' : !marka ? 'marka' : 'model';
@@ -141,7 +139,7 @@ export function KategoriMenuPaneli({ secim, degistir, mobil, tumunuAc }: Props) 
               alan === 'model'
                 ? modelBaglantisi(secenek.id)
                 : alan === 'marka'
-                  ? { pathname: '/kesfet' as const, params: { ...secim, marka: secenek.id } }
+                  ? (kategoriAdresi({ ...secim, marka: secenek.id }) as Href)
                   : altBaglantisi(secenek.id);
             return (
               <Link key={secenek.id} href={href} asChild>
@@ -183,7 +181,7 @@ export function KategoriMenuPaneli({ secim, degistir, mobil, tumunuAc }: Props) 
         )),
         <MenuBaglantisi
           etiket={'Tüm ' + kategoriAdi + ' ilanları'}
-          href={{ pathname: '/kesfet', params: { kategori } }}
+          href={kategoriAdresi({ kategori }) as Href}
         />,
         0.2,
         true,
@@ -200,7 +198,7 @@ export function KategoriMenuPaneli({ secim, degistir, mobil, tumunuAc }: Props) 
         )),
         <MenuBaglantisi
           etiket={yapi.markaGirisi ? 'Tüm markaları gör' : 'Tüm ilanları gör'}
-          href={{ pathname: '/kesfet', params: { kategori, altKategori } }}
+          href={kategoriAdresi({ kategori, altKategori }) as Href}
         />,
         0.18,
       )}

@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
 import Check from 'lucide-react-native/icons/check';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
@@ -34,6 +34,7 @@ import {
 } from '../veri/kategoriler';
 import { ozellikFiltreAlanlari, type OzellikAlani } from '../veri/ozellikler';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
+import { kategoriAdresi } from '../veri/kategoriSayfalari';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
@@ -268,8 +269,17 @@ export default function Kesfet() {
                 kapsam.some((ilan) => ozellikFiltreEslesir(ilan.ozellikler?.[ad], secili)),
             ),
           );
-    router.setParams({ ...sonraki, ozellikler: Object.keys(tutulan).length ? JSON.stringify(tutulan) : '' });
+    router.replace(
+      kategoriAdresi(sonraki, {
+        q,
+        firsat: firsat ? '1' : '',
+        takas: takas ? '1' : '',
+        ozellikler: Object.keys(tutulan).length ? JSON.stringify(tutulan) : '',
+      }) as Href,
+    );
   }
+  const kategoriBaglantisi = (alan: keyof KesifSecimi, deger: string) =>
+    kategoriAdresi(kesifSeciminiDegistir(secim, alan, deger)) as Href;
   function sifirla() {
     setEnAz('');
     setEnCok('');
@@ -277,7 +287,7 @@ export default function Kesfet() {
     setTakas(false);
     setTeknikAcik(false);
     konumSec('');
-    router.setParams({ ...bosSecim, q: '', firsat: '', takas: '', ozellikler: '' });
+    router.replace('/kesfet');
   }
   const aktifFiltreler: AktifFiltre[] = [
     ...(q ? [{ id: 'arama', ad: `Arama: ${q}`, kaldir: () => router.setParams({ q: '' }) }] : []),
@@ -335,7 +345,7 @@ export default function Kesfet() {
         </HareketliBas>
       </View>
       <View style={s.filtreBolum}>
-        <KategoriAgaci ilanlar={tumIlanlar} secim={secim} sec={sec} />
+        <KategoriAgaci ilanlar={tumIlanlar} secim={secim} sec={sec} adres={kategoriBaglantisi} />
       </View>
       <View style={s.filtreBolum}>
         <Yazi style={s.filtreBaslik}>Konum</Yazi>
@@ -555,7 +565,15 @@ export default function Kesfet() {
               <Yazi style={{ fontWeight: '700', fontSize: 13 }}>{sonuc.length} ilan</Yazi>
             </Yazi>
           </View>
-          {tablet && <KategoriAgaci ilanlar={tumIlanlar} secim={secim} sec={sec} gorunum="mobil" />}
+          {tablet && (
+            <KategoriAgaci
+              ilanlar={tumIlanlar}
+              secim={secim}
+              sec={sec}
+              adres={kategoriBaglantisi}
+              gorunum="mobil"
+            />
+          )}
           <View style={[ortak.aralikli, { gap: 8 }]}>
             {tablet ? (
               <Buton

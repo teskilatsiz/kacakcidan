@@ -1,6 +1,8 @@
 import type { PropsWithChildren } from 'react';
 import { useServerDocumentContext } from 'expo-router/html';
 import { acikRenkler, koyuRenkler } from '../src/tasarim/palet';
+import { ilanUrunVerisi } from '../src/tasarim/seo';
+import { ilanlar } from '../src/veri/ilanlar';
 
 const degiskenler = (palet: typeof acikRenkler) =>
   Object.entries(palet)
@@ -19,6 +21,9 @@ const siteYapilandirilmisVerisi = JSON.stringify({
 
 export default function Html({ children, pathname }: PropsWithChildren<{ pathname?: string }>) {
   const { htmlAttributes, bodyAttributes, headNodes, bodyNodes } = useServerDocumentContext();
+  const urunVerisi = pathname?.startsWith('/ilan/')
+    ? ilanUrunVerisi(ilanlar.find(({ id }) => pathname === `/ilan/${id}`))
+    : undefined;
 
   return (
     <html {...htmlAttributes} lang="tr">
@@ -38,6 +43,13 @@ export default function Html({ children, pathname }: PropsWithChildren<{ pathnam
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: siteYapilandirilmisVerisi }}
+          />
+        )}
+        {urunVerisi && (
+          <script
+            id="ilan-urun-verisi"
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(urunVerisi).replace(/</g, '\\u003c') }}
           />
         )}
         <link
