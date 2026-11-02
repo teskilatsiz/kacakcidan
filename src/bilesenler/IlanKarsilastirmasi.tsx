@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { Link } from 'expo-router';
-import Scale from 'lucide-react-native/icons/scale';
+import SquareSplitHorizontal from 'lucide-react-native/icons/square-split-horizontal';
 import X from 'lucide-react-native/icons/x';
 import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right';
 import Check from 'lucide-react-native/icons/check';
@@ -80,7 +80,7 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
           onPress={() => setAcik(true)}
           style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 }}
         >
-          <Scale size={18} color={renk.murekkep} />
+          <SquareSplitHorizontal size={18} color={renk.murekkep} />
           <Yazi style={{ fontSize: 13, fontWeight: '600' }}>Son baktığın ilanla karşılaştır</Yazi>
         </HareketliBas>
       ) : (
@@ -113,7 +113,7 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
                   flexShrink: 0,
                 }}
               >
-                <Scale size={21} color={renk.murekkep} strokeWidth={1.7} />
+                <SquareSplitHorizontal size={21} color={renk.murekkep} strokeWidth={1.7} />
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <Yazi style={{ fontSize: 14, fontWeight: '700', lineHeight: 20 }}>
@@ -144,7 +144,7 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
               style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
             >
               <Buton
-                simge={<Scale size={17} />}
+                simge={<SquareSplitHorizontal size={17} />}
                 onPress={() => setAcik(true)}
                 style={{ flex: mobil ? 1 : undefined, minHeight: 44 }}
               >
