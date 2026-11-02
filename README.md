@@ -17,8 +17,7 @@
 ## Ekran görüntüleri
 
 <p align="center">
-  <img src="screenshots/anasayfa-masaustu.png" alt="Kaçakçıdan ana sayfası, masaüstü görünümü" height="550" />
-  <img src="screenshots/anasayfa-mobil.png" alt="Kaçakçıdan ana sayfası, mobil görünümü" height="550" />
+  <img src="screenshots/anasayfa-karsilastirma.png" alt="Kaçakçıdan ana sayfasının masaüstü ve mobil görünümleri yan yana" width="100%" />
 </p>
 
 ## Proje
