@@ -17,6 +17,7 @@ import LogOut from 'lucide-react-native/icons/log-out';
 import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right';
 import Settings from 'lucide-react-native/icons/settings-2';
 import CircleHelp from 'lucide-react-native/icons/circle-question-mark';
+import Search from 'lucide-react-native/icons/search';
 import Palette from 'lucide-react-native/icons/palette';
 import { usePazar } from '../durum/Pazar';
 import { kategoriler } from '../veri/ilanlar';
@@ -405,6 +406,7 @@ export function UstMenu() {
             { href: '/mesajlar', ad: 'Mesajlar', simge: MessageCircle },
             { href: '/bildirimler', ad: 'Bildirimler', simge: Bell },
             { href: '/ayarlar', ad: 'Hesap ayarları', simge: Settings },
+            { href: '/alim-talepleri', ad: 'Alım talepleri', simge: Search },
           ].map(({ href, ad, simge: Simge }) => (
             <Link key={href} href={href as '/'} asChild>
               <HareketliBas onPress={() => setMenu(false)} style={s.menuKisayol}>
@@ -512,6 +514,7 @@ export function AltBilgi() {
   const pazarBaglantilari = [
     { ad: 'Tüm ilanlar', yol: '/kesfet' },
     { ad: 'İlan ver', yol: '/ilan-ver' },
+    { ad: 'Alım talepleri', yol: '/alim-talepleri' },
     { ad: 'Nasıl çalışır?', yol: '/nasil-calisir' },
   ];
   const baglanti = (ad: string, yol: string, kategori = false) => (

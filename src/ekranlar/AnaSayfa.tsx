@@ -219,6 +219,38 @@ export default function AnaSayfa() {
             </HareketliBas>
           </Link>
         </View>
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderColor: renk.cizgi,
+            paddingTop: 20,
+            gap: 8,
+            flexDirection: mobil ? 'column' : 'row',
+            alignItems: mobil ? 'stretch' : 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+            <Yazi style={{ fontWeight: '700', fontSize: 17 }}>Aradığını bulamadın mı?</Yazi>
+            <Yazi style={{ color: renk.gri, fontSize: 13 }}>
+              Aradığın ürünü ve bütçeni alım taleplerine yaz.
+            </Yazi>
+          </View>
+          <Link href="/alim-talepleri" asChild>
+            <HareketliBas
+              style={{
+                minHeight: 44,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                paddingHorizontal: mobil ? 0 : 12,
+              }}
+            >
+              <Yazi style={{ fontSize: 13, fontWeight: '600' }}>Alım taleplerini gör</Yazi>
+              <ArrowRight size={17} color={renk.murekkep} />
+            </HareketliBas>
+          </Link>
+        </View>
         {web ? (
           <View dataSet={{ 'kesif-yerlesimi': 'alt' }}>{kesifBandi(true)}</View>
         ) : (

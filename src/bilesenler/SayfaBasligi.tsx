@@ -36,6 +36,11 @@ const sayfalar: Record<string, [string, string, boolean?]> = {
   ],
   '/ilan-ver': ['İlan ver | Kaçakçıdan', 'Ürün, araç, emlak, iş veya hizmet ilanını oluştur.', true],
   '/ilan-duzenle': ['İlanı düzenle | Kaçakçıdan', 'İlan bilgilerini ve fotoğraflarını güncelle.', true],
+  '/alim-talepleri': [
+    'Alım talepleri | Kaçakçıdan',
+    'Aradığın ürünü ve bütçeni belirt, uygun ilanları incele.',
+    true,
+  ],
   '/nasil-calisir': ['Nasıl çalışır? | Kaçakçıdan', nasilCalisirAciklamasi],
 };
 
