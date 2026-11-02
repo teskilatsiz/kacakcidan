@@ -144,7 +144,7 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
               style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
             >
               <Buton
-                simge={<SquareSplitHorizontal size={17} />}
+                simge={<SquareSplitHorizontal size={17} strokeWidth={2.4} />}
                 onPress={() => setAcik(true)}
                 style={{ flex: mobil ? 1 : undefined, minHeight: 44 }}
               >
