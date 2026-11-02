@@ -123,6 +123,8 @@ export const kategoriAgaci: KategoriAgaci = {
             secenek('iphone-13', 'iPhone 13'),
             secenek('iphone-13-pro', 'iPhone 13 Pro'),
             secenek('iphone-12', 'iPhone 12'),
+            secenek('iphone-12-pro', 'iPhone 12 Pro'),
+            secenek('iphone-12-pro-max', 'iPhone 12 Pro Max'),
             secenek('iphone-11', 'iPhone 11'),
           ],
         },

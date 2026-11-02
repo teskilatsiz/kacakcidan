@@ -3,6 +3,7 @@ import type { ParolaKaydi } from './parola.types';
 import type { Ilan } from '../veri/ilanlar';
 import { telefonuNormallestir } from '../veri/telefon.ts';
 import { durumKanitlariniTemizle, urunDurumAlanlari } from '../veri/urunDurumu.ts';
+import { modelOzellikleriniUygula } from '../veri/modelOzellikleri.ts';
 import {
   ilanKaldirmaNedenleri,
   sikayetNedenleri,
@@ -46,7 +47,9 @@ function kaydiTemizle(kayit: Kayit): Kayit {
 }
 
 function ilanBilgileriniTemizle(ilan: Ilan): Ilan {
-  const temiz = iletisimiDuzenle(ilan);
+  const oncekiOzellikler = ilan.ozellikler ?? {};
+  const ozellikler = modelOzellikleriniUygula(ilan, oncekiOzellikler);
+  const temiz = iletisimiDuzenle(ozellikler === oncekiOzellikler ? ilan : { ...ilan, ozellikler });
   if (temiz.durumKanitlari === undefined) return temiz;
   const { durumKanitlari: _kanitlar, ...diger } = temiz;
   const kanitlar = durumKanitlariniTemizle(

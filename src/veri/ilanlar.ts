@@ -4,6 +4,7 @@ import { kategoriler, type Kategori } from './anaKategoriler.ts';
 import { ekIlanlar } from './ekIlanlar.ts';
 import type { IlanKaldirmaNedeni } from './ilanYonetimi.ts';
 import type { DurumKaniti } from './urunDurumu.ts';
+import { modelOzellikleriniUygula } from './modelOzellikleri.ts';
 
 export { kategoriler, type Kategori } from './anaKategoriler.ts';
 
@@ -336,7 +337,11 @@ const ayrintilar: Record<string, Partial<Ilan>> = {
 export const ilanlar: Ilan[] = [
   ...vitrinIlanlari.map((ilan) => ({ ...ilan, ...ayrintilar[ilan.id] })),
   ...ekIlanlar,
-];
+].map((ilan) => {
+  const onceki = ilan.ozellikler ?? {};
+  const ozellikler = modelOzellikleriniUygula(ilan, onceki);
+  return ozellikler === onceki ? ilan : { ...ilan, ozellikler };
+});
 
 const paraBicimi = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 export const para = (deger: number) => `${paraBicimi.format(deger)} TL`;

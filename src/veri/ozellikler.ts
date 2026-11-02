@@ -4,6 +4,7 @@ import { kategoriAgaci } from './kategoriler.ts';
 import { ilanOzellikAlanlari } from './ilanOzellikleri.ts';
 import { urunKategorisiMi } from './anaKategoriler.ts';
 import { satisAlanlari, urunDurumAlanlari } from './urunDurumu.ts';
+import { modelOzellikleri } from './modelOzellikleri.ts';
 
 export type OzellikAlani = {
   ad: string;
@@ -13,6 +14,7 @@ export type OzellikAlani = {
   birim?: string;
   enAz?: number;
   enCok?: number;
+  sabit?: string;
 };
 export type UrunSecimi = { kategori: Kategori; altKategori?: string; marka?: string; model?: string };
 const alan = (ad: string, secenekler: string[]): OzellikAlani => ({ ad, secenekler });
@@ -72,6 +74,8 @@ const telefonKapasiteleri: Record<string, string[]> = {
   'iphone-13': ['128 GB', '256 GB', '512 GB'],
   'iphone-13-pro': ['128 GB', '256 GB', '512 GB', '1 TB'],
   'iphone-12': ['64 GB', '128 GB', '256 GB'],
+  'iphone-12-pro': ['128 GB', '256 GB', '512 GB'],
+  'iphone-12-pro-max': ['128 GB', '256 GB', '512 GB'],
   'iphone-11': ['64 GB', '128 GB', '256 GB'],
   'galaxy-s23-ultra': ['256 GB', '512 GB', '1 TB'],
   'galaxy-s23': ['128 GB', '256 GB'],
@@ -127,6 +131,8 @@ const telefonRenkleri: Record<string, string[]> = {
   'iphone-13': ['Gece yarısı', 'Yıldız ışığı', 'Mavi', 'Pembe', 'Yeşil', 'Kırmızı'],
   'iphone-13-pro': ['Grafit', 'Altın', 'Gümüş', 'Sierra mavisi', 'Köknar yeşili'],
   'iphone-12': ['Siyah', 'Beyaz', 'Kırmızı', 'Yeşil', 'Mavi', 'Mor'],
+  'iphone-12-pro': ['Gümüş', 'Grafit', 'Altın', 'Pasifik mavisi'],
+  'iphone-12-pro-max': ['Gümüş', 'Grafit', 'Altın', 'Pasifik mavisi'],
   'iphone-11': ['Mor', 'Yeşil', 'Sarı', 'Siyah', 'Beyaz', 'Kırmızı'],
   'galaxy-s23-ultra': [
     'Siyah',
@@ -2048,10 +2054,16 @@ function temelOzellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
 export function ozellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
   const temel = temelOzellikAlanlari(secim);
   if (!temel.length) return [];
+  const sabit = modelOzellikleri(secim);
   return [
     ...new Map(
       [
         ...temel,
+        ...Object.entries(sabit?.degerler ?? {}).map(([ad, deger]) => ({
+          ad,
+          secenekler: [deger],
+          sabit: deger,
+        })),
         ...urunDurumAlanlari(secim),
         ...(urunKategorisiMi(secim.kategori) ? satisAlanlari() : []),
       ].map((alan) => [alan.ad, alan]),
@@ -2077,6 +2089,7 @@ export function ozellikFiltreAlanlari(secim: UrunSecimi): OzellikAlani[] {
       const ayniAlanlar = tanimlar.flatMap((tanim) => tanim.filter((aday) => aday.ad === alan.ad));
       return {
         ...alan,
+        sabit: undefined,
         secenekler: [...new Set(ayniAlanlar.flatMap((aday) => aday.secenekler))],
         ...(alan.filtreSecenekleri
           ? {
@@ -2095,8 +2108,8 @@ export function ozellikFiltreAlanlari(secim: UrunSecimi): OzellikAlani[] {
 
 /** Kategori veya model değiştiğinde artık geçerli olmayan teknik bilgiler silinir. */
 export function ozellikleriTemizle(alanlar: readonly OzellikAlani[], degerler: Record<string, string>) {
-  return Object.fromEntries(
-    Object.entries(degerler).filter(([ad, deger]) => {
+  return Object.fromEntries([
+    ...Object.entries(degerler).filter(([ad, deger]) => {
       const tanim = alanlar.find((a) => a.ad === ad);
       if (!tanim || !deger) return false;
       if (tanim.sayisal)
@@ -2107,5 +2120,6 @@ export function ozellikleriTemizle(alanlar: readonly OzellikAlani[], degerler: R
         );
       return tanim.secenekler.includes(deger);
     }),
-  );
+    ...alanlar.flatMap((alan) => (alan.sabit ? [[alan.ad, alan.sabit]] : [])),
+  ]);
 }
