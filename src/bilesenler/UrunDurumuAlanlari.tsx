@@ -37,7 +37,7 @@ export function UrunDurumuAlanlari({
   return (
     <View style={{ gap: 16 }}>
       <View style={{ gap: 6 }}>
-        <Yazi style={{ fontSize: 15, fontWeight: '700' }}>Ürünün durumu</Yazi>
+        <Yazi style={{ fontSize: 15, fontWeight: '700' }}>Ayrıntılı durum bilgileri</Yazi>
         <Yazi style={{ color: renk.gri, fontSize: 12, lineHeight: 19 }}>
           Bildiğin bilgileri seç; emin olmadıklarını boş bırak veya bilinmiyor olarak belirt. İstersen ilgili
           bilginin fotoğrafını ekle.

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
-import { Keyboard, Platform, StyleSheet, View } from 'react-native';
+import { Keyboard, Linking, Platform, StyleSheet, View } from 'react-native';
 import type { ImagePickerAsset } from 'expo-image-picker';
 import { randomUUID } from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -15,6 +15,8 @@ import Pencil from 'lucide-react-native/icons/pencil';
 import Video from 'lucide-react-native/icons/video';
 import X from 'lucide-react-native/icons/x';
 import Camera from 'lucide-react-native/icons/camera';
+import LockKeyhole from 'lucide-react-native/icons/lock-keyhole';
+import ExternalLink from 'lucide-react-native/icons/external-link';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { HesapGerekli } from '../bilesenler/HesapGerekli';
 import { Alan, Baslik, BosDurum, Buton, Secenek, Yazi } from '../bilesenler/Temel';
@@ -31,13 +33,14 @@ import { medyaBoyutlariniOku, medyaKaydet, medyaOnizlemesiniBirak, medyaSil } fr
 import { fotografHatasi, MEDYA_SINIRLARI, megabayt, videoHatasi } from '../veri/medya';
 import { kategoriYapisi } from '../veri/kategoriler';
 import { ozellikAlanlari, ozellikleriTemizle } from '../veri/ozellikler';
+import { modelOzellikleri } from '../veri/modelOzellikleri';
+import { sayfaBasinaDon } from '../tasarim/sayfaOdagi';
 import { durumKanitlariniTemizle, urunDurumAlanlari, type DurumKaniti } from '../veri/urunDurumu';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 import { kategoriler, ilanYolu, ilanBedeli, type Ilan, type Kategori } from '../veri/ilanlar';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
-const adimlar = ['Kategori', 'Fotoğraf & video', 'İlan bilgileri', 'Önizleme'];
 export default function IlanVer({ duzenleme = false }: { duzenleme?: boolean } = {}) {
   const { renk } = useTema();
 
@@ -194,14 +197,24 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
   useEffect(() => {
     if (Platform.OS === 'web') {
       const oge = baslikAlani.current as unknown as HTMLElement | null;
-      oge?.focus?.();
+      oge?.focus?.({ preventScroll: true });
     }
+    sayfaBasinaDon();
   }, [adim, kaydedilen]);
 
   const yapi = kategori ? kategoriYapisi(kategori, altKategori) : undefined;
   const isIlani = kategori === 'is-ilanlari';
   const hizmetIlani = kategori === 'hizmetler';
   const urunIlani = urunKategorisiMi(kategori);
+  const adimlar = [
+    'Kategori',
+    'Fotoğraf & video',
+    'İlan bilgileri',
+    ...(urunIlani ? ['Ürün durumu'] : []),
+    'Önizleme',
+  ];
+  const durumAdimi = urunIlani ? 4 : 0;
+  const onizlemeAdimi = adimlar.length;
   const fotografGerekli = !isIlani;
   const fiyatSecimiVar = isIlani || hizmetIlani;
   const altKategoriEtiketi = yapi?.altKategoriBasligi
@@ -251,6 +264,10 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     () => (kategori ? ozellikAlanlari({ kategori, altKategori, marka, model }) : []),
     [kategori, altKategori, marka, model],
   );
+  const sabitModelBilgisi = useMemo(
+    () => (kategori ? modelOzellikleri({ kategori, altKategori, marka, model }) : undefined),
+    [kategori, altKategori, marka, model],
+  );
   const durumAlanlari = useMemo(
     () => (kategori ? urunDurumAlanlari({ kategori, altKategori, marka, model }) : []),
     [kategori, altKategori, marka, model],
@@ -297,12 +314,18 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     setHata('');
   }
   function markaSec(deger: string) {
+    setOzellikler((onceki) =>
+      Object.fromEntries(Object.entries(onceki).filter(([ad]) => !sabitModelBilgisi?.degerler[ad])),
+    );
     setMarka(deger);
     setModel('');
     setDigerModel('');
     setHata('');
   }
   function modelSec(deger: string) {
+    setOzellikler((onceki) =>
+      Object.fromEntries(Object.entries(onceki).filter(([ad]) => !sabitModelBilgisi?.degerler[ad])),
+    );
     setModel(deger);
     setHata('');
   }
@@ -330,6 +353,17 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     if (modelGirisi && model === 'diger' && digerModel.trim().length < 2) return 'Ürünün modelini yaz.';
     return '';
   }
+  function ozellikleriDenetle(urunDurumu = false) {
+    const hatalar: Record<string, string> = {};
+    for (const alan of teknikAlanlar.filter((alan) => durumAdlari.has(alan.ad) === urunDurumu)) {
+      const deger = ozellikler[alan.ad];
+      if (alan.sayisal && deger && Number(deger) > (alan.enCok ?? Number.MAX_SAFE_INTEGER))
+        hatalar[alan.ad] = `${alan.ad} en fazla ${alan.enCok?.toLocaleString('tr-TR')} olabilir.`;
+      if (alan.sayisal && deger && Number(deger) < (alan.enAz ?? 0))
+        hatalar[alan.ad] = `${alan.ad} en az ${alan.enAz?.toLocaleString('tr-TR')} olmalı.`;
+    }
+    return hatalar;
+  }
   function bilgileriDenetle() {
     const hatalar: Record<string, string> = {};
     const telefonSorunu = telefonHatasi(telefon, telefonGoster);
@@ -344,14 +378,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     if (!seciliKonum.ilce) hatalar.ilce = 'İlanın bulunduğu ilçeyi seç.';
     if (aciklama.trim().length < 20)
       hatalar.aciklama = 'İlanın hakkında en az 20 karakterlik bir açıklama yaz.';
-    for (const alan of teknikAlanlar) {
-      const deger = ozellikler[alan.ad];
-      if (alan.sayisal && deger && Number(deger) > (alan.enCok ?? Number.MAX_SAFE_INTEGER))
-        hatalar[alan.ad] = `${alan.ad} en fazla ${alan.enCok?.toLocaleString('tr-TR')} olabilir.`;
-      if (alan.sayisal && deger && Number(deger) < (alan.enAz ?? 0))
-        hatalar[alan.ad] = `${alan.ad} en az ${alan.enAz?.toLocaleString('tr-TR')} olmalı.`;
-    }
-    return hatalar;
+    return { ...hatalar, ...ozellikleriDenetle() };
   }
   function devam() {
     setHata('');
@@ -368,6 +395,14 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     }
     if (adim === 3) {
       const hatalar = bilgileriDenetle();
+      setAlanHatalari(hatalar);
+      if (Object.keys(hatalar).length) {
+        setHata('İşaretli alanları kontrol edip devam edebilirsin.');
+        return;
+      }
+    }
+    if (adim === durumAdimi) {
+      const hatalar = ozellikleriDenetle(true);
       setAlanHatalari(hatalar);
       if (Object.keys(hatalar).length) {
         setHata('İşaretli alanları kontrol edip devam edebilirsin.');
@@ -464,6 +499,12 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     if (Object.keys(bilgiHatalari).length) {
       adimaGit(3);
       setAlanHatalari(bilgiHatalari);
+      return;
+    }
+    const durumHatalari = ozellikleriDenetle(true);
+    if (Object.keys(durumHatalari).length) {
+      adimaGit(durumAdimi);
+      setAlanHatalari(durumHatalari);
       return;
     }
     islemSuruyor.current = true;
@@ -578,62 +619,82 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
             <View
               accessibilityRole="progressbar"
               aria-valuemin={1}
-              aria-valuemax={4}
+              aria-valuemax={adimlar.length}
               aria-valuenow={adim}
               aria-valuetext={`${adim}. adım: ${adimlar[adim - 1]}`}
               accessibilityLabel={ilan ? 'İlan düzenleme adımları' : 'İlan oluşturma adımları'}
-              accessibilityValue={{ min: 1, max: 4, now: adim, text: `${adim}. adım: ${adimlar[adim - 1]}` }}
+              accessibilityValue={{
+                min: 1,
+                max: adimlar.length,
+                now: adim,
+                text: `${adim}. adım: ${adimlar[adim - 1]}`,
+              }}
               style={{ height: 3, backgroundColor: renk.cizgi, borderRadius: 2, marginBottom: 18 }}
             >
               <View
-                style={{ height: 3, backgroundColor: renk.murekkep, width: `${adim * 25}%`, borderRadius: 2 }}
+                style={{
+                  height: 3,
+                  backgroundColor: renk.murekkep,
+                  width: `${(adim / adimlar.length) * 100}%`,
+                  borderRadius: 2,
+                }}
               />
             </View>
-            <View style={{ flexDirection: 'row', marginBottom: mobil ? 18 : 26, gap: mobil ? 6 : 18 }}>
-              {adimlar.map((ad, i) => (
-                <HareketliBas
-                  key={ad}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${i + 1}. ${ad}${adim === i + 1 ? ', şu anki adım' : ''}`}
-                  accessibilityState={{ selected: adim === i + 1, disabled: i + 1 >= adim || calisiyor }}
-                  disabled={i + 1 >= adim || calisiyor}
-                  onPress={() => adimaGit(i + 1)}
-                  style={{
-                    flex: 1,
-                    flexDirection: mobil ? 'column' : 'row',
-                    alignItems: mobil ? 'flex-start' : 'center',
-                    gap: 8,
-                    minHeight: 44,
-                  }}
-                >
-                  <View style={[s.adimNo, { backgroundColor: adim >= i + 1 ? renk.murekkep : renk.acik }]}>
-                    {adim > i + 1 ? (
-                      <Check size={14} color={renk.tersYazi} />
-                    ) : (
-                      <Yazi
-                        style={{
-                          color: adim === i + 1 ? renk.tersYazi : renk.gri,
-                          fontSize: 12,
-                          fontWeight: '700',
-                        }}
-                      >
-                        {i + 1}
-                      </Yazi>
-                    )}
-                  </View>
-                  <Yazi
+            {mobil ? (
+              <View style={[ortak.aralikli, { marginBottom: 18, gap: 12 }]}>
+                <Yazi style={{ fontSize: 13, fontWeight: '700', flex: 1 }}>{adimlar[adim - 1]}</Yazi>
+                <Yazi style={{ fontSize: 12, color: renk.gri }}>
+                  Adım {adim} / {adimlar.length}
+                </Yazi>
+              </View>
+            ) : (
+              <View style={{ flexDirection: 'row', marginBottom: mobil ? 18 : 26, gap: mobil ? 6 : 18 }}>
+                {adimlar.map((ad, i) => (
+                  <HareketliBas
+                    key={ad}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${i + 1}. ${ad}${adim === i + 1 ? ', şu anki adım' : ''}`}
+                    accessibilityState={{ selected: adim === i + 1, disabled: i + 1 >= adim || calisiyor }}
+                    disabled={i + 1 >= adim || calisiyor}
+                    onPress={() => adimaGit(i + 1)}
                     style={{
-                      fontSize: mobil ? 10 : 12,
-                      lineHeight: 17,
-                      fontWeight: adim === i + 1 ? '700' : '400',
-                      color: adim >= i + 1 ? renk.murekkep : renk.gri,
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      minHeight: 44,
                     }}
                   >
-                    {ad}
-                  </Yazi>
-                </HareketliBas>
-              ))}
-            </View>
+                    <View style={[s.adimNo, { backgroundColor: adim >= i + 1 ? renk.murekkep : renk.acik }]}>
+                      {adim > i + 1 ? (
+                        <Check size={14} color={renk.tersYazi} />
+                      ) : (
+                        <Yazi
+                          style={{
+                            color: adim === i + 1 ? renk.tersYazi : renk.gri,
+                            fontSize: 12,
+                            fontWeight: '700',
+                          }}
+                        >
+                          {i + 1}
+                        </Yazi>
+                      )}
+                    </View>
+                    <Yazi
+                      style={{
+                        fontSize: 12,
+                        lineHeight: 17,
+                        flexShrink: 1,
+                        fontWeight: adim === i + 1 ? '700' : '400',
+                        color: adim >= i + 1 ? renk.murekkep : renk.gri,
+                      }}
+                    >
+                      {ad}
+                    </Yazi>
+                  </HareketliBas>
+                ))}
+              </View>
+            )}
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 24 }}>
               <View
                 style={[
@@ -648,6 +709,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         'Hangi kategoride ilan vereceksin?',
                         isIlani ? 'Çalışma ortamını göster.' : 'İlanına fotoğraf ekle.',
                         isIlani ? 'İşin koşullarını anlat.' : 'İlanın ayrıntılarını tamamla.',
+                        ...(urunIlani ? ['Ürünün durumunu belirt.'] : []),
                         'Son bir kez gözden geçir.',
                       ][adim - 1]
                     }
@@ -662,6 +724,11 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         isIlani
                           ? 'Sorumlulukları, aranan nitelikleri ve çalışma koşullarını açıkça belirt.'
                           : 'Açık bir başlık ve ayrıntılı bir açıklama karar vermeyi kolaylaştırır.',
+                        ...(urunIlani
+                          ? [
+                              'Kullanım izlerini ve bilinen kusurları paylaş. Emin olmadığın bilgileri boş bırakabilirsin.',
+                            ]
+                          : []),
                         'Bir şey eksikse ilgili bölüme dönüp düzenleyebilirsin.',
                       ][adim - 1]
                     }
@@ -1040,18 +1107,6 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         />
                       </View>
                     </View>
-                    {urunIlani ? (
-                      <View style={{ gap: 10 }}>
-                        <Yazi style={s.etiket}>Ürünün durumu</Yazi>
-                        <View style={s.secenekler}>
-                          {(['İkinci el', 'Yeni gibi', 'Sıfır'] as const).map((d) => (
-                            <Secenek key={d} secili={durum === d} onPress={() => setDurum(d)}>
-                              {d}
-                            </Secenek>
-                          ))}
-                        </View>
-                      </View>
-                    ) : null}
                     {kategori ? (
                       <View style={{ gap: 14 }}>
                         <View style={ortak.aralikli}>
@@ -1066,9 +1121,60 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                           </Yazi>
                           <Yazi style={{ fontSize: 11, color: renk.gri }}>İsteğe bağlı</Yazi>
                         </View>
+                        {sabitModelBilgisi ? (
+                          <View
+                            style={{ padding: 16, borderRadius: 10, backgroundColor: renk.zemin, gap: 12 }}
+                          >
+                            <View style={[ortak.satir, { gap: 8 }]}>
+                              <LockKeyhole size={15} color={renk.gri} />
+                              <Yazi style={{ fontSize: 13, fontWeight: '700', flex: 1 }}>
+                                Modele ait bilgiler
+                              </Yazi>
+                            </View>
+                            <Yazi style={{ fontSize: 12, lineHeight: 19, color: renk.gri }}>
+                              Bu bilgiler seçtiğin modele göre dolduruldu. Farklı bir cihaz için kategori
+                              adımından modeli değiştir.
+                            </Yazi>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
+                              {Object.entries(sabitModelBilgisi.degerler).map(([ad, deger]) => (
+                                <View
+                                  key={ad}
+                                  style={{
+                                    flexBasis: mobil ? '100%' : '45%',
+                                    flexGrow: 1,
+                                    minWidth: 0,
+                                    gap: 3,
+                                  }}
+                                >
+                                  <Yazi style={{ fontSize: 12, color: renk.gri }}>{ad}</Yazi>
+                                  <Yazi selectable style={{ fontSize: 14, fontWeight: '600' }}>
+                                    {deger}
+                                  </Yazi>
+                                </View>
+                              ))}
+                            </View>
+                            <HareketliBas
+                              accessibilityRole="link"
+                              accessibilityLabel="Üreticinin teknik bilgilerini aç"
+                              onPress={() => void Linking.openURL(sabitModelBilgisi.kaynak)}
+                              style={{
+                                minHeight: 44,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                                alignSelf: 'flex-start',
+                              }}
+                            >
+                              <Yazi style={{ fontSize: 12, textDecorationLine: 'underline' }}>
+                                Üreticinin teknik bilgileri
+                              </Yazi>
+                              <ExternalLink size={13} color={renk.gri} />
+                            </HareketliBas>
+                          </View>
+                        ) : null}
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
                           {teknikAlanlar
-                            .filter((alan) => !durumAdlari.has(alan.ad))
+                            .filter((alan) => !durumAdlari.has(alan.ad) && !alan.sabit)
                             .map((alan) => (
                               <View
                                 key={alan.ad}
@@ -1106,25 +1212,6 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                             ))}
                         </View>
                       </View>
-                    ) : null}
-                    {durumAlanlari.length ? (
-                      <UrunDurumuAlanlari
-                        alanlar={durumAlanlari}
-                        degerler={ozellikler}
-                        degistir={(ad, deger) => {
-                          setOzellikler((onceki) => ({ ...onceki, [ad]: deger }));
-                          hataSil(ad);
-                        }}
-                        kanitlar={durumKanitlari}
-                        kanitDegistir={(ad, kanit) =>
-                          setDurumKanitlari((onceki) => [
-                            ...onceki.filter((kayit) => kayit.alan !== ad),
-                            ...(kanit ? [kanit] : []),
-                          ])
-                        }
-                        fotograflar={fotograflar.map((foto) => foto.uri)}
-                        hatalar={alanHatalari}
-                      />
                     ) : null}
                     <Alan
                       nativeID="ilan-aciklamasi"
@@ -1192,7 +1279,43 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                   </View>
                 ) : null}
 
-                {adim === 4 ? (
+                {adim === durumAdimi ? (
+                  <View style={{ gap: 24 }}>
+                    {urunIlani ? (
+                      <View style={{ gap: 10 }}>
+                        <Yazi style={s.etiket}>Genel durum</Yazi>
+                        <View style={s.secenekler}>
+                          {(['İkinci el', 'Yeni gibi', 'Sıfır'] as const).map((d) => (
+                            <Secenek key={d} secili={durum === d} onPress={() => setDurum(d)}>
+                              {d}
+                            </Secenek>
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
+                    {durumAlanlari.length ? (
+                      <UrunDurumuAlanlari
+                        alanlar={durumAlanlari}
+                        degerler={ozellikler}
+                        degistir={(ad, deger) => {
+                          setOzellikler((onceki) => ({ ...onceki, [ad]: deger }));
+                          hataSil(ad);
+                        }}
+                        kanitlar={durumKanitlari}
+                        kanitDegistir={(ad, kanit) =>
+                          setDurumKanitlari((onceki) => [
+                            ...onceki.filter((kayit) => kayit.alan !== ad),
+                            ...(kanit ? [kanit] : []),
+                          ])
+                        }
+                        fotograflar={fotograflar.map((foto) => foto.uri)}
+                        hatalar={alanHatalari}
+                      />
+                    ) : null}
+                  </View>
+                ) : null}
+
+                {adim === onizlemeAdimi ? (
                   <View style={{ gap: 22 }}>
                     <View style={ortak.aralikli}>
                       <Yazi style={{ fontSize: 12, color: renk.gri, flex: 1 }}>
@@ -1231,7 +1354,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     <View style={{ gap: 10, paddingTop: 20, borderTopWidth: 1, borderColor: renk.cizgi }}>
                       <View style={ortak.aralikli}>
                         <Yazi style={{ fontSize: 11, color: renk.gri }}>
-                          {urunIlani ? durum : kategoriAdi}
+                          {kategoriAdi}
                           {urunIlani && takas ? ' · Takasa açık' : ''}
                         </Yazi>
                         <Duzenle onPress={() => adimaGit(3)} etiket="İlan bilgilerini düzenle" />
@@ -1253,14 +1376,46 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                           : 'Cep telefonu ilanda gösterilmez.'}
                       </Yazi>
                     </View>
-                    {Object.values(ozellikler).some((deger) => deger.trim()) ? (
+                    {urunIlani ? (
+                      <View
+                        style={{ gap: 10, paddingTop: 18, borderTopWidth: 1, borderTopColor: renk.cizgi }}
+                      >
+                        <View style={ortak.aralikli}>
+                          <Yazi style={s.etiket}>Ürün durumu</Yazi>
+                          <Duzenle onPress={() => adimaGit(durumAdimi)} etiket="Ürün durumunu düzenle" />
+                        </View>
+                        <Yazi style={{ fontSize: 13 }}>{durum}</Yazi>
+                        {durumAlanlari
+                          .filter((alan) => ozellikler[alan.ad])
+                          .map((alan) => (
+                            <View
+                              key={alan.ad}
+                              style={[ortak.aralikli, { alignItems: 'flex-start', gap: 12 }]}
+                            >
+                              <Yazi style={{ fontSize: 12, color: renk.gri, flex: 1 }}>{alan.ad}</Yazi>
+                              <Yazi style={{ fontSize: 12, flex: 1, textAlign: 'right' }}>
+                                {ozellikler[alan.ad]}
+                                {alan.birim ? ` ${alan.birim}` : ''}
+                              </Yazi>
+                            </View>
+                          ))}
+                        {durumKanitlari.length ? (
+                          <Yazi style={{ fontSize: 12, color: renk.gri }}>
+                            {durumKanitlari.length} bilgiye fotoğraf eklendi.
+                          </Yazi>
+                        ) : null}
+                      </View>
+                    ) : null}
+                    {Object.entries(ozellikler).some(
+                      ([ad, deger]) => !durumAdlari.has(ad) && deger.trim(),
+                    ) ? (
                       <View style={{ gap: 8 }}>
                         {Object.entries(ozellikler)
-                          .filter(([, deger]) => deger.trim())
+                          .filter(([ad, deger]) => !durumAdlari.has(ad) && deger.trim())
                           .map(([ad, deger]) => (
-                            <View key={ad} style={ortak.aralikli}>
-                              <Yazi style={{ fontSize: 12, color: renk.gri }}>{ad}</Yazi>
-                              <Yazi style={{ fontSize: 12 }}>{deger}</Yazi>
+                            <View key={ad} style={[ortak.aralikli, { alignItems: 'flex-start', gap: 12 }]}>
+                              <Yazi style={{ fontSize: 12, color: renk.gri, flex: 1 }}>{ad}</Yazi>
+                              <Yazi style={{ fontSize: 12, flex: 1, textAlign: 'right' }}>{deger}</Yazi>
                             </View>
                           ))}
                       </View>
@@ -1282,7 +1437,9 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                 ) : null}
                 {calisiyor ? (
                   <Yazi role="status" style={{ fontSize: 12, color: renk.gri }}>
-                    {adim === 4 ? 'Fotoğraflar ve ilan bilgileri kaydediliyor…' : 'Dosyalar hazırlanıyor…'}
+                    {adim === onizlemeAdimi
+                      ? 'Fotoğraflar ve ilan bilgileri kaydediliyor…'
+                      : 'Dosyalar hazırlanıyor…'}
                   </Yazi>
                 ) : null}
                 <View
@@ -1311,22 +1468,22 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                       Vazgeç
                     </Buton>
                   ) : (
-                    <Yazi style={{ color: renk.gri, fontSize: 11 }}>1 / 4</Yazi>
+                    <Yazi style={{ color: renk.gri, fontSize: 11 }}>1 / {adimlar.length}</Yazi>
                   )}
                   <Buton
                     disabled={calisiyor || !hazir}
-                    onPress={adim === 4 ? kaydet : devam}
+                    onPress={adim === onizlemeAdimi ? kaydet : devam}
                     simge={
-                      adim === 4 ? (
+                      adim === onizlemeAdimi ? (
                         <Check color={renk.murekkep} size={17} />
                       ) : (
                         <ArrowRight color={renk.murekkep} size={17} />
                       )
                     }
                     testID="ilan-devam"
-                    style={mobil && adim === 4 ? { flexGrow: 1 } : undefined}
+                    style={mobil && adim === onizlemeAdimi ? { flexGrow: 1 } : undefined}
                   >
-                    {adim === 4 ? (ilan ? 'Değişiklikleri kaydet' : 'İlanı kaydet') : 'Devam et'}
+                    {adim === onizlemeAdimi ? (ilan ? 'Değişiklikleri kaydet' : 'İlanı kaydet') : 'Devam et'}
                   </Buton>
                 </View>
               </View>
