@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { Linking, View } from 'react-native';
 import Phone from 'lucide-react-native/icons/phone';
+import Copy from 'lucide-react-native/icons/copy';
+import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right';
+import * as Clipboard from 'expo-clipboard';
 import { Buton, Yazi } from './Temel';
+import { HareketliBas } from './Hareketli';
 import { useTema } from '../tasarim/tema';
 import { telefonuGoster, telefonuNormallestir } from '../veri/telefon';
 
@@ -18,24 +22,54 @@ export function SaticiIletisimi({ telefon, gorunur }: { telefon?: string; gorunu
       setHata('Arama açılamadı. Numarayı kopyalayıp telefonundan arayabilirsin.');
     }
   }
+  async function kopyala() {
+    if (!numara) return;
+    try {
+      await Clipboard.setStringAsync(numara);
+      setHata('Telefon numarası kopyalandı.');
+    } catch {
+      setHata('Numarayı seçip kopyalayabilirsin.');
+    }
+  }
   return (
-    <View style={{ gap: 7 }}>
-      <Buton
-        ikincil
+    <View style={{ gap: 7, minWidth: 0 }}>
+      <HareketliBas
+        accessibilityRole="button"
+        accessibilityLabel={`${telefonuGoster(numara)} numarasından ilan sahibini ara`}
         onPress={ara}
-        simge={<Phone size={16} color={renk.murekkep} />}
-        style={{ minHeight: 46 }}
+        style={{
+          minHeight: 48,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+          borderWidth: 1,
+          borderColor: renk.cizgi,
+          borderRadius: 8,
+          paddingHorizontal: 12,
+          paddingVertical: 10,
+        }}
       >
-        {telefonuGoster(numara)}
-      </Buton>
+        <Phone size={16} color={renk.murekkep} style={{ flexShrink: 0 }} />
+        <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
+          <Yazi style={{ fontSize: 13, lineHeight: 20, fontWeight: '600' }}>{telefonuGoster(numara)}</Yazi>
+          <Yazi style={{ fontSize: 11, lineHeight: 17, color: renk.gri }}>Telefonla ara</Yazi>
+        </View>
+        <ArrowUpRight size={14} color={renk.gri} style={{ flexShrink: 0 }} />
+      </HareketliBas>
       {!!hata && (
-        <Yazi selectable style={{ fontSize: 14 }}>
-          {telefonuGoster(numara)}
-        </Yazi>
+        <View style={{ gap: 8 }}>
+          <Yazi accessibilityLiveRegion="polite" style={{ fontSize: 12, lineHeight: 19, color: renk.gri }}>
+            {hata}
+          </Yazi>
+          <Yazi selectable style={{ fontSize: 14 }}>
+            {telefonuGoster(numara)}
+          </Yazi>
+          <Buton ikincil onPress={kopyala} simge={<Copy size={14} />} style={{ minHeight: 48 }}>
+            Numarayı kopyala
+          </Buton>
+        </View>
       )}
-      <Yazi style={{ fontSize: 11, color: renk.gri }}>
-        {hata || 'İlan sahibinin paylaştığı telefon numarası'}
-      </Yazi>
+      <Yazi style={{ fontSize: 11, lineHeight: 18, color: renk.gri }}>İlan sahibinin paylaştığı numara</Yazi>
     </View>
   );
 }

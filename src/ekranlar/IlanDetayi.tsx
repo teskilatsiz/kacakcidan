@@ -9,7 +9,6 @@ import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Pencil from 'lucide-react-native/icons/pencil';
 import Share2 from 'lucide-react-native/icons/share-2';
 import Copy from 'lucide-react-native/icons/copy';
-import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import * as Clipboard from 'expo-clipboard';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { Alan, Baslik, BosDurum, Buton, Pencere, SimgeButon, Yazi } from '../bilesenler/Temel';
@@ -24,9 +23,8 @@ import { IlanKarsilastirmasi } from '../bilesenler/IlanKarsilastirmasi';
 import { DurumRaporu } from '../bilesenler/DurumRaporu';
 import { SaticiKontrolleri } from '../bilesenler/SaticiKontrolleri';
 import { SaticiIletisimi } from '../bilesenler/SaticiIletisimi';
-import { SaticiPuani, SaticiResmi } from '../bilesenler/SaticiBilgisi';
-import { HareketliBas } from '../bilesenler/Hareketli';
-import { saticiKimligi, saticiYolu } from '../veri/saticilar';
+import { SaticiOzeti } from '../bilesenler/SaticiBilgisi';
+import { saticiKimligi } from '../veri/saticilar';
 import { kisiler, usePazar } from '../durum/Pazar';
 import { kategoriler, para, ilanBedeli } from '../veri/ilanlar';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
@@ -97,6 +95,9 @@ export default function IlanDetayi() {
   ) ?? { id: saticiKimligi(ilan.satici), ad: ilan.satici, konum: ilan.konum, hakkinda: '' };
   const kisi = kisiler.find((k) => k.ilanId === id)?.id || `ilan-${id}`;
   const ilanBanaAit = !!oturum && eklenenler.some((kayit) => kayit.id === ilan.id);
+  const saticininIlanSayisi = tumIlanlar.filter(
+    (kayit) => (kayit.saticiId ?? saticiKimligi(kayit.satici)) === satici.id,
+  ).length;
   const ilanDuzenle = () => router.push({ pathname: '/ilan-duzenle', params: { id: ilan.id } });
   const iletisim = () => router.push({ pathname: '/mesajlar', params: { kisi, ilan: ilan.id } });
   const kategori = kategoriler.find((k) => k.id === ilan.kategori);
@@ -431,59 +432,30 @@ export default function IlanDetayi() {
               </View>
             )}
             <View dataSet={{ 'ilan-satici-karti': 'true' }} style={[s.satici, { padding: mobil ? 16 : 20 }]}>
-              <View style={[ortak.satir, { gap: 12 }]}>
-                <SaticiResmi satici={satici} />
-                <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                  <Yazi style={{ fontSize: 15, fontFamily: kalin, fontWeight: '700' }}>{ilan.satici}</Yazi>
-                  <Yazi style={s.yardimci}>
-                    {ilanBanaAit
-                      ? 'Bu ilan sana ait'
-                      : isIlani
-                        ? 'İşveren'
-                        : ilan.kategori === 'hizmetler'
-                          ? 'Hizmet veren'
-                          : ilan.kategori === 'emlak'
-                            ? 'İlan sahibi'
-                            : (ilan.ozellikler?.['Satıcı türü'] ?? 'Satıcı')}
-                  </Yazi>
-                  <SaticiPuani satici={satici} />
-                </View>
-                {(web || mobil) && !ilanBanaAit && (
-                  <View dataSet={{ 'ilan-mobil-eylemi': 'true' }}>
-                    <SimgeButon etiket="İlan sahibine mesaj yaz" onPress={iletisim}>
-                      <MessageCircle size={18} />
-                    </SimgeButon>
-                  </View>
-                )}
-              </View>
+              <SaticiOzeti
+                satici={satici}
+                rol={
+                  ilanBanaAit
+                    ? 'Bu ilan sana ait'
+                    : isIlani
+                      ? 'İşveren'
+                      : ilan.kategori === 'hizmetler'
+                        ? 'Hizmet veren'
+                        : ilan.kategori === 'emlak'
+                          ? 'İlan sahibi'
+                          : (ilan.ozellikler?.['Satıcı türü'] ?? 'İlan sahibi')
+                }
+                ilanSayisi={saticininIlanSayisi}
+              />
               <SaticiIletisimi telefon={ilan.telefon} gorunur={ilan.telefonGoster === true} />
-              <SaticiKontrolleri />
-              <Link href={saticiYolu(satici.id)} asChild>
-                <HareketliBas
-                  accessibilityRole="link"
-                  accessibilityLabel={`${satici.ad} profilini ve ilanlarını gör`}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    minHeight: 44,
-                    gap: 8,
-                    borderTopWidth: 1,
-                    borderColor: renk.cizgi,
-                    paddingTop: 10,
-                  }}
-                >
-                  <Yazi style={{ fontSize: 13, fontWeight: '600', flex: 1 }}>Profili ve diğer ilanları</Yazi>
-                  <ChevronRight size={17} color={renk.murekkep} />
-                </HareketliBas>
-              </Link>
               {(web || mobil) && !ilanBanaAit && urunIlani && (
                 <View dataSet={{ 'ilan-mobil-eylemi': 'true' }}>
-                  <Buton ikincil onPress={teklifPenceresiAc} style={{ minHeight: 44 }}>
+                  <Buton ikincil onPress={teklifPenceresiAc} style={{ minHeight: 48 }}>
                     Teklif yap
                   </Buton>
                 </View>
               )}
+              <SaticiKontrolleri />
             </View>
             <IlanSikayeti ilan={{ ...ilan, benim: ilanBanaAit }} />
           </View>
@@ -574,7 +546,13 @@ const useStiller = temaStilleri((renk) =>
   StyleSheet.create({
     yardimci: { fontSize: 12, lineHeight: 20, color: renk.gri },
     fiyat: { fontFamily: kalin, fontWeight: '700', letterSpacing: -0.8 },
-    satici: { borderWidth: 1, borderColor: renk.cizgi, borderRadius: 12, gap: 14 },
+    satici: {
+      backgroundColor: renk.beyaz,
+      borderWidth: 1,
+      borderColor: renk.cizgi,
+      borderRadius: 12,
+      gap: 14,
+    },
     avatar: {
       width: 44,
       height: 44,
