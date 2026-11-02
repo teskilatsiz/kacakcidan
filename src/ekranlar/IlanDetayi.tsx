@@ -20,6 +20,7 @@ import { IlanEtiketleri } from '../bilesenler/IlanEtiketleri';
 import { IlanIzgarasi } from '../bilesenler/IlanKarti';
 import { IlanSorulari } from '../bilesenler/IlanSorulari';
 import { IlanSikayeti } from '../bilesenler/IlanSikayeti';
+import { IlanKarsilastirmasi } from '../bilesenler/IlanKarsilastirmasi';
 import { DurumRaporu } from '../bilesenler/DurumRaporu';
 import { SaticiKontrolleri } from '../bilesenler/SaticiKontrolleri';
 import { SaticiIletisimi } from '../bilesenler/SaticiIletisimi';
@@ -402,6 +403,7 @@ export default function IlanDetayi() {
               </View>
             )}
             <IlanGalerisi ilan={ilan} />
+            {hazir && <IlanKarsilastirmasi key={ilan.id} ilan={ilan} />}
           </View>
           {!ozellikSekmesi && (
             <View dataSet={{ 'ilan-ozellik-alani': 'true' }} style={{ minWidth: 0 }}>

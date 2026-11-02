@@ -1,0 +1,44 @@
+[data-karsilastirma-onerisi] {
+  min-width: 0;
+  animation: karsilastirma-giris 180ms ease-out;
+}
+[data-karsilastirma-simdiki] {
+  display: none;
+}
+@media (min-width: 1100px) and (min-height: 560px) {
+  [data-karsilastirma-onerisi] {
+    position: fixed !important;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 34;
+    width: min(1180px, calc(100% - 48px));
+    box-shadow: 0 6px 28px #00000012;
+    display: grid !important;
+    grid-template-columns: minmax(220px, 1.2fr) minmax(160px, 1fr) minmax(160px, 1fr) auto;
+    align-items: center !important;
+    gap: 20px !important;
+  }
+  [data-karsilastirma-simdiki] {
+    display: flex;
+  }
+  [data-karsilastirma-mobil-kapat] {
+    display: none;
+  }
+  [data-ilan-detay-alani]:has([data-karsilastirma-bileseni][data-oneri-gorunur='true']) {
+    padding-bottom: 144px !important;
+  }
+}
+@keyframes karsilastirma-giris {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-karsilastirma-onerisi] {
+    animation: none;
+  }
+}
