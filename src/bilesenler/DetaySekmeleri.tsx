@@ -8,6 +8,7 @@ export type DetaySekmeleriProps = {
   secili: DetaySekmesi;
   degistir: (sekme: DetaySekmesi) => void;
   kimlik: string;
+  ozellikler?: boolean;
 };
 export const detaySekmeleri = [
   { id: 'aciklama', ad: 'Açıklama' },
@@ -15,7 +16,7 @@ export const detaySekmeleri = [
   { id: 'sorular', ad: 'Soru & cevap' },
 ] as const;
 
-export function DetaySekmeleri({ secili, degistir, kimlik }: DetaySekmeleriProps) {
+export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: DetaySekmeleriProps) {
   const { renk } = useTema();
 
   return (
@@ -30,31 +31,33 @@ export function DetaySekmeleri({ secili, degistir, kimlik }: DetaySekmeleriProps
         flexWrap: 'wrap',
       }}
     >
-      {detaySekmeleri.map((sekme) => (
-        <HareketliBas
-          key={sekme.id}
-          nativeID={`${kimlik}-${sekme.id}`}
-          accessibilityRole="tab"
-          accessibilityState={{ selected: secili === sekme.id }}
-          onPress={() => degistir(sekme.id)}
-          style={{
-            minHeight: 48,
-            justifyContent: 'center',
-            borderBottomWidth: 2,
-            borderColor: secili === sekme.id ? renk.murekkep : 'transparent',
-          }}
-        >
-          <Yazi
+      {detaySekmeleri
+        .filter((sekme) => ozellikler || sekme.id !== 'ozellikler')
+        .map((sekme) => (
+          <HareketliBas
+            key={sekme.id}
+            nativeID={`${kimlik}-${sekme.id}`}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: secili === sekme.id }}
+            onPress={() => degistir(sekme.id)}
             style={{
-              fontFamily: kalin,
-              fontWeight: '700',
-              color: secili === sekme.id ? renk.murekkep : renk.gri,
+              minHeight: 48,
+              justifyContent: 'center',
+              borderBottomWidth: 2,
+              borderColor: secili === sekme.id ? renk.murekkep : 'transparent',
             }}
           >
-            {sekme.ad}
-          </Yazi>
-        </HareketliBas>
-      ))}
+            <Yazi
+              style={{
+                fontFamily: kalin,
+                fontWeight: '700',
+                color: secili === sekme.id ? renk.murekkep : renk.gri,
+              }}
+            >
+              {sekme.ad}
+            </Yazi>
+          </HareketliBas>
+        ))}
     </View>
   );
 }

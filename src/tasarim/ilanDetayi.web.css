@@ -1,18 +1,18 @@
-/* Başlık ve galeri ilk HTML'de aynı sırayla kalır; yalnız yerleşim değişir. */
+/* Tek özellik tablosu, geniş ekranda galerinin yanında; mobilde hemen altında. */
 [data-ilan-detay-alani] {
   padding: 16px 48px 40px !important;
   gap: 28px !important;
 }
 [data-ilan-ust-yerlesimi] {
   display: grid !important;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  grid-template-areas: 'galeri baslik' 'galeri bilgiler';
-  column-gap: 36px !important;
-  row-gap: 24px !important;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr) 248px;
+  grid-template-areas: 'galeri fiyat bilgiler' 'galeri ozellikler bilgiler';
+  grid-template-rows: auto minmax(0, 1fr);
+  column-gap: 24px !important;
+  row-gap: 16px !important;
   align-items: start !important;
 }
 [data-ilan-web-baslik] {
-  grid-area: baslik;
   min-width: 0;
 }
 [data-ilan-galeri-alani] {
@@ -23,6 +23,13 @@
   grid-area: bilgiler;
   min-width: 0;
 }
+[data-ilan-ozellik-alani] {
+  grid-area: ozellikler;
+  min-width: 0;
+}
+[data-ilan-masaustu-eylemi] {
+  flex-direction: column !important;
+}
 [data-ilan-baslik] {
   gap: 12px !important;
 }
@@ -31,6 +38,7 @@
   line-height: 38px !important;
 }
 [data-ilan-fiyat-alani] {
+  grid-area: fiyat;
   gap: 10px !important;
 }
 [data-ilan-ana-fiyati] {
@@ -48,28 +56,96 @@
   display: none !important;
 }
 [data-ilan-ozellik-satiri] {
-  gap: 28px !important;
-  padding-inline: 16px !important;
+  gap: 12px !important;
+  padding-inline: 12px !important;
 }
 [data-ilan-ozellik-adi] {
-  width: 170px !important;
+  width: 42% !important;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+[data-ilan-ozellik-satiri] > div:last-child {
+  overflow-wrap: anywhere;
+}
+@media (min-width: 700px) {
+  [data-ilan-galeri-alani],
+  [data-ilan-ozellik-alani] {
+    align-self: stretch;
+  }
+  [data-ilan-galeri-alani] > .ilan-galeri {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  [data-ilan-galeri-alani] .ilan-galeri-ana {
+    flex: 1;
+    height: auto;
+    min-height: 320px;
+  }
+  [data-ilan-galeri-alani] .ilan-galeri-ana > img {
+    position: absolute;
+    inset: 0;
+  }
+  [data-ilan-galeri-alani] [aria-label='İlan fotoğrafları ve video'] {
+    flex-shrink: 0;
+  }
+  [data-ilan-ozellik-tablosu] {
+    flex: 1;
+    border-top: 1px solid var(--renk-cizgi);
+  }
+  [data-ilan-ozellik-basligi] {
+    display: none !important;
+  }
+  [data-ilan-ozellik-satiri] {
+    flex: 1;
+    align-items: center;
+    min-height: 32px;
+    padding: 5px 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    border-bottom: 1px solid var(--renk-cizgi);
+  }
+  [data-ilan-ozellik-adi] {
+    color: var(--renk-murekkep) !important;
+    font-weight: 600 !important;
+  }
+  [aria-label='İlan numarasını kopyala'] {
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+  }
 }
 @media (min-width: 700px) and (max-width: 1099px) {
   [data-ilan-detay-alani] {
     padding-inline: 28px !important;
   }
-}
-@media (max-width: 959px) {
   [data-ilan-ust-yerlesimi] {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'baslik' 'galeri' 'bilgiler';
-    gap: 20px !important;
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 1fr);
+    grid-template-areas: 'galeri fiyat' 'galeri ozellikler' 'bilgiler bilgiler';
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  [data-ilan-yan-alani] {
+    max-width: 560px;
+    width: 100%;
+  }
+  [data-ilan-masaustu-eylemi] {
+    flex-direction: row !important;
   }
 }
 @media (max-width: 699px) {
   [data-ilan-detay-alani] {
     padding: 8px 20px 100px !important;
     gap: 20px !important;
+  }
+  [data-ilan-ust-yerlesimi] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'fiyat' 'galeri' 'bilgiler';
+    grid-template-rows: none;
+    gap: 24px !important;
+  }
+  [data-ilan-ozellik-alani] {
+    display: none !important;
   }
   [data-ilan-baslik] {
     gap: 10px !important;

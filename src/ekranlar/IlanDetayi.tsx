@@ -30,6 +30,7 @@ import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { kategoriYapisi } from '../veri/kategoriler';
 import { kalin, mobilAltMenuYuksekligi, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
+import { ilanPaylasimAdresi } from '../tasarim/seo';
 import '../tasarim/ilanDetayi.web.css';
 
 export default function IlanDetayi() {
@@ -51,7 +52,7 @@ export default function IlanDetayi() {
     ilaniGoruntule,
     saticilar,
   } = usePazar();
-  const { mobil, tablet, bosluk, genislik } = useEkran();
+  const { mobil, bosluk, genislik } = useEkran();
   const guvenliAlan = useSafeAreaInsets();
   const klavyeAcik = useKlavyeAcik();
   const router = useRouter();
@@ -180,17 +181,35 @@ export default function IlanDetayi() {
   ].slice(0, web ? 5 : mobil ? 4 : 5);
 
   async function paylas() {
+    if (!ilan) return;
+    const adres = ilanPaylasimAdresi(ilan);
+    if (!adres) {
+      haberVer('Bu ilanın henüz paylaşıma açık bir bağlantısı yok.');
+      return;
+    }
+    const kopyala = async () => {
+      const kopyalandi = await Clipboard.setStringAsync(adres);
+      haberVer(kopyalandi ? 'İlan bağlantısı kopyalandı.' : 'Bağlantı kopyalanamadı. Yeniden dene.');
+    };
     try {
       if (Platform.OS === 'web') {
-        if (navigator.share) await navigator.share({ title: ilan!.baslik, url: window.location.href });
-        else {
-          await navigator.clipboard.writeText(window.location.href);
-          haberVer('İlan bağlantısı kopyalandı.');
-        }
-      } else await Share.share({ message: ilan!.baslik });
+        if (navigator.share) await navigator.share({ title: ilan.baslik, url: adres });
+        else await kopyala();
+      } else {
+        await Share.share(
+          Platform.OS === 'ios'
+            ? { title: ilan.baslik, message: ilan.baslik, url: adres }
+            : { title: ilan.baslik, message: `${ilan.baslik}\n${adres}` },
+          { dialogTitle: 'İlanı paylaş' },
+        );
+      }
     } catch (hata) {
-      if (!(hata instanceof Error && hata.name === 'AbortError'))
-        haberVer('Bağlantıyı adres çubuğundan kopyalayabilirsin.');
+      if (hata instanceof Error && hata.name === 'AbortError') return;
+      try {
+        await kopyala();
+      } catch {
+        haberVer('Bağlantı kopyalanamadı. Yeniden dene.');
+      }
     }
   }
   function teklifGonder() {
@@ -218,15 +237,71 @@ export default function IlanDetayi() {
         <Yazi style={s.yardimci}>{ilan.konum}</Yazi>
         <Yazi style={s.yardimci}>· {ilan.zaman}</Yazi>
       </View>
-      <View dataSet={{ 'ilan-fiyat-alani': 'true' }} style={{ gap: mobil ? 8 : 10, paddingTop: 2 }}>
-        <Yazi
-          dataSet={{ 'ilan-ana-fiyati': 'true' }}
-          style={[s.fiyat, { fontSize: mobil ? 30 : 34, lineHeight: mobil ? 38 : 43 }]}
+    </View>
+  );
+
+  const ozellikSekmesi = !web || mobil;
+  const etkinSekme = sekme === 'ozellikler' && !ozellikSekmesi ? 'aciklama' : sekme;
+  const ozellikTablosu = (
+    <View
+      dataSet={{ 'ilan-ozellik-tablosu': 'true' }}
+      role="region"
+      accessibilityLabel="İlan özellikleri"
+      style={{ minWidth: 0 }}
+    >
+      {ozellikler.map(([ad, deger], sira) => (
+        <View
+          key={ad}
+          dataSet={{ 'ilan-ozellik-satiri': 'true' }}
+          style={{
+            flexDirection: 'row',
+            gap: 12,
+            paddingHorizontal: 12,
+            paddingVertical: ozellikSekmesi ? 12 : 9,
+            backgroundColor: sira % 2 === 0 ? renk.zemin : renk.beyaz,
+            borderRadius: 5,
+          }}
         >
-          {ilanBedeli(ilan)}
-        </Yazi>
-        {urunIlani ? <IlanEtiketleri durum={ilan.durum} takas={ilan.takas} /> : null}
-      </View>
+          <Yazi
+            dataSet={{ 'ilan-ozellik-adi': 'true' }}
+            style={{ width: '42%', maxWidth: 170, color: renk.gri, fontSize: 13, lineHeight: 20 }}
+          >
+            {ad}
+          </Yazi>
+          <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Yazi selectable style={{ flexShrink: 1, fontSize: 13, lineHeight: 20, fontWeight: '500' }}>
+              {deger}
+            </Yazi>
+            {ad === 'İlan no' && (
+              <SimgeButon
+                etiket="İlan numarasını kopyala"
+                style={{
+                  width: 36,
+                  height: 36,
+                  minWidth: 36,
+                  minHeight: 36,
+                  marginLeft: 2,
+                  borderWidth: 0,
+                  backgroundColor: renk.zemin,
+                  borderRadius: 8,
+                }}
+                onPress={async () => {
+                  try {
+                    const kopyalandi = await Clipboard.setStringAsync(deger);
+                    haberVer(
+                      kopyalandi ? 'İlan numarası kopyalandı.' : 'Numaraya basılı tutarak kopyalayabilirsin.',
+                    );
+                  } catch {
+                    haberVer('Numaraya basılı tutarak kopyalayabilirsin.');
+                  }
+                }}
+              >
+                <Copy size={14} color={renk.murekkep} />
+              </SimgeButon>
+            )}
+          </View>
+        </View>
+      ))}
     </View>
   );
 
@@ -304,29 +379,33 @@ export default function IlanDetayi() {
           </View>
         </View>
 
-        <View
-          dataSet={{ 'ilan-ust-yerlesimi': 'true' }}
-          style={{ flexDirection: tablet ? 'column' : 'row', alignItems: 'stretch', gap: tablet ? 20 : 36 }}
-        >
-          {web && <View dataSet={{ 'ilan-web-baslik': 'true' }}>{ilanBasligi}</View>}
-          <View
-            dataSet={{ 'ilan-galeri-alani': 'true' }}
-            style={{ flex: tablet ? undefined : 1.1, minWidth: 0, gap: 20 }}
-          >
+        <View dataSet={{ 'ilan-web-baslik': 'true' }}>{ilanBasligi}</View>
+
+        <View dataSet={{ 'ilan-ust-yerlesimi': 'true' }} style={{ gap: mobil ? 20 : 24 }}>
+          <View dataSet={{ 'ilan-fiyat-alani': 'true' }} style={{ minWidth: 0, gap: mobil ? 8 : 10 }}>
+            <Yazi
+              dataSet={{ 'ilan-ana-fiyati': 'true' }}
+              style={[s.fiyat, { fontSize: mobil ? 30 : 34, lineHeight: mobil ? 38 : 43 }]}
+            >
+              {ilanBedeli(ilan)}
+            </Yazi>
+            {urunIlani ? <IlanEtiketleri durum={ilan.durum} takas={ilan.takas} /> : null}
+          </View>
+          <View dataSet={{ 'ilan-galeri-alani': 'true' }} style={{ minWidth: 0, gap: 20 }}>
             {ilan.yayinDurumu === 'kaldirildi' && (
               <View style={{ padding: 14, backgroundColor: renk.zemin, borderRadius: 9 }}>
                 <Yazi style={{ fontWeight: '600' }}>Bu ilan yayında değil</Yazi>
                 <Yazi style={s.yardimci}>İlanını hesabından yeniden yayınlayabilirsin.</Yazi>
               </View>
             )}
-            {!web && tablet && ilanBasligi}
             <IlanGalerisi ilan={ilan} />
           </View>
-          <View
-            dataSet={{ 'ilan-yan-alani': 'true' }}
-            style={{ flex: tablet ? undefined : 1, minWidth: 0, gap: 24 }}
-          >
-            {!web && !tablet && ilanBasligi}
+          {!ozellikSekmesi && (
+            <View dataSet={{ 'ilan-ozellik-alani': 'true' }} style={{ minWidth: 0 }}>
+              {ozellikTablosu}
+            </View>
+          )}
+          <View dataSet={{ 'ilan-yan-alani': 'true' }} style={{ minWidth: 0, gap: 16 }}>
             {(web || !mobil) && ilanBanaAit && (
               <View dataSet={{ 'ilan-masaustu-eylemi': 'true' }}>
                 <Buton onPress={ilanDuzenle} simge={<Pencil size={17} />}>
@@ -405,18 +484,29 @@ export default function IlanDetayi() {
         </View>
 
         <View style={{ gap: 20 }}>
-          <DetaySekmeleri secili={sekme} degistir={setSekme} kimlik={sekmeId} />
+          <DetaySekmeleri
+            secili={etkinSekme}
+            degistir={setSekme}
+            kimlik={sekmeId}
+            ozellikler={ozellikSekmesi}
+          />
           <View
             nativeID={`${sekmeId}-icerik`}
             role="tabpanel"
             accessibilityLabel={
-              sekme === 'aciklama' ? 'Açıklama' : sekme === 'sorular' ? 'Soru ve cevap' : 'Özellikler'
+              etkinSekme === 'aciklama'
+                ? 'Açıklama'
+                : etkinSekme === 'sorular'
+                  ? 'Soru ve cevap'
+                  : 'Özellikler'
             }
             style={{ minHeight: 128 }}
           >
-            {sekme === 'sorular' ? (
+            {etkinSekme === 'sorular' ? (
               <IlanSorulari key={ilan.id} ilan={ilan} />
-            ) : sekme === 'aciklama' ? (
+            ) : etkinSekme === 'ozellikler' ? (
+              ozellikTablosu
+            ) : (
               <Yazi
                 style={{
                   maxWidth: 860,
@@ -428,66 +518,6 @@ export default function IlanDetayi() {
               >
                 {ilan.aciklama}
               </Yazi>
-            ) : (
-              <View style={{ maxWidth: 860 }}>
-                {ozellikler.map(([ad, deger], sira) => (
-                  <View
-                    key={ad}
-                    dataSet={{ 'ilan-ozellik-satiri': 'true' }}
-                    style={{
-                      flexDirection: 'row',
-                      gap: mobil ? 12 : 28,
-                      paddingHorizontal: mobil ? 12 : 16,
-                      paddingVertical: 12,
-                      backgroundColor: sira % 2 === 0 ? renk.zemin : renk.beyaz,
-                      borderRadius: 5,
-                    }}
-                  >
-                    <Yazi
-                      dataSet={{ 'ilan-ozellik-adi': 'true' }}
-                      style={{ width: mobil ? '42%' : 170, maxWidth: 170, color: renk.gri, fontSize: 13 }}
-                    >
-                      {ad}
-                    </Yazi>
-                    <View
-                      style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                    >
-                      <Yazi selectable style={{ flexShrink: 1, fontSize: 13, fontWeight: '500' }}>
-                        {deger}
-                      </Yazi>
-                      {ad === 'İlan no' && (
-                        <SimgeButon
-                          etiket="İlan numarasını kopyala"
-                          style={{
-                            width: 36,
-                            height: 36,
-                            minWidth: 36,
-                            minHeight: 36,
-                            marginLeft: 2,
-                            borderWidth: 0,
-                            backgroundColor: renk.zemin,
-                            borderRadius: 8,
-                          }}
-                          onPress={async () => {
-                            try {
-                              const kopyalandi = await Clipboard.setStringAsync(deger);
-                              haberVer(
-                                kopyalandi
-                                  ? 'İlan numarası kopyalandı.'
-                                  : 'Numaraya basılı tutarak kopyalayabilirsin.',
-                              );
-                            } catch {
-                              haberVer('Numaraya basılı tutarak kopyalayabilirsin.');
-                            }
-                          }}
-                        >
-                          <Copy size={14} color={renk.murekkep} />
-                        </SimgeButon>
-                      )}
-                    </View>
-                  </View>
-                ))}
-              </View>
             )}
           </View>
         </View>

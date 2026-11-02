@@ -2,14 +2,15 @@ import { useTema } from '../tasarim/tema';
 import { useRef } from 'react';
 import type { DetaySekmeleriProps } from './DetaySekmeleri';
 
-const sekmeler = [
+const tumSekmeler = [
   { id: 'aciklama', ad: 'Açıklama' },
   { id: 'ozellikler', ad: 'Özellikler' },
   { id: 'sorular', ad: 'Soru & cevap' },
 ] as const;
 
-export function DetaySekmeleri({ secili, degistir, kimlik }: DetaySekmeleriProps) {
+export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: DetaySekmeleriProps) {
   const { renk } = useTema();
+  const sekmeler = tumSekmeler.filter((sekme) => ozellikler || sekme.id !== 'ozellikler');
 
   const dugmeler = useRef<(HTMLButtonElement | null)[]>([]);
   return (
