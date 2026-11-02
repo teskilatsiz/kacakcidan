@@ -600,7 +600,7 @@ export function MobilMenu() {
           <HareketliBas
             accessibilityLabel={ad}
             onPress={sayfaBasinaDon}
-            accessibilityState={{ selected: yol === href }}
+            accessibilityState={Platform.OS === 'web' ? undefined : { selected: yol === href }}
             aria-current={Platform.OS === 'web' && yol === href ? 'page' : undefined}
             style={{
               flex: 1,

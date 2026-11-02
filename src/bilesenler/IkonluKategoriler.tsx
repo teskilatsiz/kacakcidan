@@ -102,9 +102,6 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
         ref={(eleman) => {
           if (!tumu) dugmeler.current[kategori.id] = eleman;
         }}
-        accessibilityLabel={
-          kategori.ad + ', ' + (sayilar.get(kategori.id) ?? 0) + ' ilan. Alt kategorileri göster'
-        }
         accessibilityState={{ expanded: secili }}
         aria-controls={!mobil && !tumu ? menuKimligi : undefined}
         onPress={() => kategoriSec(kategori.id)}
@@ -190,7 +187,6 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
     <HareketliBas
       vurgu="kategori"
       dataSet={{ 'kategori-web-tumu': 'true' }}
-      accessibilityLabel="Tüm kategorileri göster"
       accessibilityState={{ expanded: pencere === 'tum' }}
       onPress={() => setPencere('tum')}
       style={({ hovered }) => [
@@ -297,11 +293,7 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
         {(web || mobil) && (
           <View style={ortak.aralikli} dataSet={{ 'kategori-web-baslik': 'true' }}>
             <Baslik style={{ fontSize: 24, lineHeight: 32 }}>Kategoriler</Baslik>
-            <HareketliBas
-              accessibilityLabel="Tüm kategorileri göster"
-              onPress={() => setPencere('tum')}
-              style={s.tumunuGor}
-            >
+            <HareketliBas onPress={() => setPencere('tum')} style={s.tumunuGor}>
               <Yazi style={{ fontSize: 13, fontWeight: '600' }}>Tümünü gör</Yazi>
               <ArrowRight size={18} color={renk.murekkep} />
             </HareketliBas>

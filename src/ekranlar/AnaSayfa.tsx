@@ -47,7 +47,8 @@ export default function AnaSayfa() {
           const sira = (id: string) =>
             id.startsWith('yerel-') ? -1 : vitrinSirasi.includes(id) ? vitrinSirasi.indexOf(id) : 100;
           return sira(a.id) - sira(b.id);
-        }),
+        })
+        .slice(0, 14),
     [tumIlanlar, konum],
   );
   const kesifBandi = (kucuk: boolean) => (
@@ -61,6 +62,9 @@ export default function AnaSayfa() {
           source={gorselKaynagi('/gorseller/kategorilerde-kesfet.webp')}
           style={StyleSheet.absoluteFill}
           accessibilityLabel="Ahşap masa üzerinde dizüstü bilgisayar, telefon ve kulaklık"
+          sizes="(max-width: 699px) 40vw, (max-width: 1099px) calc((100vw - 56px) * 0.32), (max-width: 1439px) calc((100vw - 96px) * 0.32), 430px"
+          priority={kucuk ? undefined : 'high'}
+          media={web && !kucuk ? '(min-width: 700px)' : undefined}
         />
       </View>
       <View

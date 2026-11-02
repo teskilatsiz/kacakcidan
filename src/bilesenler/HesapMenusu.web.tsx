@@ -49,7 +49,7 @@ export function HesapMenusu() {
       <button
         ref={dugme}
         type="button"
-        aria-label={oturum ? 'Hesap menüsünü aç' : 'Giriş ve kayıt seçeneklerini aç'}
+        aria-label={oturum ? 'Hesap menüsünü aç' : 'Giriş yap'}
         aria-expanded={acik}
         aria-controls={kimlik}
         aria-haspopup="dialog"

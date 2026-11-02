@@ -29,9 +29,24 @@
 [[headers]]
   for = "/fonts/*"
   [headers.values]
-    Cache-Control = "public, max-age=604800"
+    Cache-Control = "public, max-age=2592000, stale-while-revalidate=86400"
 
 [[headers]]
-  for = "/gorseller/*"
+  for = "/gorseller/:dosya"
   [headers.values]
-    Cache-Control = "public, max-age=604800"
+    Cache-Control = "public, max-age=2592000, stale-while-revalidate=86400"
+
+[[headers]]
+  for = "/gorseller/profiller/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000, stale-while-revalidate=86400"
+
+[[headers]]
+  for = "/gorseller/kart/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/paylasim/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

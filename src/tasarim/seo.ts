@@ -1,5 +1,6 @@
 import type { Metadata } from 'expo-router/server';
-import type { Ilan } from '../veri/ilanlar';
+import { ilanlar, type Ilan } from '../veri/ilanlar.ts';
+import { ilanPaylasimGorselleri } from '../veri/ilanPaylasimGorselleri.ts';
 import { kategoriler, type Kategori } from '../veri/anaKategoriler.ts';
 import { bosSecim, kategoriYapisi, kesifSeciminiTamamla, type KesifSecimi } from '../veri/kategoriler.ts';
 import type { SaticiProfili } from '../veri/saticilar';
@@ -10,6 +11,29 @@ export const siteAdresi = (process.env.EXPO_PUBLIC_SITE_URL || 'https://kacakcid
 );
 
 export const paylasimGorseli = `${siteAdresi}/og-kacakcidan.png`;
+
+/** Cihazda tutulan ilanların bağlantısı diğer kullanıcılarda açılmaz. */
+export function ilanPaylasimAdresi(ilan: Pick<Ilan, 'id' | 'yayinDurumu'>) {
+  if (ilan.yayinDurumu === 'kaldirildi' || !ilanlar.some((kayit) => kayit.id === ilan.id)) return undefined;
+  return `${siteAdresi}/ilan/${encodeURIComponent(ilan.id)}`;
+}
+
+/** Galerinin sırası değişse de önizlemede seçilen kapak kullanılır. */
+export function ilanPaylasimGorseli(ilan?: Pick<Ilan, 'gorsel' | 'baslik'>) {
+  const gorsel =
+    ilan && Object.hasOwn(ilanPaylasimGorselleri, ilan.gorsel)
+      ? ilanPaylasimGorselleri[ilan.gorsel]
+      : undefined;
+  const url = gorsel ? `${siteAdresi}${gorsel.uri}` : paylasimGorseli;
+  return {
+    url,
+    secureUrl: url,
+    width: gorsel?.width ?? 1200,
+    height: gorsel?.height ?? 630,
+    type: gorsel?.type ?? 'image/png',
+    alt: gorsel && ilan ? `${ilan.baslik} ilanının kapak fotoğrafı` : 'Kaçakçıdan ilan ve alışveriş sitesi',
+  };
+}
 export const anaSayfaBasligi = 'Kaçakçıdan | İkinci El Online İlan ve Alışveriş Sitesi';
 export const anaSayfaAciklamasi =
   'İkinci el otomobil, emlak ve ürün ilanlarını ara; iş ve hizmet ilanlarını incele. Fiyat ve konuma göre filtrele, satıcıyla iletişime geç veya kendi ilanını ver.';
@@ -145,8 +169,16 @@ export function ilanAciklamasi(
     .replace(/[.,;:]$/, '')}...`;
 }
 
-export function sayfaMetasi(baslik: string, aciklama: string, yol = '/', kisisel = false): Metadata {
+export function sayfaMetasi(
+  baslik: string,
+  aciklama: string,
+  yol = '/',
+  kisisel = false,
+  ilan?: Pick<Ilan, 'gorsel' | 'baslik'>,
+): Metadata {
   const adres = `${siteAdresi}${yol}`;
+  const gorsel = ilanPaylasimGorseli(kisisel ? undefined : ilan);
+  const paylasimBasligi = ilan?.baslik ?? baslik;
   return {
     title: baslik,
     description: aciklama,
@@ -154,17 +186,19 @@ export function sayfaMetasi(baslik: string, aciklama: string, yol = '/', kisisel
     robots: { index: !kisisel && process.env.EXPO_PUBLIC_NOINDEX !== 'true', follow: true },
     alternates: { canonical: adres },
     openGraph: {
-      title: baslik,
+      title: paylasimBasligi,
       description: aciklama,
       url: adres,
       siteName: 'Kaçakçıdan',
       locale: 'tr_TR',
       type: 'website',
+      images: gorsel,
     },
     twitter: {
       card: 'summary_large_image',
-      title: baslik,
+      title: paylasimBasligi,
       description: aciklama,
+      images: { url: gorsel.url, alt: gorsel.alt },
     },
   };
 }

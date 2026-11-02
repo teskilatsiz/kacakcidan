@@ -3,7 +3,22 @@ import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { Image, type ImageProps } from 'expo-image';
 import { IskeletParcasi, YuklemeIskeleti } from './YuklemeIskeleti';
 
-export function Gorsel({ source, style, onLoad, onError, onDisplay, ...props }: ImageProps) {
+export type GorselProps = ImageProps & {
+  sizes?: string;
+  /** Web'de picture kaynağı ve ön yükleme aynı ekran sorgusunu kullanır. */
+  media?: string;
+};
+
+export function Gorsel({
+  source,
+  style,
+  onLoad,
+  onError,
+  onDisplay,
+  sizes: _sizes,
+  media: _media,
+  ...props
+}: GorselProps) {
   const kaynak = Array.isArray(source) ? source[0] : source;
   const kimlik = kaynak && typeof kaynak === 'object' && 'uri' in kaynak ? kaynak.uri : kaynak;
   const [sonlanan, setSonlanan] = useState<unknown>(null);

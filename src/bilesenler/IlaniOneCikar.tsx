@@ -45,7 +45,6 @@ export function IlaniOneCikar() {
   return (
     <>
       <HareketliBas
-        accessibilityLabel="İlanını öne çıkar, vitrin seçeneklerini gör"
         onPress={() => {
           setHata('');
           setTamamlanan('');

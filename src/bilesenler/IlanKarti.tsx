@@ -16,11 +16,13 @@ export const IlanKarti = memo(function IlanKarti({
   ilan,
   liste = false,
   priority,
+  sizes,
   vitrin = false,
 }: {
   ilan: Ilan;
   liste?: boolean;
   priority?: 'high' | 'normal';
+  sizes?: string;
   vitrin?: boolean;
 }) {
   const { renk } = useTema();
@@ -36,7 +38,6 @@ export const IlanKarti = memo(function IlanKarti({
       <Link href={ilanYolu(ilan)} asChild>
         <HareketliBas
           olcek={0.99}
-          accessibilityLabel={`${ilan.baslik}, ${ilanBedeli(ilan)}${urunKategorisiMi(ilan.kategori) ? `, ${ilan.durum}${ilan.takas ? ', takasa açık' : ''}` : ''}, ${ilan.konum}`}
           style={StyleSheet.flatten([{ flex: 1 }, liste && { flexDirection: 'row' }])}
         >
           <View
@@ -55,7 +56,8 @@ export const IlanKarti = memo(function IlanKarti({
               contentFit="cover"
               style={StyleSheet.absoluteFill}
               priority={priority}
-              accessibilityLabel={ilan.baslik}
+              sizes={sizes}
+              accessibilityLabel=""
               transition={0}
               cachePolicy="memory-disk"
             />
@@ -161,6 +163,11 @@ export function IlanIzgarasi({
 }) {
   const { genislik, mobil } = useEkran();
   const sutun = liste ? 1 : mobil ? 2 : genislik < 1000 ? 3 : sikisik ? 3 : genislik < 1250 ? 4 : 5;
+  const gorselBoyutu = liste
+    ? '(max-width: 699px) 100px, 180px'
+    : sikisik
+      ? '(max-width: 699px) calc(50vw - 26px), (max-width: 1099px) 280px, 350px'
+      : '(max-width: 699px) calc(50vw - 26px), (max-width: 999px) calc((100vw - 96px) / 3), (max-width: 1099px) calc((100vw - 116px) / 4), (max-width: 1249px) calc((100vw - 156px) / 4), (max-width: 1439px) calc((100vw - 176px) / 5), 253px';
   const hucreStili = {
     width: liste
       ? ('100%' as const)
@@ -174,7 +181,8 @@ export function IlanIzgarasi({
         ilan={ilan}
         liste={liste}
         vitrin={vitrin}
-        priority={oncelikli && index === 0 ? 'high' : oncelikli && index < sutun ? 'normal' : undefined}
+        priority={oncelikli && index === 0 ? 'high' : oncelikli && index === 1 ? 'normal' : undefined}
+        sizes={gorselBoyutu}
       />
     </View>
   ));

@@ -8,20 +8,14 @@ import Eye from 'lucide-react-native/icons/eye';
 import EyeOff from 'lucide-react-native/icons/eye-off';
 import Heart from 'lucide-react-native/icons/heart';
 import Plus from 'lucide-react-native/icons/plus';
-import Animated, {
-  cancelAnimation,
-  ReduceMotion,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import { usePazar } from '../durum/Pazar';
 import { kalin, temaStilleri, useEkran, useTema } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
 import { gorselKaynagi } from '../veri/gorseller';
 import { Gorsel } from './Gorsel';
-import { Giris, HareketliBas, useAzaltilmisHareket } from './Hareketli';
+import { Giris, HareketliBas } from './Hareketli';
 import { HesapFormu, HesapGonder } from './HesapFormu';
+import { KayitIlerlemesi } from './KayitIlerlemesi';
 import { Alan, Baslik, Yazi } from './Temel';
 
 export function guvenliDonusYolu(deger?: string | string[]) {
@@ -34,16 +28,6 @@ export function guvenliDonusYolu(deger?: string | string[]) {
 function KayitAdimlari({ adim }: { adim: 1 | 2 }) {
   const { renk } = useTema();
   const s = useStiller();
-  const azHareket = useAzaltilmisHareket();
-  const ilerleme = useSharedValue(adim / 2);
-  useEffect(() => {
-    cancelAnimation(ilerleme);
-    ilerleme.value = azHareket
-      ? adim / 2
-      : withTiming(adim / 2, { duration: 220, reduceMotion: ReduceMotion.System });
-    return () => cancelAnimation(ilerleme);
-  }, [adim, azHareket, ilerleme]);
-  const hareket = useAnimatedStyle(() => ({ transform: [{ scaleX: ilerleme.value }] }));
   return (
     <View
       accessibilityRole="progressbar"
@@ -77,12 +61,7 @@ function KayitAdimlari({ adim }: { adim: 1 | 2 }) {
         ))}
       </View>
       <View style={{ height: 3, backgroundColor: renk.cizgi, overflow: 'hidden', borderRadius: 3 }}>
-        <Animated.View
-          style={[
-            { height: 3, width: '100%', backgroundColor: renk.sari, transformOrigin: 'left center' },
-            hareket,
-          ]}
-        />
+        <KayitIlerlemesi adim={adim} />
       </View>
     </View>
   );

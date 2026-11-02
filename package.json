@@ -52,11 +52,13 @@
     "react-native-worklets": "0.13.0"
   },
   "devDependencies": {
+    "@jridgewell/trace-mapping": "^0.3.31",
     "@types/react": "~19.3.0",
     "parse5": "^8.0.0",
     "postcss": "^8.5.32",
     "prettier": "^3.9.10",
     "serve": "^14.2.6",
+    "sharp": "^0.35.5",
     "typescript": "~6.0.0"
   }
 }

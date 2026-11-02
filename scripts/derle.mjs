@@ -3,6 +3,10 @@ import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { aramaDosyalariniYaz } from './arama-dosyalari.mjs';
 import { cssCiktisiniDuzenle } from './css-ciktisi.mjs';
+import { gorselVaryantlariniYaz } from './gorsel-varyantlari.mjs';
+import { webStilleriniSatirIcineAl } from './web-stilleri.mjs';
+import { kaynakHaritalariniDuzenle } from './kaynak-haritalari.mjs';
+import { ilanPaylasimGorselleriniYaz } from './ilan-paylasim-gorselleri.mjs';
 
 // Node, kabuktaki değişkenleri korur. Önce daha özel .env dosyaları okunur.
 for (const file of ['.env.production.local', '.env.local', '.env.production', '.env']) {
@@ -36,15 +40,20 @@ const env = {
 if (siteUrl) env.EXPO_PUBLIC_SITE_URL = siteUrl;
 
 const require = createRequire(import.meta.url);
-const result = spawnSync(process.execPath, [require.resolve('expo/bin/cli'), 'export', '--platform', 'web'], {
-  env,
-  stdio: 'inherit',
-});
+await gorselVaryantlariniYaz();
+await ilanPaylasimGorselleriniYaz();
+const result = spawnSync(
+  process.execPath,
+  [require.resolve('expo/bin/cli'), 'export', '--platform', 'web', '--source-maps'],
+  { env, stdio: 'inherit' },
+);
 
 if (result.error) throw result.error;
 if (result.status !== 0) process.exit(result.status ?? 1);
 
 await cssCiktisiniDuzenle();
+await webStilleriniSatirIcineAl();
+await kaynakHaritalariniDuzenle();
 await aramaDosyalariniYaz({ siteUrl, noindex });
 console.log(
   siteUrl

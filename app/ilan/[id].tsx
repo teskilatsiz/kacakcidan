@@ -9,6 +9,6 @@ export const generateMetadata: GenerateMetadataFunction = (_istek, params) => {
   const ilan = ilanlar.find((i) => i.id === params.id);
   if (!ilan)
     return sayfaMetasi('İlanım | Kaçakçıdan', 'İlan detayları ve satıcı bilgileri.', '/ilan/yerel', true);
-  return sayfaMetasi(ilanSayfaBasligi(ilan), ilanAciklamasi(ilan), `/ilan/${ilan.id}`);
+  return sayfaMetasi(ilanSayfaBasligi(ilan), ilanAciklamasi(ilan), `/ilan/${ilan.id}`, false, ilan);
 };
 export default IlanDetayi;

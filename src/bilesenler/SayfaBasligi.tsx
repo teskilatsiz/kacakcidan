@@ -8,6 +8,7 @@ import {
   anaSayfaBasligi,
   ilanAciklamasi,
   ilanSayfaBasligi,
+  ilanPaylasimGorseli,
   kesfetSayfaBilgisi,
   saticiSayfaBilgisi,
   nasilCalisirAciklamasi,
@@ -66,6 +67,14 @@ export function SayfaBasligi() {
         ? saticiSayfaBilgisi(satici, yol === '/satici/yerel' || !!hesap)
         : { baslik: varsayilanBaslik, aciklama: varsayilanAciklama, yol, kisisel: !!kisisel };
   const { baslik, aciklama } = bilgi;
+  const paylasimBasligi = ilan?.baslik ?? baslik;
+  const {
+    url: gorselAdresi,
+    alt: gorselAciklamasi,
+    width,
+    height,
+    type,
+  } = ilanPaylasimGorseli(bilgi.kisisel ? undefined : ilan);
   const adres = `${siteAdresi}${bilgi.yol}`;
   const noindex = bilgi.kisisel || process.env.EXPO_PUBLIC_NOINDEX === 'true';
   const robotlar = noindex ? 'noindex, follow' : 'index, follow';
@@ -85,20 +94,40 @@ export function SayfaBasligi() {
     for (const [ad, content] of Object.entries({
       description: aciklama,
       robots: robotlar,
-      'twitter:title': baslik,
+      'twitter:card': 'summary_large_image',
+      'twitter:title': paylasimBasligi,
       'twitter:description': aciklama,
+      'twitter:image': gorselAdresi,
+      'twitter:image:alt': gorselAciklamasi,
     })) {
       guncelle(`meta[name="${ad}"]`, 'meta', { name: ad, content });
     }
     for (const [property, content] of Object.entries({
-      'og:title': baslik,
+      'og:title': paylasimBasligi,
       'og:description': aciklama,
       'og:url': adres,
+      'og:image': gorselAdresi,
+      'og:image:secure_url': gorselAdresi,
+      'og:image:alt': gorselAciklamasi,
+      'og:image:width': String(width),
+      'og:image:height': String(height),
+      'og:image:type': type,
     })) {
       guncelle(`meta[property="${property}"]`, 'meta', { property, content });
     }
     guncelle('link[rel="canonical"]', 'link', { rel: 'canonical', href: adres });
-  }, [baslik, aciklama, robotlar, adres]);
+  }, [
+    baslik,
+    paylasimBasligi,
+    aciklama,
+    robotlar,
+    adres,
+    gorselAdresi,
+    gorselAciklamasi,
+    width,
+    height,
+    type,
+  ]);
 
   if (Platform.OS === 'web') return null;
   return (
@@ -106,12 +135,21 @@ export function SayfaBasligi() {
       <title>{baslik}</title>
       <meta name="description" content={aciklama} />
       <meta name="robots" content={robotlar} />
-      <meta property="og:title" content={baslik} />
+      <meta property="og:title" content={paylasimBasligi} />
       <meta property="og:description" content={aciklama} />
+      <meta property="og:image" content={gorselAdresi} />
+      <meta property="og:image:secure_url" content={gorselAdresi} />
+      <meta property="og:image:alt" content={gorselAciklamasi} />
+      <meta property="og:image:width" content={String(width)} />
+      <meta property="og:image:height" content={String(height)} />
+      <meta property="og:image:type" content={type} />
       <link rel="canonical" href={adres} />
       <meta property="og:url" content={adres} />
-      <meta name="twitter:title" content={baslik} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={paylasimBasligi} />
       <meta name="twitter:description" content={aciklama} />
+      <meta name="twitter:image" content={gorselAdresi} />
+      <meta name="twitter:image:alt" content={gorselAciklamasi} />
     </Head>
   );
 }

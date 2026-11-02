@@ -1,6 +1,5 @@
 import type { PropsWithChildren } from 'react';
 import { useServerDocumentContext } from 'expo-router/html';
-import { paylasimGorseli } from '../src/tasarim/seo';
 import { acikRenkler, koyuRenkler } from '../src/tasarim/palet';
 
 const degiskenler = (palet: typeof acikRenkler) =>
@@ -25,23 +24,22 @@ export default function Html({ children }: PropsWithChildren) {
           content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
         />
         <meta name="theme-color" content="#ffd12f" />
-        <meta property="og:image" content={paylasimGorseli} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:type" content="image/png" />
-        <meta
-          property="og:image:alt"
-          content="Kaçakçıdan ana sayfasında ilan arama, kategoriler ve vitrin."
-        />
-        <meta name="twitter:image" content={paylasimGorseli} />
-        <meta
-          name="twitter:image:alt"
-          content="Kaçakçıdan ana sayfasında ilan arama, kategoriler ve vitrin."
-        />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="preload" href="/fonts/dm-sans-400.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/dm-sans-700.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
+        <link
+          rel="preload"
+          href="/fonts/dm-sans-400.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/dm-sans-700.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         {headNodes}
       </head>
       <body {...bodyAttributes}>

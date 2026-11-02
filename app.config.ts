@@ -45,6 +45,7 @@ const config: ExpoConfig = {
   ],
   experiments: {
     typedRoutes: true,
+    chunking: { mode: 'granular' },
   },
 };
 
