@@ -20,6 +20,8 @@ import { IlanEtiketleri } from '../bilesenler/IlanEtiketleri';
 import { IlanIzgarasi } from '../bilesenler/IlanKarti';
 import { IlanSorulari } from '../bilesenler/IlanSorulari';
 import { IlanSikayeti } from '../bilesenler/IlanSikayeti';
+import { DurumRaporu } from '../bilesenler/DurumRaporu';
+import { SaticiKontrolleri } from '../bilesenler/SaticiKontrolleri';
 import { SaticiIletisimi } from '../bilesenler/SaticiIletisimi';
 import { SaticiPuani, SaticiResmi } from '../bilesenler/SaticiBilgisi';
 import { HareketliBas } from '../bilesenler/Hareketli';
@@ -440,7 +442,7 @@ export default function IlanDetayi() {
                           ? 'Hizmet veren'
                           : ilan.kategori === 'emlak'
                             ? 'İlan sahibi'
-                            : 'Bireysel satıcı'}
+                            : (ilan.ozellikler?.['Satıcı türü'] ?? 'Satıcı')}
                   </Yazi>
                   <SaticiPuani satici={satici} />
                 </View>
@@ -453,6 +455,7 @@ export default function IlanDetayi() {
                 )}
               </View>
               <SaticiIletisimi telefon={ilan.telefon} gorunur={ilan.telefonGoster === true} />
+              <SaticiKontrolleri />
               <Link href={saticiYolu(satici.id)} asChild>
                 <HareketliBas
                   accessibilityRole="link"
@@ -508,17 +511,19 @@ export default function IlanDetayi() {
             ) : etkinSekme === 'ozellikler' ? (
               ozellikTablosu
             ) : (
-              <Yazi
-                style={{
-                  maxWidth: 860,
-                  fontSize: 15,
-                  lineHeight: 27,
-                  color: renk.murekkep,
-                  paddingBottom: 10,
-                }}
-              >
-                {ilan.aciklama}
-              </Yazi>
+              <View style={{ gap: 26, maxWidth: 860 }}>
+                <Yazi
+                  style={{
+                    fontSize: 15,
+                    lineHeight: 27,
+                    color: renk.murekkep,
+                    paddingBottom: 10,
+                  }}
+                >
+                  {ilan.aciklama}
+                </Yazi>
+                <DurumRaporu key={ilan.id} ilan={ilan} />
+              </View>
             )}
           </View>
         </View>

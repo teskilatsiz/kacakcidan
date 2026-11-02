@@ -3,6 +3,7 @@ import { konumEslesir } from './konumlar.ts';
 import { kategoriler, type Kategori } from './anaKategoriler.ts';
 import { ekIlanlar } from './ekIlanlar.ts';
 import type { IlanKaldirmaNedeni } from './ilanYonetimi.ts';
+import type { DurumKaniti } from './urunDurumu.ts';
 
 export { kategoriler, type Kategori } from './anaKategoriler.ts';
 
@@ -34,6 +35,7 @@ export interface Ilan {
   video?: string;
   videoPoster?: string;
   ozellikler?: Record<string, string>;
+  durumKanitlari?: DurumKaniti[];
 }
 
 const gorsel = (ad: string) => `/gorseller/${ad}.webp`;
@@ -370,7 +372,11 @@ export function ozellikFiltreEslesir(deger: string | undefined, secim: string): 
   if (!deger) return false;
   const aralik = /^aralik:(\d+):(\d*)$/.exec(secim);
   if (!aralik) return deger === secim;
-  const sayi = Number(deger.replace(/\D/g, ''));
+  // "Bilinmiyor", "%50 altında" veya "1 - 3 yıl" kesin bir ölçüm değildir.
+  // Eşik sorgularına yalnızca tek bir sayısal ölçümü dahil et.
+  const olcum = /^%?\s*(\d+(?:\.\d{3})*)\s*(?:%|km|cm|m²|saat)?$/i.exec(deger.trim());
+  if (!olcum) return false;
+  const sayi = Number(olcum[1]!.replace(/\./g, ''));
   const enAz = Number(aralik[1]);
   const enCok = aralik[2] ? Number(aralik[2]) : Number.POSITIVE_INFINITY;
   return Number.isFinite(sayi) && sayi >= enAz && sayi <= enCok;

@@ -62,9 +62,6 @@ export function katalogSaticilari(ilanlar: Ilan[]): SaticiProfili[] {
       konum: ilan.konum,
       hakkinda: '',
       fotograf: `/gorseller/profiller/satici-${String(portreEslesmeleri[ad.split(' ')[0] ?? ''] ?? (ozet % 8) + 1).padStart(2, '0')}.webp`,
-      puan: Number((4.5 + (ozet % 6) / 10).toFixed(1)),
-      degerlendirmeSayisi: 4 + (ozet % 24),
-      uyelikYili: 2020 + (ozet % 6),
     };
   });
 }

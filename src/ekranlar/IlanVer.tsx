@@ -23,6 +23,7 @@ import { Gorsel } from '../bilesenler/Gorsel';
 import { VideoOynatici } from '../bilesenler/VideoOynatici';
 import { SecimAlani } from '../bilesenler/SecimAlani';
 import { TelefonBilgisiAlanlari } from '../bilesenler/TelefonBilgisiAlanlari';
+import { UrunDurumuAlanlari } from '../bilesenler/UrunDurumuAlanlari';
 import { telefonHatasi, telefonuGoster, telefonuNormallestir } from '../veri/telefon';
 import { usePazar } from '../durum/Pazar';
 import { medyaSec } from '../durum/medyaSecici';
@@ -30,6 +31,7 @@ import { medyaBoyutlariniOku, medyaKaydet, medyaOnizlemesiniBirak, medyaSil } fr
 import { fotografHatasi, MEDYA_SINIRLARI, megabayt, videoHatasi } from '../veri/medya';
 import { kategoriYapisi } from '../veri/kategoriler';
 import { ozellikAlanlari, ozellikleriTemizle } from '../veri/ozellikler';
+import { durumKanitlariniTemizle, urunDurumAlanlari, type DurumKaniti } from '../veri/urunDurumu';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 import { kategoriler, ilanYolu, ilanBedeli, type Ilan, type Kategori } from '../veri/ilanlar';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
@@ -136,6 +138,14 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     ilan ? Boolean(ilan.telefonGoster) : Boolean(profil.telefonGoster),
   );
   const [ozellikler, setOzellikler] = useState<Record<string, string>>(ilan?.ozellikler ?? {});
+  const [durumKanitlari, setDurumKanitlari] = useState<DurumKaniti[]>(() =>
+    ilan
+      ? durumKanitlariniTemizle(ilan.durumKanitlari, urunDurumAlanlari(ilan), ilan.ozellikler ?? {}, [
+          ilan.gorsel,
+          ...(ilan.fotografler ?? []),
+        ])
+      : [],
+  );
   const [hata, setHata] = useState('');
   const [alanHatalari, setAlanHatalari] = useState<Record<string, string>>({});
   const [calisiyor, setCalisiyor] = useState(false);
@@ -241,12 +251,28 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     () => (kategori ? ozellikAlanlari({ kategori, altKategori, marka, model }) : []),
     [kategori, altKategori, marka, model],
   );
+  const durumAlanlari = useMemo(
+    () => (kategori ? urunDurumAlanlari({ kategori, altKategori, marka, model }) : []),
+    [kategori, altKategori, marka, model],
+  );
+  const durumAdlari = useMemo(() => new Set(durumAlanlari.map((alan) => alan.ad)), [durumAlanlari]);
   useEffect(() => {
     setOzellikler((onceki) => {
       const yeni = ozellikleriTemizle(teknikAlanlar, onceki);
       return JSON.stringify(yeni) === JSON.stringify(onceki) ? onceki : yeni;
     });
   }, [teknikAlanlar]);
+  useEffect(() => {
+    setDurumKanitlari((onceki) => {
+      const yeni = durumKanitlariniTemizle(
+        onceki,
+        durumAlanlari,
+        ozellikler,
+        fotograflar.map((foto) => foto.uri),
+      );
+      return JSON.stringify(yeni) === JSON.stringify(onceki) ? onceki : yeni;
+    });
+  }, [durumAlanlari, ozellikler, fotograflar]);
 
   function kategoriSec(deger: string) {
     const yeni = deger as Kategori;
@@ -322,6 +348,8 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
       const deger = ozellikler[alan.ad];
       if (alan.sayisal && deger && Number(deger) > (alan.enCok ?? Number.MAX_SAFE_INTEGER))
         hatalar[alan.ad] = `${alan.ad} en fazla ${alan.enCok?.toLocaleString('tr-TR')} olabilir.`;
+      if (alan.sayisal && deger && Number(deger) < (alan.enAz ?? 0))
+        hatalar[alan.ad] = `${alan.ad} en az ${alan.enAz?.toLocaleString('tr-TR')} olmalı.`;
     }
     return hatalar;
   }
@@ -475,6 +503,15 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
             : fotografKayitlari[0]
           : undefined,
         ozellikler: ozellikleriTemizle(teknikAlanlar, ozellikler),
+        durumKanitlari: durumKanitlariniTemizle(
+          durumKanitlari,
+          durumAlanlari,
+          ozellikler,
+          fotograflar.map((foto) => foto.uri),
+        ).map((kanit) => ({
+          ...kanit,
+          gorsel: fotografKayitlari[fotograflar.findIndex((foto) => foto.uri === kanit.gorsel)]!,
+        })),
         satici: profil.ad,
         telefon: telefonuNormallestir(telefon),
         telefonGoster: Boolean(telefonuNormallestir(telefon) && telefonGoster),
@@ -1030,43 +1067,64 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                           <Yazi style={{ fontSize: 11, color: renk.gri }}>İsteğe bağlı</Yazi>
                         </View>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
-                          {teknikAlanlar.map((alan) => (
-                            <View
-                              key={alan.ad}
-                              style={{ flexBasis: mobil ? '100%' : '47%', flexGrow: 1, minWidth: 0 }}
-                            >
-                              {alan.sayisal ? (
-                                <Alan
-                                  nativeID={`ilan-ozellik-${alan.ad.replace(/\s+/g, '-').toLocaleLowerCase('tr')}`}
-                                  etiket={alan.birim ? `${alan.ad} (${alan.birim})` : alan.ad}
-                                  placeholder="Sayı yaz"
-                                  value={ozellikler[alan.ad] || ''}
-                                  keyboardType="number-pad"
-                                  onChangeText={(v) => {
-                                    setOzellikler((onceki) => ({
-                                      ...onceki,
-                                      [alan.ad]: v.replace(/[^0-9]/g, ''),
-                                    }));
-                                    hataSil(alan.ad);
-                                  }}
-                                  maxLength={8}
-                                  hata={alanHatalari[alan.ad]}
-                                />
-                              ) : (
-                                <SecimAlani
-                                  etiket={alan.ad}
-                                  deger={ozellikler[alan.ad] || ''}
-                                  secenekler={alan.secenekler.map((ad) => ({ id: ad, ad }))}
-                                  degistir={(deger) =>
-                                    setOzellikler((onceki) => ({ ...onceki, [alan.ad]: deger }))
-                                  }
-                                  ipucu="Belirtilmedi"
-                                />
-                              )}
-                            </View>
-                          ))}
+                          {teknikAlanlar
+                            .filter((alan) => !durumAdlari.has(alan.ad))
+                            .map((alan) => (
+                              <View
+                                key={alan.ad}
+                                style={{ flexBasis: mobil ? '100%' : '47%', flexGrow: 1, minWidth: 0 }}
+                              >
+                                {alan.sayisal ? (
+                                  <Alan
+                                    nativeID={`ilan-ozellik-${alan.ad.replace(/\s+/g, '-').toLocaleLowerCase('tr')}`}
+                                    etiket={alan.birim ? `${alan.ad} (${alan.birim})` : alan.ad}
+                                    placeholder="Sayı yaz"
+                                    value={ozellikler[alan.ad] || ''}
+                                    keyboardType="number-pad"
+                                    onChangeText={(v) => {
+                                      setOzellikler((onceki) => ({
+                                        ...onceki,
+                                        [alan.ad]: v.replace(/[^0-9]/g, ''),
+                                      }));
+                                      hataSil(alan.ad);
+                                    }}
+                                    maxLength={8}
+                                    hata={alanHatalari[alan.ad]}
+                                  />
+                                ) : (
+                                  <SecimAlani
+                                    etiket={alan.ad}
+                                    deger={ozellikler[alan.ad] || ''}
+                                    secenekler={alan.secenekler.map((ad) => ({ id: ad, ad }))}
+                                    degistir={(deger) =>
+                                      setOzellikler((onceki) => ({ ...onceki, [alan.ad]: deger }))
+                                    }
+                                    ipucu="Belirtilmedi"
+                                  />
+                                )}
+                              </View>
+                            ))}
                         </View>
                       </View>
+                    ) : null}
+                    {durumAlanlari.length ? (
+                      <UrunDurumuAlanlari
+                        alanlar={durumAlanlari}
+                        degerler={ozellikler}
+                        degistir={(ad, deger) => {
+                          setOzellikler((onceki) => ({ ...onceki, [ad]: deger }));
+                          hataSil(ad);
+                        }}
+                        kanitlar={durumKanitlari}
+                        kanitDegistir={(ad, kanit) =>
+                          setDurumKanitlari((onceki) => [
+                            ...onceki.filter((kayit) => kayit.alan !== ad),
+                            ...(kanit ? [kanit] : []),
+                          ])
+                        }
+                        fotograflar={fotograflar.map((foto) => foto.uri)}
+                        hatalar={alanHatalari}
+                      />
                     ) : null}
                     <Alan
                       nativeID="ilan-aciklamasi"

@@ -6,6 +6,7 @@ import { Kabuk } from '../bilesenler/Kabuk';
 import { Baslik, BosDurum, Buton, Yazi } from '../bilesenler/Temel';
 import { SaticiIletisimi } from '../bilesenler/SaticiIletisimi';
 import { SaticiPuani, SaticiResmi } from '../bilesenler/SaticiBilgisi';
+import { SaticiKontrolleri } from '../bilesenler/SaticiKontrolleri';
 import { IlanIzgarasi } from '../bilesenler/IlanKarti';
 import { usePazar } from '../durum/Pazar';
 import { ortak, useEkran, useTema } from '../tasarim/tema';
@@ -74,6 +75,7 @@ export default function Satici() {
               <SaticiIletisimi telefon={satici.telefon} gorunur />
             </View>
           )}
+          <SaticiKontrolleri />
           <View
             style={{
               borderTopWidth: 1,

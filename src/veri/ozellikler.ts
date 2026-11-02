@@ -2,6 +2,8 @@ import type { Kategori } from './ilanlar.ts';
 import { ekOzellikAlanlari } from './ekOzellikler.ts';
 import { kategoriAgaci } from './kategoriler.ts';
 import { ilanOzellikAlanlari } from './ilanOzellikleri.ts';
+import { urunKategorisiMi } from './anaKategoriler.ts';
+import { satisAlanlari, urunDurumAlanlari } from './urunDurumu.ts';
 
 export type OzellikAlani = {
   ad: string;
@@ -9,6 +11,7 @@ export type OzellikAlani = {
   filtreSecenekleri?: { id: string; ad: string }[];
   sayisal?: boolean;
   birim?: string;
+  enAz?: number;
   enCok?: number;
 };
 export type UrunSecimi = { kategori: Kategori; altKategori?: string; marka?: string; model?: string };
@@ -2013,7 +2016,7 @@ function koleksiyonAlanlari({ altKategori, model = '' }: UrunSecimi): OzellikAla
 }
 
 /** İlan formu ve arama aynı tanımları kullanır; alt ürün seçildikçe yalnızca ilgili alanlar döner. */
-export function ozellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
+function temelOzellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
   if (!secim.altKategori || !kategoriAgaci[secim.kategori]?.some((dal) => dal.id === secim.altKategori))
     return [];
   switch (secim.kategori) {
@@ -2040,6 +2043,20 @@ export function ozellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
     default:
       return ekOzellikAlanlari(secim);
   }
+}
+
+export function ozellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
+  const temel = temelOzellikAlanlari(secim);
+  if (!temel.length) return [];
+  return [
+    ...new Map(
+      [
+        ...temel,
+        ...urunDurumAlanlari(secim),
+        ...(urunKategorisiMi(secim.kategori) ? satisAlanlari() : []),
+      ].map((alan) => [alan.ad, alan]),
+    ).values(),
+  ];
 }
 
 /** Tür seçilmeden yalnızca o dalın bütün ürünlerinde anlamlı olan filtreler gösterilir. */
@@ -2083,7 +2100,11 @@ export function ozellikleriTemizle(alanlar: readonly OzellikAlani[], degerler: R
       const tanim = alanlar.find((a) => a.ad === ad);
       if (!tanim || !deger) return false;
       if (tanim.sayisal)
-        return /^\d+$/.test(deger) && Number(deger) <= (tanim.enCok ?? Number.MAX_SAFE_INTEGER);
+        return (
+          /^\d+$/.test(deger) &&
+          Number(deger) >= (tanim.enAz ?? 0) &&
+          Number(deger) <= (tanim.enCok ?? Number.MAX_SAFE_INTEGER)
+        );
       return tanim.secenekler.includes(deger);
     }),
   );

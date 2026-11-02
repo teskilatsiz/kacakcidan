@@ -2,6 +2,7 @@ import type { Kayit } from './PazarBaglami';
 import type { ParolaKaydi } from './parola.types';
 import type { Ilan } from '../veri/ilanlar';
 import { telefonuNormallestir } from '../veri/telefon.ts';
+import { durumKanitlariniTemizle, urunDurumAlanlari } from '../veri/urunDurumu.ts';
 import {
   ilanKaldirmaNedenleri,
   sikayetNedenleri,
@@ -40,8 +41,21 @@ function kaydiTemizle(kayit: Kayit): Kayit {
   return {
     ...kayit,
     profil: iletisimiDuzenle(kayit.profil),
-    eklenenler: kayit.eklenenler.map(iletisimiDuzenle),
+    eklenenler: kayit.eklenenler.map(ilanBilgileriniTemizle),
   };
+}
+
+function ilanBilgileriniTemizle(ilan: Ilan): Ilan {
+  const temiz = iletisimiDuzenle(ilan);
+  if (temiz.durumKanitlari === undefined) return temiz;
+  const { durumKanitlari: _kanitlar, ...diger } = temiz;
+  const kanitlar = durumKanitlariniTemizle(
+    temiz.durumKanitlari,
+    urunDurumAlanlari(temiz),
+    temiz.ozellikler ?? {},
+    [temiz.gorsel, ...(temiz.fotografler ?? [])],
+  );
+  return { ...diger, ...(kanitlar.length ? { durumKanitlari: kanitlar } : {}) };
 }
 
 export function bosKayit(ad = ''): Kayit {
@@ -88,7 +102,7 @@ export function ilanKaydiniGuncelle(
     eklenenler: eski.eklenenler.map((kayitli) =>
       kayitli.id === ilan.id
         ? {
-            ...iletisimiDuzenle(ilan),
+            ...ilanBilgileriniTemizle(ilan),
             id: onceki.id,
             ...((onceki.numara ?? depo.etkilesimler.ilanNumaralari[onceki.id])
               ? { numara: onceki.numara ?? depo.etkilesimler.ilanNumaralari[onceki.id] }
@@ -114,7 +128,7 @@ export function ilanKaydiniEkle(depo: HesapDeposu, hesapId: string, ilan: Ilan):
     ...eski,
     eklenenler: [
       {
-        ...iletisimiDuzenle(ilan),
+        ...ilanBilgileriniTemizle(ilan),
         numara: etkilesimler.ilanNumaralari[ilan.id],
         saticiId: hesapId,
         yayinDurumu: 'yayinda',
