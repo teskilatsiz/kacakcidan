@@ -8,7 +8,7 @@ import Search from 'lucide-react-native/icons/search';
 import { Baslik, BosDurum, Buton, Yazi } from '../bilesenler/Temel';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { Giris, HareketliBas } from '../bilesenler/Hareketli';
-import { IlanIzgarasi } from '../bilesenler/IlanKarti';
+import { VitrinIzgarasi } from '../bilesenler/VitrinIzgarasi';
 import { IlaniOneCikar } from '../bilesenler/IlaniOneCikar';
 import { Gorsel } from '../bilesenler/Gorsel';
 import { IkonluKategoriler } from '../bilesenler/IkonluKategoriler';
@@ -197,13 +197,7 @@ export default function AnaSayfa() {
             )}
           </View>
           {vitrin.length > 0 ? (
-            <IlanIzgarasi
-              ilanlar={vitrin}
-              oncelikli
-              vitrin
-              araya={<IlaniOneCikar />}
-              arayaSira={web ? 3 : mobil ? 3 : 4}
-            />
+            <VitrinIzgarasi ilanlar={vitrin} araya={<IlaniOneCikar />} arayaSira={web ? 3 : mobil ? 3 : 4} />
           ) : (
             <BosDurum
               simge={<Search color={renk.murekkep} size={28} />}

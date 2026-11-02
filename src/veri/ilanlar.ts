@@ -338,8 +338,8 @@ export const ilanlar: Ilan[] = [
   ...ekIlanlar,
 ];
 
-export const para = (deger: number) =>
-  `${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(deger)} TL`;
+const paraBicimi = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
+export const para = (deger: number) => `${paraBicimi.format(deger)} TL`;
 
 export function ilanBedeli(
   ilan: Pick<Ilan, 'fiyat' | 'fiyatGorusulur' | 'kategori' | 'marka' | 'ozellikler'>,

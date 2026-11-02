@@ -102,5 +102,9 @@ export function gorunurAlaniIzle(guncelle: () => void) {
 }
 
 export function useGorunurAlan(etkin = true) {
-  return useSyncExternalStore(etkin ? gorunurAlaniIzle : aboneOlma, gorunurAlaniOku, sunucuOlcusu);
+  return useSyncExternalStore(
+    etkin ? gorunurAlaniIzle : aboneOlma,
+    etkin ? gorunurAlaniOku : sunucuOlcusu,
+    sunucuOlcusu,
+  );
 }

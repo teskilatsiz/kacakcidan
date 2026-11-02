@@ -33,7 +33,11 @@ export function kategoriSayfalariniOlustur(): KategoriSayfasi[] {
   // Tek ilanı olan alt dallar arama ekranından açılır; aynı sonuçlu yüzlerce sayfa oluşturulmaz.
   return [...dallar.values()]
     .filter(({ yol, ilanSayisi }) => yol.length === 1 || ilanSayisi >= 2)
-    .sort((a, b) => a.yol.join('/').localeCompare(b.yol.join('/'), 'en'));
+    .sort((a, b) => {
+      const sol = a.yol.join('/');
+      const sag = b.yol.join('/');
+      return sol < sag ? -1 : sol > sag ? 1 : 0;
+    });
 }
 
 export const kategoriSayfalari = kategoriSayfalariniOlustur();

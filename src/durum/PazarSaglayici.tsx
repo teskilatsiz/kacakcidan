@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { randomUUID } from 'expo-crypto';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ilanlar, type Ilan } from '../veri/ilanlar';
 import { epostaDuzenle, kayitBilgisiHatasi } from '../veri/hesap';
 import { PazarBaglami, type HesapSonucu, type Kayit, type Mesaj, type Profil } from './PazarBaglami';
@@ -126,7 +126,9 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
           ]),
         };
         bekleyen.current = [];
-        uygula(yeni);
+        // Kayıt okunurken vitrinin ilk etkileşimleri beklemesin.
+        depoRef.current = yeni;
+        startTransition(() => setDepo(yeni));
         if (eskiHam || degisiklikVar || yeni.etkilesimler !== okunan.etkilesimler)
           void sakla(yeni).catch(() => {});
       })
@@ -136,7 +138,7 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
       .finally(() => {
         if (!etkin) return;
         yuklendi.current = true;
-        setHazir(true);
+        startTransition(() => setHazir(true));
       });
     return () => {
       etkin = false;

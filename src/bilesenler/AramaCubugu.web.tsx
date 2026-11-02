@@ -1,4 +1,13 @@
-import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import {
+  useDeferredValue,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+} from 'react';
 import { useRouter } from 'expo-router';
 import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right';
 import LayoutGrid from 'lucide-react-native/icons/layout-grid';
@@ -40,19 +49,20 @@ export function AraKutusu({
   const [acik, setAcik] = useState(false);
   const [aktif, setAktif] = useState(-1);
   const sorgu = deger.trim();
+  const ertelenenDeger = useDeferredValue(deger);
   const oneriler = useMemo(
-    () => aramaOnerileri(tumIlanlar, kategoriler, kategoriAgaci, deger),
-    [tumIlanlar, deger],
+    () => (acik ? aramaOnerileri(tumIlanlar, kategoriler, kategoriAgaci, ertelenenDeger) : []),
+    [acik, tumIlanlar, ertelenenDeger],
   );
   const satirlar: Satir[] = useMemo(
     () =>
       sorgu
         ? [
             { id: 'tum-sonuclar', tur: 'tum', baslik: `“${sorgu}” için tüm ilanları gör`, sorgu },
-            ...oneriler.slice(0, 6),
+            ...(ertelenenDeger === deger ? oneriler.slice(0, 6) : []),
           ]
         : oneriler,
-    [sorgu, oneriler],
+    [sorgu, oneriler, ertelenenDeger, deger],
   );
   const gorunur = acik && satirlar.length > 0;
   const listeId = `arama-${kimlik}`;
@@ -101,6 +111,12 @@ export function AraKutusu({
   }
   function tus(olay: KeyboardEvent<HTMLInputElement>) {
     if (olay.nativeEvent.isComposing) return;
+    // Yeni sorgu henüz hesaplanmadıysa eski öneriyi Enter ile seçme.
+    if (ertelenenDeger !== deger && olay.key === 'Enter') {
+      olay.preventDefault();
+      tamamla();
+      return;
+    }
     if (olay.key === 'ArrowDown' || olay.key === 'ArrowUp') {
       olay.preventDefault();
       setAcik(true);
