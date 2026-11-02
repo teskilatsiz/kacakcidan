@@ -22,32 +22,34 @@
 
 ## Proje
 
-Kaçakçıdan; ikinci el ürün, araç, emlak, iş ve hizmet ilanlarını bir araya getiren bir pazar yeri arayüzüdür. Kategori ve arama üzerinden ilanlara ulaşabilir, ayrıntıları inceleyebilir ve ilan sahibiyle iletişim kurabilirsiniz.
+Kaçakçıdan, ikinci el ürünlerin yanında araç, emlak, iş ve hizmet ilanlarını da kapsayan bir pazar yeri arayüzü. Web, iOS ve Android için aynı kod tabanını kullanıyor.
 
-İlan ararken kategori içinde kaybolmamak, iki ürünün farkını görebilmek ve eksik bir bilgiyi fark etmek benim için tasarımın temel parçaları. Sayfaları, menüleri ve formları bu işlerin etrafında düzenledim.
+Bu projede en çok ilan arama ve inceleme akışına odaklandım. Aranan modele birkaç seçimle ulaşmak, fiyatları karşılaştırırken iki sayfa arasında gidip gelmemek ve ürünün hangi bilgisinin eksik olduğunu görebilmek tasarım kararlarını belirledi. Küçük ekranlarda da aynı işleri rahatça yapabilmek için menülerin, formların ve ilan ayrıntılarının yerleşimi ekran boyutuna göre değişiyor.
 
 ## Kullanım
 
-- Kategori, alt kategori, marka ve model seçimi; arama önerileri ve ürün türüne uygun filtreler
-- Son bakılan aynı türdeki ilanla fiyat ve özellik karşılaştırması; yalnızca farkları görme
-- Fotoğraf ve video galerisi, favoriler, mesajlar ve ilan hakkında soru-cevap
-- Ürüne göre durum bilgileri, ilgili bilgiye fotoğraf ekleme ve satıcı beyanını inceleme
-- Bütçeyle alım talebi oluşturma, uygun ilanları görme ve kendi ilanıyla yanıt verme
-- Adımlı ilan oluşturma ve düzenleme; profil, hesap ayarları, açık ve koyu tema
+- Kategoriden alt kategoriye, marka ve modele ilerleme, yazarken arama önerileri ve ürüne uygun filtreler
+- Aynı türdeki son bakılan ilanla fiyat ve özellik karşılaştırması, yalnızca farklı bilgileri gösterme
+- Fotoğraf yakınlaştırma, video oynatma, favoriler, mesajlaşma ve ilan hakkında soru-cevap
+- Ürünün kullanım ve onarım bilgileri, bu bilgilere bağlı fotoğraflar
+- Bütçe ve konum belirterek alım talebi açma, uygun ilanları görme ve kendi ilanıyla yanıt verme
+- Adımlı ilan oluşturma ve düzenleme, ilan yönetimi, profil ve hesap ayarları, açık ve koyu tema
 
 ## Kullanıcı deneyimi
 
-Masaüstünde ilan görseli, fiyat ve özellikler yan yana durur. Telefonda içerik tek sütuna geçer; özellikler ve sorular sekmelerden açılır. Aynı ürün türündeki başka bir ilana bakıldığında önceki ilanla karşılaştırma önerilir. Pencere kendiliğinden açılmaz; kullanıcı ilanı incelemeye devam edebilir.
+Ana sayfada kategoriler ve vitrindeki ilanlar hemen görünür. Kategori seçtikçe alt seçenekler aynı menüde ilerler, seçim yolu görünür kalır. Arama alanı da kategori, marka, model ve anahtar kelime önerileriyle bu akışa katılır.
 
-Filtreler seçilen ürüne göre değişir. Telefonda pil sağlığı ve ekran değişimi, bilgisayarda batarya ve donanım, mobilyada ölçüler ve kusurlar ayrı alanlardır. Bilgi yazılmamışsa sağlam ya da sorunsuz kabul edilmez. Satıcının yazdığı bilgiyle eklediği fotoğraf da bağımsız doğrulamadan ayrı tutulur. Gerçek değerlendirme kaydı olmadan satıcı puanı gösterilmez.
+Masaüstünde ilan görselinin yanında fiyat ve özellikler bulunur. Telefonda içerik tek sütuna geçer, özellikler ve sorular sekmelerden açılır. Başka bir ilana bakıldığında aynı türdeki önceki ilanla karşılaştırma önerilir. Karşılaştırmayı açıp yalnızca farkları görmek ya da öneriyi kapatıp ilana devam etmek kullanıcıya kalır.
 
-Formlar kısa adımlara bölünür. Açılır menüler küçük ekranlarda pencere olarak açılır; klavye açıldığında odaktaki alan görünür tutulur. Dokunma alanları, klavyeyle gezinme, pencereyi kapatma ve kapatınca önceki odağa dönme ortak bileşenlerde ele alınır.
+Filtreler ürün türüne göre değişir. Telefonda pil sağlığı ve ekran değişimi, bilgisayarda batarya ve donanım, mobilyada ölçüler ve kusurlar için ayrı alanlar var. Yazılmamış bir bilgi sağlam ya da sorunsuz kabul edilmez. İlan sahibinin beyanı ve eklediği fotoğraf açıkça gösterilir, değerlendirme kaydı olmadan satıcıya puan verilmez.
+
+İlan formu kısa adımlara ayrılır, eksik bilgi ilgili alanın yanında belirtilir. Ürün durumu ayrı bir adımda doldurulur; kaydı bulunan modellerde üretici belgesindeki sabit özellikler otomatik gelir ve değiştirilemez, depolama ve renk gibi seçenekleri ilan sahibi seçer. Uzun seçenek listelerinde arama yapılabilir, açılır menüler küçük ekranlarda pencereye dönüşür. Klavye açıldığında formun ve mesaj alanının görünür kalması için tarayıcının kullanılabilir yüksekliği takip edilir. Klavyeyle gezinme, odak göstergeleri ve pencere kapandığında önceki alana dönme ortak bileşenlerde düzenlenir.
 
 ## Performans
 
-İlan görsellerinin farklı ekran boyutlarına uygun WebP kopyaları derleme sırasında hazırlanır. İlk ekranda görünen görsellere öncelik verilir; uzaktakiler gecikmeli yüklenir. Galeri önizlemeleri ve paylaşım görselleri ayrı boyutlarda tutulur.
+Görsellerin farklı ekran boyutlarına uygun WebP kopyaları derleme sırasında hazırlanır. İlk ekrandaki görsellere öncelik verilir, sayfanın aşağısındakiler ihtiyaç olduğunda yüklenir. Görsel alanları önceden ayrıldığı için fotoğraf yüklenirken kartların yerleşimi değişmez. Galeri önizlemeleri için de tam boy fotoğraflar indirilmez.
 
-Web sayfaları önceden HTML olarak üretilir. Ekran kodları parçalara ayrılır; arama sonuçları yazma sırasında ertelenerek hesaplanır. Animasyonlar kısa tutulur ve cihazın azaltılmış hareket tercihi izlenir. Karşılaştırma geçmişi en fazla 20 ilan kimliği ve tarihinden oluşur; fotoğraflar bu kayda kopyalanmaz.
+Web sayfaları önceden HTML olarak üretilir, ekran kodları ayrı parçalarda yüklenir. Arama sonucu hesaplamaları yazmayı bekletmeyecek şekilde ertelenir. Geçişler kısa tutulur ve cihazın azaltılmış hareket tercihi izlenir. Karşılaştırma geçmişinde en fazla 20 ilanın kimliği ve bakılma tarihi saklanır, fotoğrafları kopyalanmaz.
 
 ## Yerelde çalıştırma
 
@@ -88,9 +90,9 @@ screenshots/            README ekran görüntüleri
 
 ## Veri saklama
 
-Bu depoda sunucu bağlantısı bulunmuyor. Hesap, ilan, favori, mesaj ve alım talebi kayıtları kullanıldıkları tarayıcıda veya cihazda saklanır; cihazlar arasında eşitlenmez. Alım taleplerine aynı cihazdaki başka bir hesapla yanıt verilebilir. Ödeme, kargo takibi, kimlik doğrulama ve doğrulanmış satış altyapısı yoktur.
+Bu depo uygulamanın ön yüzünü içeriyor. Hesap, ilan, favori, mesaj ve alım talebi kayıtları kullanıldıkları tarayıcıda veya cihazda saklanır. Alım talepleri aynı cihazda açılan başka bir hesapla yanıtlanabilir. Mesaj ekranındaki yazışmalar ise hesaba kaydedilir, karşı tarafa iletilmez. Kayıtlar başka cihazlara aktarılmaz. Merkezi üyelik, ödeme, kargo takibi ve bağımsız satıcı doğrulaması için sunucu hizmeti bulunmuyor.
 
-Göz atma geçmişi hesaplara göre ayrılır, 30 günden eski kayıtlar kullanılmaz ve karşılaştırma penceresinden temizlenebilir. Tarayıcı ya da uygulama verilerini temizlemek diğer yerel kayıtları da siler.
+Göz atma geçmişi hesaplara göre ayrılır, 30 günden eski kayıtlar kullanılmaz. Karşılaştırma penceresinden bu geçmiş temizlenebilir. Tarayıcı ya da uygulama verilerini temizlemek diğer yerel kayıtları da siler.
 
 ## Lisans
 

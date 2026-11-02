@@ -29,6 +29,7 @@ export default function Html({ children, pathname }: PropsWithChildren<{ pathnam
     <html {...htmlAttributes} lang="tr">
       <head>
         <meta charSet="utf-8" />
+        <meta name="author" content="Teşkilatsız" />
         <meta name="color-scheme" content="light dark" />
         <style dangerouslySetInnerHTML={{ __html: temaCss }} />
         <script dangerouslySetInnerHTML={{ __html: temaBaslat }} />
