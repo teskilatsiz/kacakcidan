@@ -8,8 +8,16 @@ const degiskenler = (palet: typeof acikRenkler) =>
     .join(';');
 const temaCss = `:root{color-scheme:light;${degiskenler(acikRenkler)}}:root[data-tema=koyu]{color-scheme:dark;${degiskenler(koyuRenkler)}}@media(prefers-color-scheme:dark){:root:not([data-tema=acik]){color-scheme:dark;${degiskenler(koyuRenkler)}}}`;
 const temaBaslat = `(function(){try{var t=localStorage.getItem('kacakcidan-gorunum');var d=t==='koyu'||(t!=='acik'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.tema=d?'koyu':'acik';document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}})();`;
+const siteAdresi = (process.env.EXPO_PUBLIC_SITE_URL || 'https://kacakcidan.netlify.app').replace(/\/$/, '');
+const siteYapilandirilmisVerisi = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Kaçakçıdan',
+  alternateName: 'Kacakcidan',
+  url: `${siteAdresi}/`,
+}).replace(/</g, '\\u003c');
 
-export default function Html({ children }: PropsWithChildren) {
+export default function Html({ children, pathname }: PropsWithChildren<{ pathname?: string }>) {
   const { htmlAttributes, bodyAttributes, headNodes, bodyNodes } = useServerDocumentContext();
 
   return (
@@ -24,8 +32,14 @@ export default function Html({ children }: PropsWithChildren) {
           content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
         />
         <meta name="theme-color" content="#ffd12f" />
-        <link rel="icon" type="image/png" href="/favicon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="256x256" href="/favicon.png" />
+        <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="/apple-touch-icon.png" />
+        {pathname === '/' && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: siteYapilandirilmisVerisi }}
+          />
+        )}
         <link
           rel="preload"
           href="/fonts/dm-sans-400.woff2"
