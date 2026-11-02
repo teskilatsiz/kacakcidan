@@ -46,59 +46,66 @@ export default function Satici() {
           Geri
         </Buton>
         <View
+          dataSet={{ 'satici-profil-bilgileri': 'true' }}
           style={{
             padding: mobil ? 20 : 28,
             borderWidth: 1,
             borderColor: renk.cizgi,
             borderRadius: 14,
-            gap: 18,
+            backgroundColor: renk.beyaz,
+            flexDirection: mobil ? 'column' : 'row',
+            gap: mobil ? 22 : 32,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: mobil ? 14 : 20 }}>
-            <SaticiResmi satici={satici} boyut={mobil ? 66 : 86} />
-            <View style={{ flex: 1, minWidth: 0, gap: 7 }}>
-              <Baslik style={{ fontSize: mobil ? 23 : 29, lineHeight: mobil ? 30 : 38 }}>{satici.ad}</Baslik>
-              <SaticiPuani satici={satici} />
-              {!!satici.konum && (
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 5 }}>
-                  <MapPin size={14} color={renk.gri} style={{ marginTop: 3, flexShrink: 0 }} />
-                  <Yazi style={{ fontSize: 13, color: renk.gri, flex: 1 }}>{satici.konum}</Yazi>
-                </View>
+          <View style={{ flex: mobil ? undefined : 1, minWidth: 0, gap: 18 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: mobil ? 14 : 20 }}>
+              <SaticiResmi satici={satici} boyut={mobil ? 66 : 86} />
+              <View style={{ flex: 1, minWidth: 0, gap: 7 }}>
+                <Baslik style={{ fontSize: mobil ? 23 : 29, lineHeight: mobil ? 30 : 38 }}>
+                  {satici.ad}
+                </Baslik>
+                <SaticiPuani satici={satici} />
+                {!!satici.konum && (
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 5 }}>
+                    <MapPin size={14} color={renk.gri} style={{ marginTop: 3, flexShrink: 0 }} />
+                    <Yazi style={{ fontSize: 13, color: renk.gri, flex: 1 }}>{satici.konum}</Yazi>
+                  </View>
+                )}
+              </View>
+            </View>
+            {!!satici.hakkinda && (
+              <Yazi style={{ fontSize: 14, lineHeight: 24, maxWidth: 800 }}>{satici.hakkinda}</Yazi>
+            )}
+            {!!satici.telefon && (
+              <View style={{ maxWidth: 320 }}>
+                <SaticiIletisimi telefon={satici.telefon} gorunur />
+              </View>
+            )}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+                flexWrap: 'wrap',
+              }}
+            >
+              <Yazi style={{ fontSize: 13, fontWeight: '600' }}>{ilanlar.length} ilan yayında</Yazi>
+              {!!satici.uyelikYili && (
+                <Yazi style={{ fontSize: 13, color: renk.gri }}>{satici.uyelikYili} yılından beri üye</Yazi>
+              )}
+              {oturum?.id === satici.id && (
+                <Buton
+                  ikincil
+                  style={{ minHeight: 48, paddingHorizontal: 12 }}
+                  onPress={() => router.push('/profil')}
+                >
+                  Hesabıma git
+                </Buton>
               )}
             </View>
           </View>
-          {!!satici.hakkinda && (
-            <Yazi style={{ fontSize: 14, lineHeight: 24, maxWidth: 800 }}>{satici.hakkinda}</Yazi>
-          )}
-          {!!satici.telefon && (
-            <View style={{ maxWidth: 320 }}>
-              <SaticiIletisimi telefon={satici.telefon} gorunur />
-            </View>
-          )}
-          <SaticiKontrolleri />
-          <View
-            style={{
-              borderTopWidth: 1,
-              borderColor: renk.cizgi,
-              paddingTop: 14,
-              flexDirection: 'row',
-              gap: 20,
-              flexWrap: 'wrap',
-            }}
-          >
-            <Yazi style={{ fontSize: 13, fontWeight: '600' }}>{ilanlar.length} yayında ilan</Yazi>
-            {!!satici.uyelikYili && (
-              <Yazi style={{ fontSize: 13, color: renk.gri }}>{satici.uyelikYili} yılından beri üye</Yazi>
-            )}
-            {oturum?.id === satici.id && (
-              <Buton
-                ikincil
-                style={{ minHeight: 36, paddingHorizontal: 12 }}
-                onPress={() => router.push('/profil')}
-              >
-                Hesabıma git
-              </Buton>
-            )}
+          <View style={{ width: mobil ? '100%' : 280, minWidth: 0, flexShrink: 0 }}>
+            <SaticiKontrolleri />
           </View>
         </View>
         <Baslik style={{ fontSize: mobil ? 21 : 25 }}>İlanları</Baslik>

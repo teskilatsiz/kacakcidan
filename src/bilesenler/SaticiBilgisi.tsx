@@ -44,7 +44,7 @@ export function SaticiOzeti({
             {satici.uyelikYili} yılından beri üye
           </Yazi>
         )}
-        {satici.puan !== undefined && !!satici.degerlendirmeSayisi && <SaticiPuani satici={satici} />}
+        <SaticiPuani satici={satici} />
       </View>
       <Link href={saticiYolu(satici.id)} asChild>
         <HareketliBas
@@ -109,18 +109,45 @@ export function SaticiResmi({
 
 export function SaticiPuani({ satici }: { satici: Pick<SaticiProfili, 'puan' | 'degerlendirmeSayisi'> }) {
   const { renk } = useTema();
-  if (satici.puan === undefined || !satici.degerlendirmeSayisi)
-    return <Yazi style={{ color: renk.gri, fontSize: 12 }}>Henüz değerlendirme yok</Yazi>;
+  const { puan, degerlendirmeSayisi } = satici;
+  if (
+    puan === undefined ||
+    !Number.isFinite(puan) ||
+    puan < 1 ||
+    puan > 5 ||
+    degerlendirmeSayisi === undefined ||
+    !Number.isSafeInteger(degerlendirmeSayisi) ||
+    degerlendirmeSayisi < 1
+  )
+    return (
+      <View
+        dataSet={{ 'satici-degerlendirmesi': 'true' }}
+        style={{ flexDirection: 'row', alignItems: 'flex-start', minWidth: 0, gap: 6 }}
+      >
+        <Star
+          size={14}
+          fill="none"
+          color={renk.gri}
+          strokeWidth={1.6}
+          style={{ marginTop: 3, flexShrink: 0 }}
+        />
+        <Yazi style={{ flexShrink: 1, color: renk.gri, fontSize: 12, lineHeight: 20 }}>
+          Henüz değerlendirme yok
+        </Yazi>
+      </View>
+    );
+  const puanMetni = puan.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const sayiMetni = degerlendirmeSayisi.toLocaleString('tr-TR');
   return (
     <View
+      dataSet={{ 'satici-degerlendirmesi': 'true' }}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}
-      accessibilityLabel={`${satici.puan.toLocaleString('tr-TR')} puan, ${satici.degerlendirmeSayisi} değerlendirme`}
+      accessible
+      accessibilityLabel={`5 üzerinden ${puanMetni} puan, ${sayiMetni} değerlendirme`}
     >
       <Star size={14} fill={renk.sari} color={renk.murekkep} strokeWidth={1.5} />
-      <Yazi style={{ fontWeight: '700', fontSize: 13 }}>
-        {satici.puan.toLocaleString('tr-TR', { minimumFractionDigits: 1 })}
-      </Yazi>
-      <Yazi style={{ color: renk.gri, fontSize: 12 }}>({satici.degerlendirmeSayisi} değerlendirme)</Yazi>
+      <Yazi style={{ fontWeight: '700', fontSize: 13 }}>{puanMetni} / 5</Yazi>
+      <Yazi style={{ color: renk.gri, fontSize: 12 }}>({sayiMetni} değerlendirme)</Yazi>
     </View>
   );
 }
