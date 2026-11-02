@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { forwardRef, memo, type ComponentPropsWithoutRef } from 'react';
 import { Link } from 'expo-router';
 import { usePazar } from '../durum/Pazar';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
@@ -11,6 +11,13 @@ import '../tasarim/vitrin.web.css';
 const gorselBoyutu =
   '(max-width: 699px) calc(50vw - 26px), (max-width: 999px) calc((100vw - 96px) / 3), (max-width: 1099px) calc((100vw - 116px) / 4), (max-width: 1249px) calc((100vw - 156px) / 4), (max-width: 1439px) calc((100vw - 176px) / 5), 253px';
 const gorselStili = { position: 'absolute' as const, inset: 0 };
+
+// Router web'de onClick de sağlar; React Native'e ait onPress DOM'a taşınmaz.
+const VitrinBaglantisi = forwardRef<HTMLAnchorElement, ComponentPropsWithoutRef<'a'> & { onPress?: unknown }>(
+  function VitrinBaglantisi({ onPress: _onPress, ...nitelikler }, ref) {
+    return <a {...nitelikler} ref={ref} />;
+  },
+);
 
 /** Vitrinde ölçü ve etkileşim katmanları her kart için tekrar kurulmaz. */
 export function VitrinIzgarasi({ ilanlar, araya, arayaSira = 4 }: VitrinIzgarasiProps) {
@@ -59,7 +66,7 @@ const VitrinKarti = memo(function VitrinKarti({
       data-liste-karti="false"
     >
       <Link href={ilanYolu(ilan)} asChild>
-        <a className="vitrin-karti-baglantisi">
+        <VitrinBaglantisi className="vitrin-karti-baglantisi">
           <div className="vitrin-karti-gorseli">
             <Gorsel
               source={gorselKaynagi(ilan.gorsel)}
@@ -124,7 +131,7 @@ const VitrinKarti = memo(function VitrinKarti({
               <span className="vitrin-karti-zamani">{ilan.zaman}</span>
             </div>
           </div>
-        </a>
+        </VitrinBaglantisi>
       </Link>
       <button
         type="button"
