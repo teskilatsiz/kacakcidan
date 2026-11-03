@@ -10,12 +10,15 @@ export type IlanSorusu = {
   herkeseAcik: boolean;
 };
 
-export type BildirimTuru = 'soru' | 'cevap' | 'yayin' | 'duzenleme' | 'kaldirma' | 'favori' | 'fiyat';
+export type BildirimTuru =
+  'soru' | 'cevap' | 'yayin' | 'duzenleme' | 'kaldirma' | 'favori' | 'fiyat' | 'alisveris' | 'degerlendirme';
 export type Bildirim = {
   id: string;
   hesapId: string;
   ilanId: string;
   soruId?: string;
+  saticiId?: string;
+  alisverisId?: string;
   tur: BildirimTuru;
   baslik: string;
   aciklama: string;
@@ -71,7 +74,17 @@ export function etkilesimleriOku(veri: unknown): EtkilesimKaydi {
             (typeof s.cevapTarihi === 'string' && Number.isFinite(Date.parse(s.cevapTarihi)))),
       )
     : [];
-  const turler: BildirimTuru[] = ['soru', 'cevap', 'yayin', 'duzenleme', 'kaldirma', 'favori', 'fiyat'];
+  const turler: BildirimTuru[] = [
+    'soru',
+    'cevap',
+    'yayin',
+    'duzenleme',
+    'kaldirma',
+    'favori',
+    'fiyat',
+    'alisveris',
+    'degerlendirme',
+  ];
   const bildirimler = Array.isArray(veri.bildirimler)
     ? veri.bildirimler.filter(
         (b): b is Bildirim =>
@@ -80,7 +93,9 @@ export function etkilesimleriOku(veri: unknown): EtkilesimKaydi {
           Number.isFinite(Date.parse(String(b.tarih))) &&
           turler.includes(b.tur as BildirimTuru) &&
           typeof b.okundu === 'boolean' &&
-          (b.soruId === undefined || typeof b.soruId === 'string'),
+          ['soruId', 'saticiId', 'alisverisId'].every(
+            (alan) => b[alan] === undefined || typeof b[alan] === 'string',
+          ),
       )
     : [];
   const goruntulenmeler: EtkilesimKaydi['goruntulenmeler'] = {};

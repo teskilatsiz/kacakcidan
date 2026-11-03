@@ -9,18 +9,19 @@ import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Pencil from 'lucide-react-native/icons/pencil';
 import Share2 from 'lucide-react-native/icons/share-2';
 import Copy from 'lucide-react-native/icons/copy';
+import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import * as Clipboard from 'expo-clipboard';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { Alan, Baslik, BosDurum, Buton, Pencere, SimgeButon, Yazi } from '../bilesenler/Temel';
 import { FavoriDugmesi } from '../bilesenler/Hareketli';
 import { DetaySekmeleri, type DetaySekmesi } from '../bilesenler/DetaySekmeleri';
 import { IlanGalerisi } from '../bilesenler/IlanGalerisi';
-import { IlanEtiketleri } from '../bilesenler/IlanEtiketleri';
 import { IlanIzgarasi } from '../bilesenler/IlanKarti';
 import { IlanSorulari } from '../bilesenler/IlanSorulari';
 import { IlanSikayeti } from '../bilesenler/IlanSikayeti';
 import { IlanKarsilastirmasi } from '../bilesenler/IlanKarsilastirmasi';
-import { DurumRaporu } from '../bilesenler/DurumRaporu';
+import { IlanKonumu } from '../bilesenler/IlanKonumu';
+import { GuvenliAlisveris } from '../bilesenler/GuvenliAlisveris';
 import { SaticiKontrolleri } from '../bilesenler/SaticiKontrolleri';
 import { SaticiIletisimi } from '../bilesenler/SaticiIletisimi';
 import { SaticiOzeti } from '../bilesenler/SaticiBilgisi';
@@ -30,6 +31,8 @@ import { kategoriler, para, ilanBedeli } from '../veri/ilanlar';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { kategoriYapisi } from '../veri/kategoriler';
 import { kategoriAdresi } from '../veri/kategoriSayfalari';
+import { konumuAyir } from '../veri/konumlar';
+import { HareketliBas } from '../bilesenler/Hareketli';
 import { kalin, mobilAltMenuYuksekligi, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
 import { ilanPaylasimAdresi } from '../tasarim/seo';
@@ -62,9 +65,11 @@ export default function IlanDetayi() {
   const [teklif, setTeklif] = useState('');
   const [hata, setHata] = useState('');
   const [sekme, setSekme] = useState<DetaySekmesi>('aciklama');
+  const [digerOzelliklerAcik, setDigerOzelliklerAcik] = useState(false);
   const sekmeId = useId();
   useEffect(() => {
-    setSekme(bolum === 'sorular' ? 'sorular' : 'aciklama');
+    setSekme(bolum === 'sorular' ? 'sorular' : bolum === 'konum' ? 'konum' : 'aciklama');
+    setDigerOzelliklerAcik(false);
     setTeklifAcik(false);
     setTeklif('');
     setHata('');
@@ -141,8 +146,7 @@ export default function IlanDetayi() {
   ];
   const ozellikler = Object.entries({
     ...(ilan.numara ? { 'İlan no': ilan.numara } : {}),
-    Kategori: kategori?.ad ?? ilan.kategori,
-    ...(altKategoriAdi
+    ...(!urunIlani && altKategoriAdi
       ? {
           [isIlani
             ? 'İş alanı'
@@ -175,11 +179,40 @@ export default function IlanDetayi() {
                 : 'Model']: modelAdi,
         }
       : {}),
-    ...(urunIlani ? { Durum: ilan.durum } : {}),
     ...ilan.ozellikler,
+    ...(urunIlani ? { Durum: ilan.durum } : {}),
     ...(urunIlani ? { Takas: ilan.takas ? 'Evet' : 'Hayır' } : {}),
-    Konum: ilan.konum,
   });
+  // Temel telefon bilgileri ilk bakışta okunur; ikincil donanım ayrıntıları isteğe bağlıdır.
+  const telefonSirasi = [
+    'İlan no',
+    'Marka',
+    'Model',
+    'Renk',
+    'Depolama',
+    'Ekran',
+    'Ekran boyutu',
+    'Kamera',
+    'Ön kamera',
+    'İşletim sistemi',
+    'Kayıt durumu',
+    'Garanti',
+    'Pil sağlığı',
+    'Ekran durumu',
+    'Değişen parça',
+    'Satıcı türü',
+    'Durum',
+    'Takas',
+  ];
+  const telefonBilgisi =
+    ilan.kategori === 'telefon' && ['cep-telefonu', 'yenilenmis-telefon'].includes(ilan.altKategori ?? '');
+  const anaOzellikler = telefonBilgisi
+    ? telefonSirasi.flatMap((ad) => ozellikler.filter(([anahtar]) => anahtar === ad))
+    : ozellikler;
+  const digerOzellikler = telefonBilgisi ? ozellikler.filter(([ad]) => !telefonSirasi.includes(ad)) : [];
+  const gorunenOzellikler = [...anaOzellikler, ...(digerOzelliklerAcik ? digerOzellikler : [])];
+  const konum = konumuAyir(ilan.konum);
+  const konumMetni = [konum.il, konum.ilce].filter(Boolean).join(' / ') || ilan.konum;
   const benzer = [
     ...tumIlanlar.filter((i) => i.id !== id && i.kategori === ilan.kategori),
     ...tumIlanlar.filter((i) => i.id !== id && i.kategori !== ilan.kategori),
@@ -233,14 +266,12 @@ export default function IlanDetayi() {
     setTeklifAcik(true);
   }
   const ilanBasligi = (
-    <View dataSet={{ 'ilan-baslik': 'true' }} style={{ gap: mobil ? 10 : 12 }}>
-      <Baslik buyuk style={{ fontSize: mobil ? 23 : 29, lineHeight: mobil ? 31 : 38, letterSpacing: -0.7 }}>
+    <View dataSet={{ 'ilan-baslik': 'true' }} style={{ gap: 6 }}>
+      <Baslik buyuk style={{ fontSize: mobil ? 21 : 24, lineHeight: mobil ? 28 : 32, letterSpacing: -0.5 }}>
         {ilan.baslik}
       </Baslik>
       <View style={[ortak.satir, { gap: 6, flexWrap: 'wrap' }]}>
-        <MapPin size={14} color={renk.gri} />
-        <Yazi style={s.yardimci}>{ilan.konum}</Yazi>
-        <Yazi style={s.yardimci}>· {ilan.zaman}</Yazi>
+        <Yazi style={s.yardimci}>{ilan.zaman}</Yazi>
       </View>
     </View>
   );
@@ -254,7 +285,7 @@ export default function IlanDetayi() {
       accessibilityLabel="İlan özellikleri"
       style={{ minWidth: 0 }}
     >
-      {ozellikler.map(([ad, deger], sira) => (
+      {gorunenOzellikler.map(([ad, deger], sira) => (
         <View
           key={ad}
           dataSet={{ 'ilan-ozellik-satiri': 'true' }}
@@ -262,19 +293,19 @@ export default function IlanDetayi() {
             flexDirection: 'row',
             gap: 12,
             paddingHorizontal: 12,
-            paddingVertical: ozellikSekmesi ? 12 : 9,
+            paddingVertical: ozellikSekmesi ? 9 : 5,
             backgroundColor: sira % 2 === 0 ? renk.zemin : renk.beyaz,
             borderRadius: 5,
           }}
         >
           <Yazi
             dataSet={{ 'ilan-ozellik-adi': 'true' }}
-            style={{ width: '42%', maxWidth: 170, color: renk.gri, fontSize: 13, lineHeight: 20 }}
+            style={{ width: '45%', maxWidth: 170, color: renk.gri, fontSize: 13, lineHeight: 19 }}
           >
-            {ad}
+            {ad === 'Ekran' && telefonBilgisi ? 'Ekran boyutu' : ad}
           </Yazi>
           <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Yazi selectable style={{ flexShrink: 1, fontSize: 13, lineHeight: 20, fontWeight: '500' }}>
+            <Yazi selectable style={{ flexShrink: 1, fontSize: 13, lineHeight: 19, fontWeight: '500' }}>
               {deger}
             </Yazi>
             {ad === 'İlan no' && (
@@ -307,6 +338,34 @@ export default function IlanDetayi() {
           </View>
         </View>
       ))}
+      {digerOzellikler.length > 0 && (
+        <HareketliBas
+          accessibilityRole="button"
+          accessibilityLabel={
+            digerOzelliklerAcik
+              ? 'Diğer özellikleri gizle'
+              : `${digerOzellikler.length} diğer özelliği göster`
+          }
+          accessibilityState={{ expanded: digerOzelliklerAcik }}
+          onPress={() => setDigerOzelliklerAcik((acik) => !acik)}
+          style={{
+            minHeight: 44,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 8,
+          }}
+        >
+          <Yazi style={{ fontSize: 12, fontWeight: '600' }}>
+            {digerOzelliklerAcik ? 'Daha az göster' : `Diğer özellikler (${digerOzellikler.length})`}
+          </Yazi>
+          <ChevronDown
+            size={15}
+            color={renk.murekkep}
+            style={{ transform: [{ rotate: digerOzelliklerAcik ? '180deg' : '0deg' }] }}
+          />
+        </HareketliBas>
+      )}
     </View>
   );
 
@@ -347,11 +406,11 @@ export default function IlanDetayi() {
         style={[
           ortak.alan,
           {
-            maxWidth: 1340,
+            maxWidth: 1280,
             paddingHorizontal: bosluk,
             paddingTop: mobil ? 8 : 16,
             paddingBottom: mobil ? 100 : 40,
-            gap: mobil ? 20 : 28,
+            gap: mobil ? 16 : 20,
           },
         ]}
       >
@@ -390,11 +449,42 @@ export default function IlanDetayi() {
           <View dataSet={{ 'ilan-fiyat-alani': 'true' }} style={{ minWidth: 0, gap: mobil ? 8 : 10 }}>
             <Yazi
               dataSet={{ 'ilan-ana-fiyati': 'true' }}
-              style={[s.fiyat, { fontSize: mobil ? 30 : 34, lineHeight: mobil ? 38 : 43 }]}
+              style={[s.fiyat, { fontSize: mobil ? 26 : 25, lineHeight: mobil ? 34 : 33 }]}
             >
               {ilanBedeli(ilan)}
             </Yazi>
-            {urunIlani ? <IlanEtiketleri durum={ilan.durum} takas={ilan.takas} /> : null}
+            <HareketliBas
+              accessibilityRole="button"
+              accessibilityLabel={`${konumMetni}, konumunu haritada göster`}
+              onPress={() => {
+                setSekme('konum');
+                if (web)
+                  requestAnimationFrame(() =>
+                    document.getElementById(`${sekmeId}-icerik`)?.scrollIntoView({
+                      block: 'start',
+                      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                        ? 'instant'
+                        : 'smooth',
+                    }),
+                  );
+              }}
+              dataSet={{ 'ilan-oncelikli-konum': 'true' }}
+              style={{
+                minHeight: 44,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 7,
+                borderBottomWidth: 1,
+                borderColor: renk.cizgi,
+                paddingBottom: 6,
+              }}
+            >
+              <MapPin size={16} color={renk.murekkep} style={{ flexShrink: 0 }} />
+              <Yazi style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 20, fontWeight: '700' }}>
+                {konumMetni}
+              </Yazi>
+              <ArrowRight size={14} color={renk.murekkep} style={{ flexShrink: 0 }} />
+            </HareketliBas>
           </View>
           <View dataSet={{ 'ilan-galeri-alani': 'true' }} style={{ minWidth: 0, gap: 20 }}>
             {ilan.yayinDurumu === 'kaldirildi' && (
@@ -407,7 +497,7 @@ export default function IlanDetayi() {
             {hazir && <IlanKarsilastirmasi key={ilan.id} ilan={ilan} />}
           </View>
           {!ozellikSekmesi && (
-            <View dataSet={{ 'ilan-ozellik-alani': 'true' }} style={{ minWidth: 0 }}>
+            <View dataSet={{ 'ilan-ozellik-alani': 'true' }} style={{ minWidth: 0, gap: 12 }}>
               {ozellikTablosu}
             </View>
           )}
@@ -419,19 +509,32 @@ export default function IlanDetayi() {
                 </Buton>
               </View>
             )}
-            {(web || !mobil) && !ilanBanaAit && (
-              <View dataSet={{ 'ilan-masaustu-eylemi': 'true' }} style={{ flexDirection: 'row', gap: 10 }}>
-                <Buton onPress={iletisim} simge={<MessageCircle size={17} />} style={{ flex: 1 }}>
-                  {iletisimEtiketi}
-                </Buton>
-                {urunIlani && (
-                  <Buton ikincil onPress={teklifPenceresiAc} style={{ flex: 1 }}>
-                    Teklif yap
+            {!ilanBanaAit && (
+              <View dataSet={{ 'ilan-iletisim-eylemleri': 'true' }} style={{ gap: 8, minWidth: 0 }}>
+                <GuvenliAlisveris ilan={ilan} />
+                <View style={{ flexDirection: 'row', gap: 8, minWidth: 0 }}>
+                  <Buton
+                    onPress={iletisim}
+                    simge={<MessageCircle size={17} />}
+                    style={{ flex: 1, paddingHorizontal: 8, gap: 6 }}
+                    yaziStili={{ fontSize: 13 }}
+                  >
+                    {iletisimEtiketi}
                   </Buton>
-                )}
+                  {urunIlani && (
+                    <Buton
+                      ikincil
+                      onPress={teklifPenceresiAc}
+                      style={{ flex: 1, paddingHorizontal: 8 }}
+                      yaziStili={{ fontSize: 13 }}
+                    >
+                      Teklif yap
+                    </Buton>
+                  )}
+                </View>
               </View>
             )}
-            <View dataSet={{ 'ilan-satici-karti': 'true' }} style={[s.satici, { padding: mobil ? 16 : 20 }]}>
+            <View dataSet={{ 'ilan-satici-karti': 'true' }} style={[s.satici, { padding: 14 }]}>
               <SaticiOzeti
                 satici={satici}
                 rol={
@@ -448,13 +551,6 @@ export default function IlanDetayi() {
                 ilanSayisi={saticininIlanSayisi}
               />
               <SaticiIletisimi telefon={ilan.telefon} gorunur={ilan.telefonGoster === true} />
-              {(web || mobil) && !ilanBanaAit && urunIlani && (
-                <View dataSet={{ 'ilan-mobil-eylemi': 'true' }}>
-                  <Buton ikincil onPress={teklifPenceresiAc} style={{ minHeight: 48 }}>
-                    Teklif yap
-                  </Buton>
-                </View>
-              )}
               <SaticiKontrolleri />
             </View>
             <IlanSikayeti ilan={{ ...ilan, benim: ilanBanaAit }} />
@@ -476,12 +572,16 @@ export default function IlanDetayi() {
                 ? 'Açıklama'
                 : etkinSekme === 'sorular'
                   ? 'Soru ve cevap'
-                  : 'Özellikler'
+                  : etkinSekme === 'konum'
+                    ? 'Konum'
+                    : 'Özellikler'
             }
             style={{ minHeight: 128 }}
           >
             {etkinSekme === 'sorular' ? (
               <IlanSorulari key={ilan.id} ilan={ilan} />
+            ) : etkinSekme === 'konum' ? (
+              <IlanKonumu key={ilan.konum} konum={ilan.konum} />
             ) : etkinSekme === 'ozellikler' ? (
               ozellikTablosu
             ) : (
@@ -496,7 +596,6 @@ export default function IlanDetayi() {
                 >
                   {ilan.aciklama}
                 </Yazi>
-                <DurumRaporu key={ilan.id} ilan={ilan} />
               </View>
             )}
           </View>

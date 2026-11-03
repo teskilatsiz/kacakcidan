@@ -5,6 +5,7 @@ import type { DetaySekmeleriProps } from './DetaySekmeleri';
 const tumSekmeler = [
   { id: 'aciklama', ad: 'Açıklama' },
   { id: 'ozellikler', ad: 'Özellikler' },
+  { id: 'konum', ad: 'Konum' },
   { id: 'sorular', ad: 'Soru & cevap' },
 ] as const;
 
@@ -17,7 +18,13 @@ export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: 
     <div
       role="tablist"
       aria-label="İlan bilgileri"
-      style={{ display: 'flex', gap: 20, flexWrap: 'wrap', borderBottom: `1px solid ${renk.cizgi}` }}
+      style={{
+        display: 'flex',
+        gap: 'clamp(10px, 3vw, 20px)',
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+        borderBottom: `1px solid ${renk.cizgi}`,
+      }}
     >
       {sekmeler.map((sekme, sira) => (
         <button
@@ -48,12 +55,13 @@ export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: 
           }}
           style={{
             minHeight: 48,
+            flexShrink: 0,
             padding: '0 2px',
             border: 0,
             borderBottom: `2px solid ${secili === sekme.id ? renk.murekkep : 'transparent'}`,
             background: 'transparent',
             font: 'inherit',
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: 700,
             color: secili === sekme.id ? renk.murekkep : renk.gri,
             cursor: 'pointer',

@@ -22,6 +22,17 @@ import { profiliKaliciKaydet } from './profilKaydi';
 import { katalogSaticilari, saticiKimligi, type SaticiProfili } from '../veri/saticilar';
 import { sikayetNedenleri, type SikayetNedeni, type IlanKaldirmaNedeni } from '../veri/ilanYonetimi';
 import {
+  alisverisTalebiOlustur,
+  alisverisTalebiniIptalEt,
+  alisverisTesliminiOnayla,
+  degerlendirmeOlustur,
+  degerlendirmeyeCevapVer,
+  degerlendirmeyiGuncelle,
+  degerlendirmeyiSil,
+  saticiPuanOzeti,
+  type DegerlendirmeKaydi,
+} from '../veri/saticiDegerlendirmeleri';
+import {
   gorunurSorular,
   goruntulemeKaydet,
   numaralariTamamla,
@@ -51,6 +62,58 @@ function bildirimEkle(depo: HesapDeposu, bilgi: Omit<Bildirim, 'id' | 'tarih' | 
   };
 }
 
+function alisverisBildirimleriniEkle(
+  depo: HesapDeposu,
+  onceki: DegerlendirmeKaydi,
+  hesapId: string,
+): HesapDeposu {
+  let yeni = depo;
+  const oncekiIslemler = new Map(onceki.alisverisler.map((islem) => [islem.id, islem]));
+  for (const islem of depo.degerlendirmeKaydi.alisverisler) {
+    const eski = oncekiIslemler.get(islem.id);
+    if (eski === islem) continue;
+    const alici = hesapId === islem.aliciId;
+    const digerHesap = alici ? islem.saticiId : islem.aliciId;
+    if (!depo.hesaplar.some((hesap) => hesap.id === digerHesap)) continue;
+    yeni = bildirimEkle(yeni, {
+      hesapId: digerHesap,
+      ilanId: islem.ilanId,
+      alisverisId: islem.id,
+      tur: 'alisveris',
+      baslik: !eski
+        ? 'Yeni alışveriş talebi'
+        : islem.durum === 'iptal'
+          ? 'Alışveriş talebi iptal edildi'
+          : islem.durum === 'tamamlandi'
+            ? 'Alışveriş tamamlandı'
+            : alici
+              ? 'Alıcı teslim aldığını onayladı'
+              : 'Satıcı teslim ettiğini onayladı',
+      aciklama: `${islem.ilanBasligi} · ${alici ? islem.aliciAd : islem.saticiAd}`,
+    });
+  }
+  const oncekiYorumlar = new Map(onceki.degerlendirmeler.map((yorum) => [yorum.id, yorum]));
+  for (const yorum of depo.degerlendirmeKaydi.degerlendirmeler) {
+    const eski = oncekiYorumlar.get(yorum.id);
+    if (eski === yorum) continue;
+    const saticiYanitladi = hesapId === yorum.saticiId;
+    yeni = bildirimEkle(yeni, {
+      hesapId: saticiYanitladi ? yorum.yazanId : yorum.saticiId,
+      ilanId: yorum.ilanId,
+      alisverisId: yorum.alisverisId,
+      saticiId: yorum.saticiId,
+      tur: 'degerlendirme',
+      baslik: saticiYanitladi
+        ? 'Satıcı değerlendirmeni yanıtladı'
+        : eski
+          ? 'Alıcı değerlendirmesini güncelledi'
+          : 'Yeni satıcı değerlendirmen var',
+      aciklama: yorum.ilanBasligi,
+    });
+  }
+  return yeni;
+}
+
 export function PazarSaglayici({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [depo, setDepo] = useState(ilkDepo);
@@ -62,6 +125,7 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
   const profilIsleniyor = useRef(false);
   const bekleyen = useRef<((eski: Kayit) => Kayit)[]>([]);
   const yazma = useRef<Promise<void>>(Promise.resolve());
+  const degerlendirmeYazma = useRef<Promise<void>>(Promise.resolve());
   const zamanlayici = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const haberVer = useCallback((mesaj: string) => {
@@ -586,18 +650,22 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
     [kayit.eklenenler, depo.etkilesimler.goruntulenmeler, depo.hesaplar, depo.aktifHesap],
   );
   const saticilar = useMemo<SaticiProfili[]>(
-    () => [
-      ...katalogSaticilari(ilanlar),
-      ...depo.hesaplar.map(({ id, kayit }) => ({
-        id,
-        ad: kayit.profil.ad,
-        konum: kayit.profil.konum,
-        hakkinda: kayit.profil.hakkinda,
-        fotograf: kayit.profil.fotograf,
-        telefon: kayit.profil.telefonGoster ? kayit.profil.telefon : undefined,
+    () =>
+      [
+        ...katalogSaticilari(ilanlar),
+        ...depo.hesaplar.map(({ id, kayit }) => ({
+          id,
+          ad: kayit.profil.ad,
+          konum: kayit.profil.konum,
+          hakkinda: kayit.profil.hakkinda,
+          fotograf: kayit.profil.fotograf,
+          telefon: kayit.profil.telefonGoster ? kayit.profil.telefon : undefined,
+        })),
+      ].map((satici) => ({
+        ...satici,
+        ...saticiPuanOzeti(depo.degerlendirmeKaydi.degerlendirmeler, satici.id),
       })),
-    ],
-    [depo.hesaplar],
+    [depo.hesaplar, depo.degerlendirmeKaydi.degerlendirmeler],
   );
   const tumIlanlar = useMemo(
     () => [
@@ -763,6 +831,140 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
     [sakla, uygula],
   );
 
+  const degerlendirmeKaydet = useCallback(
+    (
+      guncelle: (
+        kayit: DegerlendirmeKaydi,
+        hesapId: string,
+        depo: HesapDeposu,
+      ) => ReturnType<typeof degerlendirmeOlustur>,
+    ): Promise<HesapSonucu> => {
+      const hesapId = depoRef.current.aktifHesap;
+      if (!yuklendi.current || !hesapId)
+        return Promise.resolve({ basarili: false, hata: 'Bu işlem için hesabına giriş yap.' });
+      // Çift dokunma aynı alışverişe ikinci değerlendirme veya onay oluşturmasın.
+      const islem = degerlendirmeYazma.current
+        .catch(() => {})
+        .then(async (): Promise<HesapSonucu> => {
+          const onceki = depoRef.current;
+          if (onceki.aktifHesap !== hesapId)
+            return { basarili: false, hata: 'Hesabın değişti. İşlemi tekrar başlatabilirsin.' };
+          const sonuc = guncelle(onceki.degerlendirmeKaydi, hesapId, onceki);
+          if (!sonuc.basarili) return sonuc;
+          const yeni = alisverisBildirimleriniEkle(
+            { ...onceki, degerlendirmeKaydi: sonuc.kayit },
+            onceki.degerlendirmeKaydi,
+            hesapId,
+          );
+          const yeniBildirimler = new Set(
+            yeni.etkilesimler.bildirimler
+              .filter((bildirim) => !onceki.etkilesimler.bildirimler.includes(bildirim))
+              .map((bildirim) => bildirim.id),
+          );
+          uygula(yeni);
+          try {
+            await sakla(yeni);
+            return { basarili: true };
+          } catch {
+            if (depoRef.current.degerlendirmeKaydi === sonuc.kayit) {
+              const geri = {
+                ...depoRef.current,
+                degerlendirmeKaydi: onceki.degerlendirmeKaydi,
+                etkilesimler: {
+                  ...depoRef.current.etkilesimler,
+                  bildirimler: depoRef.current.etkilesimler.bildirimler.filter(
+                    (bildirim) => !yeniBildirimler.has(bildirim.id),
+                  ),
+                },
+              };
+              uygula(geri);
+              void sakla(geri).catch(() => {});
+            }
+            return {
+              basarili: false,
+              hata: 'İşlem kaydedilemedi. Depolama alanını kontrol edip tekrar dene.',
+            };
+          }
+        });
+      degerlendirmeYazma.current = islem.then(() => {});
+      return islem;
+    },
+    [sakla, uygula],
+  );
+  const alisverisTalepEt = useCallback(
+    (ilanId: string) =>
+      degerlendirmeKaydet((kayit, hesapId, depo) => {
+        const { ilan, sahip } = ilanBul(depo, ilanId);
+        if (!ilan || ilan.yayinDurumu === 'kaldirildi')
+          return { basarili: false, hata: 'Bu ilan artık yayında değil.' };
+        const alici = depo.hesaplar.find((hesap) => hesap.id === hesapId)!;
+        return alisverisTalebiOlustur(kayit, {
+          id: randomUUID(),
+          ilanId,
+          ilanBasligi: ilan.baslik,
+          aliciId: hesapId,
+          aliciAd: alici.kayit.profil.ad,
+          saticiId: sahip?.id ?? saticiKimligi(ilan.satici),
+          saticiAd: sahip?.kayit.profil.ad ?? ilan.satici,
+          tarih: new Date().toISOString(),
+        });
+      }),
+    [degerlendirmeKaydet],
+  );
+  const alisverisiOnayla = useCallback(
+    (id: string) =>
+      degerlendirmeKaydet((kayit, hesapId) =>
+        alisverisTesliminiOnayla(kayit, id, hesapId, new Date().toISOString()),
+      ),
+    [degerlendirmeKaydet],
+  );
+  const alisverisiIptalEt = useCallback(
+    (id: string) =>
+      degerlendirmeKaydet((kayit, hesapId) =>
+        alisverisTalebiniIptalEt(kayit, id, hesapId, new Date().toISOString()),
+      ),
+    [degerlendirmeKaydet],
+  );
+  const saticiyiDegerlendir = useCallback(
+    (bilgi: { alisverisId: string; puan: number; yorum: string }) =>
+      degerlendirmeKaydet((kayit, hesapId) =>
+        degerlendirmeOlustur(kayit, { ...bilgi, id: randomUUID() }, hesapId, new Date().toISOString()),
+      ),
+    [degerlendirmeKaydet],
+  );
+  const degerlendirmeGuncelle = useCallback(
+    (id: string, bilgi: { puan: number; yorum: string }) =>
+      degerlendirmeKaydet((kayit, hesapId) =>
+        degerlendirmeyiGuncelle(kayit, id, bilgi, hesapId, new Date().toISOString()),
+      ),
+    [degerlendirmeKaydet],
+  );
+  const degerlendirmeSil = useCallback(
+    (id: string) => degerlendirmeKaydet((kayit, hesapId) => degerlendirmeyiSil(kayit, id, hesapId)),
+    [degerlendirmeKaydet],
+  );
+  const degerlendirmeCevapla = useCallback(
+    (id: string, cevap: string) =>
+      degerlendirmeKaydet((kayit, hesapId) =>
+        degerlendirmeyeCevapVer(kayit, id, cevap, hesapId, new Date().toISOString()),
+      ),
+    [degerlendirmeKaydet],
+  );
+  const alisverisler = useMemo(
+    () =>
+      depo.degerlendirmeKaydi.alisverisler.filter(
+        (islem) => !!oturum && [islem.aliciId, islem.saticiId].includes(oturum.id),
+      ),
+    [depo.degerlendirmeKaydi.alisverisler, oturum],
+  );
+  const degerlendirmeHakkiKullanilanlar = useMemo(
+    () => [
+      ...depo.degerlendirmeKaydi.degerlendirmeler.map((kayit) => kayit.alisverisId),
+      ...depo.degerlendirmeKaydi.silinenDegerlendirmeler,
+    ],
+    [depo.degerlendirmeKaydi],
+  );
+
   return (
     <PazarBaglami.Provider
       value={{
@@ -784,6 +986,16 @@ export function PazarSaglayici({ children }: { children: ReactNode }) {
         cikisYap,
         tumIlanlar,
         saticilar,
+        alisverisler,
+        degerlendirmeler: depo.degerlendirmeKaydi.degerlendirmeler,
+        degerlendirmeHakkiKullanilanlar,
+        alisverisTalepEt,
+        alisverisiOnayla,
+        alisverisiIptalEt,
+        saticiyiDegerlendir,
+        degerlendirmeGuncelle,
+        degerlendirmeSil,
+        degerlendirmeCevapla,
         favoriDegistir,
         ilanEkle,
         ilanGuncelle,

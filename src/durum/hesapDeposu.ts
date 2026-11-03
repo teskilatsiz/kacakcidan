@@ -1,8 +1,13 @@
 import type { Kayit } from './PazarBaglami';
 import type { ParolaKaydi } from './parola.types';
 import type { Ilan } from '../veri/ilanlar';
+import {
+  bosDegerlendirmeKaydi,
+  degerlendirmeKaydiniOku,
+  type DegerlendirmeKaydi,
+} from '../veri/saticiDegerlendirmeleri.ts';
 import { telefonuNormallestir } from '../veri/telefon.ts';
-import { durumKanitlariniTemizle, urunDurumAlanlari } from '../veri/urunDurumu.ts';
+import { guvenliAlisverisAyariniTemizle } from '../veri/guvenliAlisveris.ts';
 import { modelOzellikleriniUygula } from '../veri/modelOzellikleri.ts';
 import {
   ilanKaldirmaNedenleri,
@@ -25,6 +30,7 @@ export type HesapDeposu = {
   aktifHesap: string | null;
   etkilesimler: EtkilesimKaydi;
   sikayetler: IlanSikayeti[];
+  degerlendirmeKaydi: DegerlendirmeKaydi;
 };
 
 export function iletisimiDuzenle<T extends { telefon?: string; telefonGoster?: boolean }>(veri: T): T {
@@ -50,15 +56,10 @@ function ilanBilgileriniTemizle(ilan: Ilan): Ilan {
   const oncekiOzellikler = ilan.ozellikler ?? {};
   const ozellikler = modelOzellikleriniUygula(ilan, oncekiOzellikler);
   const temiz = iletisimiDuzenle(ozellikler === oncekiOzellikler ? ilan : { ...ilan, ozellikler });
-  if (temiz.durumKanitlari === undefined) return temiz;
-  const { durumKanitlari: _kanitlar, ...diger } = temiz;
-  const kanitlar = durumKanitlariniTemizle(
-    temiz.durumKanitlari,
-    urunDurumAlanlari(temiz),
-    temiz.ozellikler ?? {},
-    [temiz.gorsel, ...(temiz.fotografler ?? [])],
-  );
-  return { ...diger, ...(kanitlar.length ? { durumKanitlari: kanitlar } : {}) };
+  // Eski kayıtlardaki fotoğraflı durum raporu artık kullanılmıyor.
+  const { durumKanitlari: _kanitlar, guvenliAlisveris: _teslimat, ...diger } = temiz;
+  const guvenliAlisveris = guvenliAlisverisAyariniTemizle(temiz);
+  return { ...diger, ...(guvenliAlisveris ? { guvenliAlisveris } : {}) };
 }
 
 export function bosKayit(ad = ''): Kayit {
@@ -73,6 +74,7 @@ export function ilkDepo(misafir = bosKayit()): HesapDeposu {
     aktifHesap: null,
     etkilesimler: bosEtkilesimKaydi(),
     sikayetler: [],
+    degerlendirmeKaydi: bosDegerlendirmeKaydi(),
   };
 }
 
@@ -247,6 +249,10 @@ export function depoyuOku(ham: string | null, eskiHam: string | null): HesapDepo
         surum: 2,
         misafir: kaydiTemizle(veri.misafir),
         hesaplar,
+        degerlendirmeKaydi: degerlendirmeKaydiniOku(
+          veri.degerlendirmeKaydi,
+          new Set(hesaplar.map((hesap) => hesap.id)),
+        ),
         etkilesimler: etkilesimleriOku(veri.etkilesimler),
         sikayetler: Array.isArray(veri.sikayetler)
           ? veri.sikayetler.filter(

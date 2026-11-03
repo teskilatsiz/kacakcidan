@@ -25,7 +25,7 @@ import { Gorsel } from '../bilesenler/Gorsel';
 import { VideoOynatici } from '../bilesenler/VideoOynatici';
 import { SecimAlani } from '../bilesenler/SecimAlani';
 import { TelefonBilgisiAlanlari } from '../bilesenler/TelefonBilgisiAlanlari';
-import { UrunDurumuAlanlari } from '../bilesenler/UrunDurumuAlanlari';
+import { TeslimatAlanlari } from '../bilesenler/TeslimatAlanlari';
 import { telefonHatasi, telefonuGoster, telefonuNormallestir } from '../veri/telefon';
 import { usePazar } from '../durum/Pazar';
 import { medyaSec } from '../durum/medyaSecici';
@@ -35,7 +35,13 @@ import { kategoriYapisi } from '../veri/kategoriler';
 import { ozellikAlanlari, ozellikleriTemizle } from '../veri/ozellikler';
 import { modelOzellikleri } from '../veri/modelOzellikleri';
 import { sayfaBasinaDon } from '../tasarim/sayfaOdagi';
-import { durumKanitlariniTemizle, urunDurumAlanlari, type DurumKaniti } from '../veri/urunDurumu';
+import {
+  alisverisOzeti,
+  alisverisParasi,
+  guvenliAlisveriseUygun,
+  kargoBoyutuGecerli,
+  type KargoBoyutu,
+} from '../veri/guvenliAlisveris';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 import { kategoriler, ilanYolu, ilanBedeli, type Ilan, type Kategori } from '../veri/ilanlar';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
@@ -141,14 +147,8 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     ilan ? Boolean(ilan.telefonGoster) : Boolean(profil.telefonGoster),
   );
   const [ozellikler, setOzellikler] = useState<Record<string, string>>(ilan?.ozellikler ?? {});
-  const [durumKanitlari, setDurumKanitlari] = useState<DurumKaniti[]>(() =>
-    ilan
-      ? durumKanitlariniTemizle(ilan.durumKanitlari, urunDurumAlanlari(ilan), ilan.ozellikler ?? {}, [
-          ilan.gorsel,
-          ...(ilan.fotografler ?? []),
-        ])
-      : [],
-  );
+  const [guvenliAlisveris, setGuvenliAlisveris] = useState(ilan?.guvenliAlisveris?.etkin ?? false);
+  const [kargoBoyutu, setKargoBoyutu] = useState<KargoBoyutu | ''>(ilan?.guvenliAlisveris?.kargoBoyutu ?? '');
   const [hata, setHata] = useState('');
   const [alanHatalari, setAlanHatalari] = useState<Record<string, string>>({});
   const [calisiyor, setCalisiyor] = useState(false);
@@ -206,14 +206,8 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
   const isIlani = kategori === 'is-ilanlari';
   const hizmetIlani = kategori === 'hizmetler';
   const urunIlani = urunKategorisiMi(kategori);
-  const adimlar = [
-    'Kategori',
-    'Fotoğraf & video',
-    'İlan bilgileri',
-    ...(urunIlani ? ['Ürün durumu'] : []),
-    'Önizleme',
-  ];
-  const durumAdimi = urunIlani ? 4 : 0;
+  const adimlar = ['Kategori', 'Fotoğraf & video', 'İlan bilgileri', 'Önizleme'];
+  const kargoluSatisUygun = !!kategori && guvenliAlisveriseUygun({ kategori });
   const onizlemeAdimi = adimlar.length;
   const fotografGerekli = !isIlani;
   const fiyatSecimiVar = isIlani || hizmetIlani;
@@ -268,28 +262,12 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     () => (kategori ? modelOzellikleri({ kategori, altKategori, marka, model }) : undefined),
     [kategori, altKategori, marka, model],
   );
-  const durumAlanlari = useMemo(
-    () => (kategori ? urunDurumAlanlari({ kategori, altKategori, marka, model }) : []),
-    [kategori, altKategori, marka, model],
-  );
-  const durumAdlari = useMemo(() => new Set(durumAlanlari.map((alan) => alan.ad)), [durumAlanlari]);
   useEffect(() => {
     setOzellikler((onceki) => {
       const yeni = ozellikleriTemizle(teknikAlanlar, onceki);
       return JSON.stringify(yeni) === JSON.stringify(onceki) ? onceki : yeni;
     });
   }, [teknikAlanlar]);
-  useEffect(() => {
-    setDurumKanitlari((onceki) => {
-      const yeni = durumKanitlariniTemizle(
-        onceki,
-        durumAlanlari,
-        ozellikler,
-        fotograflar.map((foto) => foto.uri),
-      );
-      return JSON.stringify(yeni) === JSON.stringify(onceki) ? onceki : yeni;
-    });
-  }, [durumAlanlari, ozellikler, fotograflar]);
 
   function kategoriSec(deger: string) {
     const yeni = deger as Kategori;
@@ -302,6 +280,8 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     setDigerModel('');
     setOzellikler({});
     setFiyatGorusulur(false);
+    setGuvenliAlisveris(false);
+    setKargoBoyutu('');
     setHata('');
   }
   function altKategoriSec(deger: string) {
@@ -353,9 +333,9 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     if (modelGirisi && model === 'diger' && digerModel.trim().length < 2) return 'Ürünün modelini yaz.';
     return '';
   }
-  function ozellikleriDenetle(urunDurumu = false) {
+  function ozellikleriDenetle() {
     const hatalar: Record<string, string> = {};
-    for (const alan of teknikAlanlar.filter((alan) => durumAdlari.has(alan.ad) === urunDurumu)) {
+    for (const alan of teknikAlanlar) {
       const deger = ozellikler[alan.ad];
       if (alan.sayisal && deger && Number(deger) > (alan.enCok ?? Number.MAX_SAFE_INTEGER))
         hatalar[alan.ad] = `${alan.ad} en fazla ${alan.enCok?.toLocaleString('tr-TR')} olabilir.`;
@@ -376,6 +356,8 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
       hatalar.fiyat = '1 TL ile 999.999.999 TL arasında bir fiyat yaz.';
     if (!seciliKonum.il) hatalar.il = 'İlanın bulunduğu ili seç.';
     if (!seciliKonum.ilce) hatalar.ilce = 'İlanın bulunduğu ilçeyi seç.';
+    if (kargoluSatisUygun && guvenliAlisveris && !kargoBoyutuGecerli(kargoBoyutu))
+      hatalar.kargoBoyutu = 'Kargoya vereceğin paketin boyutunu seç.';
     if (aciklama.trim().length < 20)
       hatalar.aciklama = 'İlanın hakkında en az 20 karakterlik bir açıklama yaz.';
     return { ...hatalar, ...ozellikleriDenetle() };
@@ -395,14 +377,6 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
     }
     if (adim === 3) {
       const hatalar = bilgileriDenetle();
-      setAlanHatalari(hatalar);
-      if (Object.keys(hatalar).length) {
-        setHata('İşaretli alanları kontrol edip devam edebilirsin.');
-        return;
-      }
-    }
-    if (adim === durumAdimi) {
-      const hatalar = ozellikleriDenetle(true);
       setAlanHatalari(hatalar);
       if (Object.keys(hatalar).length) {
         setHata('İşaretli alanları kontrol edip devam edebilirsin.');
@@ -501,12 +475,6 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
       setAlanHatalari(bilgiHatalari);
       return;
     }
-    const durumHatalari = ozellikleriDenetle(true);
-    if (Object.keys(durumHatalari).length) {
-      adimaGit(durumAdimi);
-      setAlanHatalari(durumHatalari);
-      return;
-    }
     islemSuruyor.current = true;
     setCalisiyor(true);
     setHata('');
@@ -544,15 +512,10 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
             : fotografKayitlari[0]
           : undefined,
         ozellikler: ozellikleriTemizle(teknikAlanlar, ozellikler),
-        durumKanitlari: durumKanitlariniTemizle(
-          durumKanitlari,
-          durumAlanlari,
-          ozellikler,
-          fotograflar.map((foto) => foto.uri),
-        ).map((kanit) => ({
-          ...kanit,
-          gorsel: fotografKayitlari[fotograflar.findIndex((foto) => foto.uri === kanit.gorsel)]!,
-        })),
+        guvenliAlisveris:
+          kargoluSatisUygun && guvenliAlisveris && kargoBoyutuGecerli(kargoBoyutu)
+            ? { etkin: true, kargoBoyutu }
+            : undefined,
         satici: profil.ad,
         telefon: telefonuNormallestir(telefon),
         telefonGoster: Boolean(telefonuNormallestir(telefon) && telefonGoster),
@@ -709,7 +672,6 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         'Hangi kategoride ilan vereceksin?',
                         isIlani ? 'Çalışma ortamını göster.' : 'İlanına fotoğraf ekle.',
                         isIlani ? 'İşin koşullarını anlat.' : 'İlanın ayrıntılarını tamamla.',
-                        ...(urunIlani ? ['Ürünün durumunu belirt.'] : []),
                         'Son bir kez gözden geçir.',
                       ][adim - 1]
                     }
@@ -724,11 +686,6 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         isIlani
                           ? 'Sorumlulukları, aranan nitelikleri ve çalışma koşullarını açıkça belirt.'
                           : 'Açık bir başlık ve ayrıntılı bir açıklama karar vermeyi kolaylaştırır.',
-                        ...(urunIlani
-                          ? [
-                              'Kullanım izlerini ve bilinen kusurları paylaş. Emin olmadığın bilgileri boş bırakabilirsin.',
-                            ]
-                          : []),
                         'Bir şey eksikse ilgili bölüme dönüp düzenleyebilirsin.',
                       ][adim - 1]
                     }
@@ -1072,6 +1029,18 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         </View>
                       </View>
                     ) : null}
+                    {urunIlani ? (
+                      <View style={{ gap: 10 }}>
+                        <Yazi style={s.etiket}>Durumu</Yazi>
+                        <View style={s.secenekler}>
+                          {(['İkinci el', 'Yeni gibi', 'Sıfır'] as const).map((deger) => (
+                            <Secenek key={deger} secili={durum === deger} onPress={() => setDurum(deger)}>
+                              {deger}
+                            </Secenek>
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
                     <View style={{ flexDirection: mobil ? 'column' : 'row', gap: 18 }}>
                       <View style={{ flex: 1, minWidth: 0 }}>
                         <SecimAlani
@@ -1174,7 +1143,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         ) : null}
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
                           {teknikAlanlar
-                            .filter((alan) => !durumAdlari.has(alan.ad) && !alan.sabit)
+                            .filter((alan) => !alan.sabit)
                             .map((alan) => (
                               <View
                                 key={alan.ad}
@@ -1237,6 +1206,20 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                     <Yazi style={{ fontSize: 11, color: renk.gri, marginTop: -15, textAlign: 'right' }}>
                       {aciklama.length} / 2000
                     </Yazi>
+                    {kargoluSatisUygun ? (
+                      <TeslimatAlanlari
+                        etkin={guvenliAlisveris}
+                        kargoBoyutu={kargoBoyutu}
+                        fiyat={sayisalFiyat}
+                        hata={alanHatalari.kargoBoyutu}
+                        disabled={calisiyor}
+                        degistir={(deger) => {
+                          setGuvenliAlisveris(deger.etkin);
+                          setKargoBoyutu(deger.kargoBoyutu);
+                          hataSil('kargoBoyutu');
+                        }}
+                      />
+                    ) : null}
                     <View style={{ gap: 14, borderTopWidth: 1, borderTopColor: renk.cizgi, paddingTop: 20 }}>
                       <Yazi style={s.etiket}>İletişim tercihi</Yazi>
                       <TelefonBilgisiAlanlari
@@ -1275,42 +1258,6 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                         </View>
                         <Yazi style={{ fontSize: 12, flex: 1 }}>Takas tekliflerini değerlendirebilirim.</Yazi>
                       </HareketliBas>
-                    ) : null}
-                  </View>
-                ) : null}
-
-                {adim === durumAdimi ? (
-                  <View style={{ gap: 24 }}>
-                    {urunIlani ? (
-                      <View style={{ gap: 10 }}>
-                        <Yazi style={s.etiket}>Genel durum</Yazi>
-                        <View style={s.secenekler}>
-                          {(['İkinci el', 'Yeni gibi', 'Sıfır'] as const).map((d) => (
-                            <Secenek key={d} secili={durum === d} onPress={() => setDurum(d)}>
-                              {d}
-                            </Secenek>
-                          ))}
-                        </View>
-                      </View>
-                    ) : null}
-                    {durumAlanlari.length ? (
-                      <UrunDurumuAlanlari
-                        alanlar={durumAlanlari}
-                        degerler={ozellikler}
-                        degistir={(ad, deger) => {
-                          setOzellikler((onceki) => ({ ...onceki, [ad]: deger }));
-                          hataSil(ad);
-                        }}
-                        kanitlar={durumKanitlari}
-                        kanitDegistir={(ad, kanit) =>
-                          setDurumKanitlari((onceki) => [
-                            ...onceki.filter((kayit) => kayit.alan !== ad),
-                            ...(kanit ? [kanit] : []),
-                          ])
-                        }
-                        fotograflar={fotograflar.map((foto) => foto.uri)}
-                        hatalar={alanHatalari}
-                      />
                     ) : null}
                   </View>
                 ) : null}
@@ -1376,42 +1323,26 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                           : 'Cep telefonu ilanda gösterilmez.'}
                       </Yazi>
                     </View>
-                    {urunIlani ? (
-                      <View
-                        style={{ gap: 10, paddingTop: 18, borderTopWidth: 1, borderTopColor: renk.cizgi }}
-                      >
+                    {urunIlani ? <Yazi style={{ fontSize: 13 }}>Durumu: {durum}</Yazi> : null}
+                    {kargoluSatisUygun && guvenliAlisveris && kargoBoyutuGecerli(kargoBoyutu) ? (
+                      <View style={{ gap: 8, borderTopWidth: 1, borderTopColor: renk.cizgi, paddingTop: 16 }}>
                         <View style={ortak.aralikli}>
-                          <Yazi style={s.etiket}>Ürün durumu</Yazi>
-                          <Duzenle onPress={() => adimaGit(durumAdimi)} etiket="Ürün durumunu düzenle" />
+                          <Yazi style={s.etiket}>Kargo ve satış</Yazi>
+                          <Duzenle onPress={() => adimaGit(3)} etiket="Kargo bilgilerini düzenle" />
                         </View>
-                        <Yazi style={{ fontSize: 13 }}>{durum}</Yazi>
-                        {durumAlanlari
-                          .filter((alan) => ozellikler[alan.ad])
-                          .map((alan) => (
-                            <View
-                              key={alan.ad}
-                              style={[ortak.aralikli, { alignItems: 'flex-start', gap: 12 }]}
-                            >
-                              <Yazi style={{ fontSize: 12, color: renk.gri, flex: 1 }}>{alan.ad}</Yazi>
-                              <Yazi style={{ fontSize: 12, flex: 1, textAlign: 'right' }}>
-                                {ozellikler[alan.ad]}
-                                {alan.birim ? ` ${alan.birim}` : ''}
-                              </Yazi>
-                            </View>
-                          ))}
-                        {durumKanitlari.length ? (
-                          <Yazi style={{ fontSize: 12, color: renk.gri }}>
-                            {durumKanitlari.length} bilgiye fotoğraf eklendi.
-                          </Yazi>
-                        ) : null}
+                        <Yazi style={{ fontSize: 13 }}>
+                          Param Güvende · {alisverisOzeti(sayisalFiyat, kargoBoyutu)?.kargo.ad}
+                        </Yazi>
+                        <Yazi style={{ color: renk.gri, fontSize: 12 }}>
+                          Kargo ve %5 hizmet bedeli dahil alıcı toplamı:{' '}
+                          {alisverisParasi(alisverisOzeti(sayisalFiyat, kargoBoyutu)?.toplam ?? 0)}
+                        </Yazi>
                       </View>
                     ) : null}
-                    {Object.entries(ozellikler).some(
-                      ([ad, deger]) => !durumAdlari.has(ad) && deger.trim(),
-                    ) ? (
+                    {Object.entries(ozellikler).some(([ad, deger]) => deger.trim()) ? (
                       <View style={{ gap: 8 }}>
                         {Object.entries(ozellikler)
-                          .filter(([ad, deger]) => !durumAdlari.has(ad) && deger.trim())
+                          .filter(([ad, deger]) => deger.trim())
                           .map(([ad, deger]) => (
                             <View key={ad} style={[ortak.aralikli, { alignItems: 'flex-start', gap: 12 }]}>
                               <Yazi style={{ fontSize: 12, color: renk.gri, flex: 1 }}>{ad}</Yazi>

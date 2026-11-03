@@ -1,0 +1,55 @@
+.degerlendirme-puani {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  color: var(--renk-murekkep);
+  font: inherit;
+}
+.degerlendirme-puani legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.degerlendirme-yildizlari {
+  display: flex;
+  gap: 6px;
+}
+.degerlendirme-yildizi {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.degerlendirme-yildizi:has(input:checked) {
+  background: var(--renk-acik);
+}
+.degerlendirme-yildizi:has(input:focus-visible) {
+  outline: 2px solid var(--renk-murekkep);
+  outline-offset: 2px;
+}
+.degerlendirme-yildizi input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.degerlendirme-puani:disabled .degerlendirme-yildizi {
+  cursor: default;
+}
+.degerlendirme-puani p {
+  min-height: 22px;
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 22px;
+  color: var(--renk-gri);
+}

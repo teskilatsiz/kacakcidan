@@ -1,9 +1,9 @@
-import { View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { HareketliBas } from './Hareketli';
 import { Yazi } from './Temel';
 import { kalin, useTema } from '../tasarim/tema';
 
-export type DetaySekmesi = 'aciklama' | 'ozellikler' | 'sorular';
+export type DetaySekmesi = 'aciklama' | 'ozellikler' | 'konum' | 'sorular';
 export type DetaySekmeleriProps = {
   secili: DetaySekmesi;
   degistir: (sekme: DetaySekmesi) => void;
@@ -13,6 +13,7 @@ export type DetaySekmeleriProps = {
 export const detaySekmeleri = [
   { id: 'aciklama', ad: 'Açıklama' },
   { id: 'ozellikler', ad: 'Özellikler' },
+  { id: 'konum', ad: 'Konum' },
   { id: 'sorular', ad: 'Soru & cevap' },
 ] as const;
 
@@ -20,16 +21,17 @@ export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: 
   const { renk } = useTema();
 
   return (
-    <View
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
       accessibilityRole="tablist"
       accessibilityLabel="İlan bilgileri"
       style={{
-        flexDirection: 'row',
-        gap: 20,
+        flexGrow: 0,
         borderBottomWidth: 1,
         borderColor: renk.cizgi,
-        flexWrap: 'wrap',
       }}
+      contentContainerStyle={{ flexDirection: 'row', gap: 16 }}
     >
       {detaySekmeleri
         .filter((sekme) => ozellikler || sekme.id !== 'ozellikler')
@@ -42,6 +44,7 @@ export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: 
             onPress={() => degistir(sekme.id)}
             style={{
               minHeight: 48,
+              flexShrink: 0,
               justifyContent: 'center',
               borderBottomWidth: 2,
               borderColor: secili === sekme.id ? renk.murekkep : 'transparent',
@@ -51,6 +54,7 @@ export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: 
               style={{
                 fontFamily: kalin,
                 fontWeight: '700',
+                fontSize: 13,
                 color: secili === sekme.id ? renk.murekkep : renk.gri,
               }}
             >
@@ -58,6 +62,6 @@ export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: 
             </Yazi>
           </HareketliBas>
         ))}
-    </View>
+    </ScrollView>
   );
 }

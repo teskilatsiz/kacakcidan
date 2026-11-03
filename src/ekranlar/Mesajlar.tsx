@@ -24,6 +24,7 @@ import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { useGorunurAlan } from '../tasarim/gorunurAlan';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
 import { IskeletParcasi, YuklemeIskeleti } from '../bilesenler/YuklemeIskeleti';
+import { AlisverisBaslat } from '../bilesenler/AlisverisIslemleri';
 
 export default function Mesajlar() {
   const { renk, koyu } = useTema();
@@ -458,6 +459,7 @@ export default function Mesajlar() {
                   }
                   accessibilityLabel={`${kisi.ad} ile görüşme`}
                 >
+                  {urunIlani && <AlisverisBaslat ilanId={ilan.id} />}
                   <View style={s.tarih}>
                     <View style={s.tarihCizgi} />
                     <Yazi style={{ fontSize: 11, color: renk.gri }}>Görüşmenin başlangıcı</Yazi>

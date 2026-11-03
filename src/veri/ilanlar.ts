@@ -4,6 +4,7 @@ import { kategoriler, type Kategori } from './anaKategoriler.ts';
 import { ekIlanlar } from './ekIlanlar.ts';
 import type { IlanKaldirmaNedeni } from './ilanYonetimi.ts';
 import type { DurumKaniti } from './urunDurumu.ts';
+import type { GuvenliAlisverisAyari } from './guvenliAlisveris.ts';
 import { modelOzellikleriniUygula } from './modelOzellikleri.ts';
 
 export { kategoriler, type Kategori } from './anaKategoriler.ts';
@@ -37,6 +38,7 @@ export interface Ilan {
   videoPoster?: string;
   ozellikler?: Record<string, string>;
   durumKanitlari?: DurumKaniti[];
+  guvenliAlisveris?: GuvenliAlisverisAyari;
 }
 
 const gorsel = (ad: string) => `/gorseller/${ad}.webp`;
@@ -44,6 +46,7 @@ const gorsel = (ad: string) => `/gorseller/${ad}.webp`;
 const vitrinIlanlari: Ilan[] = [
   {
     id: 'iphone-15-pro',
+    guvenliAlisveris: { etkin: true, kargoBoyutu: 'kucuk' },
     baslik: 'iPhone 15 Pro 256 GB',
     fiyat: 32000,
     kategori: 'telefon',
@@ -59,6 +62,7 @@ const vitrinIlanlari: Ilan[] = [
   },
   {
     id: 'playstation-5',
+    guvenliAlisveris: { etkin: true, kargoBoyutu: 'buyuk' },
     baslik: 'PlayStation 5 • Diskli',
     fiyat: 12750,
     kategori: 'oyun',
@@ -130,6 +134,7 @@ const vitrinIlanlari: Ilan[] = [
   },
   {
     id: 'macbook-air',
+    guvenliAlisveris: { etkin: true, kargoBoyutu: 'orta' },
     baslik: 'MacBook Air M2 • 16/256 GB',
     fiyat: 28500,
     kategori: 'bilgisayar',

@@ -3,7 +3,6 @@ import { ekOzellikAlanlari } from './ekOzellikler.ts';
 import { kategoriAgaci } from './kategoriler.ts';
 import { ilanOzellikAlanlari } from './ilanOzellikleri.ts';
 import { urunKategorisiMi } from './anaKategoriler.ts';
-import { satisAlanlari, urunDurumAlanlari } from './urunDurumu.ts';
 import { modelOzellikleri } from './modelOzellikleri.ts';
 
 export type OzellikAlani = {
@@ -492,15 +491,21 @@ function telefonAlanlari({ altKategori, marka, model = '' }: UrunSecimi): Ozelli
     ...elektronikBelgeleri,
   ];
   if (marka === 'apple')
-    alanlar.splice(
-      2,
-      0,
-      alan('Pil sağlığı', [
+    alanlar.splice(2, 0, {
+      ...alan('Pil sağlığı', [
         ...Array.from({ length: 51 }, (_, i) => `%${100 - i}`),
         '%50 altında',
         'Bilinmiyor',
       ]),
-    );
+      filtreSecenekleri: [
+        { id: 'aralik:95:100', ad: 'En az %95' },
+        { id: 'aralik:90:100', ad: 'En az %90' },
+        { id: 'aralik:85:100', ad: 'En az %85' },
+        { id: 'aralik:80:100', ad: 'En az %80' },
+        { id: 'aralik:0:79', ad: '%80 altında' },
+        { id: 'Bilinmiyor', ad: 'Bilinmiyor' },
+      ],
+    });
   if (altKategori === 'yenilenmis-telefon')
     alanlar.push(
       alan('Yenileme belgesi', ['Var', 'Yok']),
@@ -1029,7 +1034,7 @@ function oyunAlanlari({ altKategori, marka, model = '' }: UrunSecimi): OzellikAl
     return [alan('Kullanım', ['PS5 uzaktan oynatma']), renk, ...elektronikBelgeleri];
   const kapasiteler: Record<string, string[]> = {
     'playstation-5': ['825 GB', '1 TB'],
-    'playstation-5-slim': ['1 TB'],
+    'playstation-5-slim': ['825 GB', '1 TB'],
     'playstation-5-pro': ['2 TB'],
     'playstation-4': ['500 GB', '1 TB'],
     'playstation-4-pro': ['1 TB', '2 TB'],
@@ -2064,11 +2069,25 @@ export function ozellikAlanlari(secim: UrunSecimi): OzellikAlani[] {
           secenekler: [deger],
           sabit: deger,
         })),
-        ...urunDurumAlanlari(secim),
-        ...(urunKategorisiMi(secim.kategori) ? satisAlanlari() : []),
+        ...(urunKategorisiMi(secim.kategori)
+          ? [
+              alan('Satıcı türü', ['Bireysel', 'Mağaza']),
+              alan('Teslimat', ['Elden teslim', 'Kargo', 'Elden teslim veya kargo']),
+            ]
+          : []),
       ].map((alan) => [alan.ad, alan]),
     ).values(),
-  ];
+  ].map((alan) =>
+    // DDR4 / DDR5 ürün dalı zaten seçilmişse kullanıcıdan aynı bilgiyi tekrar isteme.
+    secim.kategori === 'bilgisayar' &&
+    secim.altKategori === 'bilgisayar-parcalari' &&
+    secim.marka === 'ram' &&
+    ['ddr4', 'ddr5'].includes(secim.model ?? '') &&
+    alan.ad === 'Bellek türü' &&
+    alan.secenekler.length === 1
+      ? { ...alan, sabit: alan.secenekler[0] }
+      : alan,
+  );
 }
 
 /** Tür seçilmeden yalnızca o dalın bütün ürünlerinde anlamlı olan filtreler gösterilir. */

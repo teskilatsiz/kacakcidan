@@ -352,7 +352,7 @@ export default function Kesfet() {
         <SecimAlani
           etiket="İl"
           deger={seciliKonum.il}
-          ipucu="Türkiye"
+          ipucu="Tüm iller"
           secenekler={iller}
           degistir={(il) => konumSec(konumuBirlestir(il))}
         />

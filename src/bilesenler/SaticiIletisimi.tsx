@@ -12,6 +12,8 @@ import { telefonuGoster, telefonuNormallestir } from '../veri/telefon';
 export function SaticiIletisimi({ telefon, gorunur }: { telefon?: string; gorunur: boolean }) {
   const { renk } = useTema();
   const [hata, setHata] = useState('');
+  const [genislik, setGenislik] = useState(0);
+  const dar = genislik > 0 && genislik < 230;
   const numara = telefonuNormallestir(telefon);
   if (!gorunur || !numara) return null;
   async function ara() {
@@ -32,7 +34,7 @@ export function SaticiIletisimi({ telefon, gorunur }: { telefon?: string; gorunu
     }
   }
   return (
-    <View style={{ gap: 7, minWidth: 0 }}>
+    <View onLayout={(olay) => setGenislik(olay.nativeEvent.layout.width)} style={{ gap: 7, minWidth: 0 }}>
       <HareketliBas
         accessibilityRole="button"
         accessibilityLabel={`${telefonuGoster(numara)} numarasından ilan sahibini ara`}
@@ -50,11 +52,23 @@ export function SaticiIletisimi({ telefon, gorunur }: { telefon?: string; gorunu
         }}
       >
         <Phone size={16} color={renk.murekkep} style={{ flexShrink: 0 }} />
-        <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
-          <Yazi style={{ fontSize: 13, lineHeight: 20, fontWeight: '600' }}>{telefonuGoster(numara)}</Yazi>
-          <Yazi style={{ fontSize: 11, lineHeight: 17, color: renk.gri }}>Telefonla ara</Yazi>
-        </View>
-        <ArrowUpRight size={14} color={renk.gri} style={{ flexShrink: 0 }} />
+        {!dar && <Yazi style={{ fontSize: 12, lineHeight: 19, color: renk.gri, flexShrink: 0 }}>Cep</Yazi>}
+        <Yazi
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.82}
+          style={{
+            flex: 1,
+            minWidth: 0,
+            fontSize: dar ? 12 : 13,
+            lineHeight: 20,
+            fontWeight: '600',
+            textAlign: 'right',
+          }}
+        >
+          {telefonuGoster(numara).replace(/ /g, '\u00a0')}
+        </Yazi>
+        {!dar && <ArrowUpRight size={14} color={renk.gri} style={{ flexShrink: 0 }} />}
       </HareketliBas>
       {!!hata && (
         <View style={{ gap: 8 }}>
@@ -69,7 +83,6 @@ export function SaticiIletisimi({ telefon, gorunur }: { telefon?: string; gorunu
           </Buton>
         </View>
       )}
-      <Yazi style={{ fontSize: 11, lineHeight: 18, color: renk.gri }}>İlan sahibinin paylaştığı numara</Yazi>
     </View>
   );
 }

@@ -1,0 +1,155 @@
+:root {
+  color-scheme: light;
+  --zemin: #ffffff;
+  --yazi: #17191b;
+  --cizgi: #dedede;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#harita {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--zemin);
+  color: var(--yazi);
+  font:
+    14px system-ui,
+    sans-serif;
+}
+#harita {
+  background: #eceee9;
+}
+.leaflet-tile-pane {
+  filter: saturate(0.55) contrast(0.96);
+}
+.leaflet-container {
+  font: inherit;
+}
+.leaflet-bar {
+  border: 1px solid var(--cizgi);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px #00000014;
+}
+.leaflet-bar a,
+.haritaya-don {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  background: var(--zemin);
+  color: var(--yazi);
+  border-color: var(--cizgi);
+}
+.leaflet-bar a:hover,
+.haritaya-don:hover {
+  background: var(--zemin);
+  color: var(--yazi);
+}
+.leaflet-bar a.leaflet-disabled {
+  background: var(--zemin);
+  color: #808080;
+}
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  font-size: 25px;
+  font-weight: 500;
+}
+.leaflet-container .leaflet-control-attribution {
+  max-width: calc(100vw - 30px);
+  padding: 3px 7px;
+  background: var(--zemin);
+  color: var(--yazi);
+  font-size: 10px;
+  line-height: 14px;
+}
+.leaflet-control-attribution a {
+  color: inherit;
+}
+.haritaya-don {
+  display: grid;
+  place-items: center;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+.haritaya-don svg {
+  width: 20px;
+  height: 20px;
+}
+button:focus-visible,
+.leaflet-bar a:focus-visible,
+#harita:focus-visible {
+  outline: 2px solid #b78c00;
+  outline-offset: -3px;
+}
+#bekleme,
+#hata {
+  position: absolute;
+  inset: 0;
+  z-index: 1001;
+  display: grid;
+  place-items: center;
+  background: var(--zemin);
+}
+#bekleme span {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--cizgi);
+  border-top-color: var(--yazi);
+  border-radius: 50%;
+  animation: don 0.8s linear infinite;
+}
+#hata {
+  padding: 24px;
+  text-align: center;
+}
+#hata div {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+#hata button {
+  border: 0;
+  border-radius: 7px;
+  background: #ffd12f;
+  color: #17191b;
+  padding: 12px 18px;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  min-height: 44px;
+}
+[hidden] {
+  display: none !important;
+}
+@keyframes don {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #bekleme span {
+    animation: none;
+  }
+}
+
+[data-tema='koyu'] {
+  color-scheme: dark;
+  --zemin: #1b1e22;
+  --yazi: #f2f3f5;
+  --cizgi: #393d44;
+}
+[data-tema='koyu'] #harita {
+  background: #292d31;
+}
+[data-tema='koyu'] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.8) contrast(0.9);
+}
+[data-tema='koyu'] .leaflet-bar a.leaflet-disabled {
+  color: #828894;
+}

@@ -37,8 +37,24 @@
     opacity: 1;
   }
 }
+@media (max-width: 699px) {
+  .pazar-pencere[open]:has([data-karsilastirma-alt-penceresi]) {
+    animation: karsilastirma-alt-pencere 220ms ease-out;
+  }
+}
+@keyframes karsilastirma-alt-pencere {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  [data-karsilastirma-onerisi] {
+  [data-karsilastirma-onerisi],
+  .pazar-pencere[open]:has([data-karsilastirma-alt-penceresi]) {
     animation: none;
   }
 }

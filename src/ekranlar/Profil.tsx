@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import Camera from 'lucide-react-native/icons/camera';
 import Eye from 'lucide-react-native/icons/eye';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
@@ -13,6 +13,7 @@ import Settings from 'lucide-react-native/icons/settings';
 import UserRound from 'lucide-react-native/icons/user-round';
 import EyeOff from 'lucide-react-native/icons/eye-off';
 import RotateCcw from 'lucide-react-native/icons/rotate-ccw';
+import ShoppingBag from 'lucide-react-native/icons/shopping-bag';
 import { Gorsel } from '../bilesenler/Gorsel';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { Baslik, BosDurum, Buton, Pencere, Yazi } from '../bilesenler/Temel';
@@ -27,6 +28,7 @@ import { gorselKaynagi } from '../veri/gorseller';
 import { ilanBedeli, ilanYolu } from '../veri/ilanlar';
 import { ilanKaldirmaNedenleri, type IlanKaldirmaNedeni } from '../veri/ilanYonetimi';
 import { saticiYolu } from '../veri/saticilar';
+import { AlisverisIslemleri } from '../bilesenler/AlisverisIslemleri';
 
 export default function Profil() {
   const { renk } = useTema();
@@ -44,12 +46,17 @@ export default function Profil() {
     ilanIstatistikleri,
     sorular,
     haberVer,
+    alisverisler,
   } = usePazar();
   const { mobil, dar, bosluk } = useEkran();
   const yanPanel = !dar;
   const router = useRouter();
+  const { bolum } = useLocalSearchParams<{ bolum?: string }>();
   const [duzenle, setDuzenle] = useState(false);
-  const [sekme, setSekme] = useState<'ilanlar' | 'favoriler'>('ilanlar');
+  const [sekme, setSekme] = useState<'ilanlar' | 'favoriler' | 'alisverisler'>('ilanlar');
+  useEffect(() => {
+    if (bolum === 'alisverisler') setSekme('alisverisler');
+  }, [bolum]);
   const [silinecek, setSilinecek] = useState('');
   const [yayinFiltresi, setYayinFiltresi] = useState<'yayinda' | 'kaldirildi'>('yayinda');
   const [kaldirmaNedeni, setKaldirmaNedeni] = useState<IlanKaldirmaNedeni>('satildi');
@@ -274,29 +281,45 @@ export default function Profil() {
           </View>
 
           <View style={[{ gap: 18 }, yanPanel ? { flex: 1, minWidth: 0 } : { width: '100%' }]}>
-            <View style={s.sekmeler} accessibilityLabel="Hesap içeriği">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ flexGrow: 0 }}
+              contentContainerStyle={[s.sekmeler, mobil && { flexGrow: 1, gap: 0 }]}
+              accessibilityLabel="Hesap içeriği"
+            >
               {[
                 { id: 'ilanlar' as const, ad: 'İlanlarım', sayi: tumBenimkiler.length, simge: Package },
                 { id: 'favoriler' as const, ad: 'Favorilerim', sayi: kaydedilen.length, simge: Heart },
+                {
+                  id: 'alisverisler' as const,
+                  ad: 'Alışverişlerim',
+                  sayi: alisverisler.filter(
+                    (islem) => islem.aliciId === oturum.id || islem.saticiId === oturum.id,
+                  ).length,
+                  simge: ShoppingBag,
+                },
               ].map(({ id, ad, sayi, simge: Simge }) => (
                 <HareketliBas
                   key={id}
                   accessibilityRole="button"
-                  accessibilityLabel={`${ad}, ${sayi} ilan`}
+                  accessibilityLabel={`${ad}, ${sayi} ${id === 'alisverisler' ? 'işlem' : 'ilan'}`}
                   accessibilityState={{ selected: sekme === id }}
                   onPress={() => setSekme(id)}
                   style={[
                     s.sekme,
-                    mobil && { flex: 1, paddingHorizontal: 7 },
+                    mobil && { flex: 1, minWidth: 0, paddingHorizontal: 4 },
                     sekme === id ? s.seciliSekme : null,
                   ]}
                 >
-                  <Simge size={16} color={sekme === id ? renk.murekkep : renk.gri} />
-                  <Yazi style={{ fontSize: 13, fontWeight: sekme === id ? '700' : '500' }}>{ad}</Yazi>
-                  <Yazi style={s.sayac}>{sayi}</Yazi>
+                  {!mobil && <Simge size={16} color={sekme === id ? renk.murekkep : renk.gri} />}
+                  <Yazi style={{ fontSize: mobil ? 12 : 13, fontWeight: sekme === id ? '700' : '500' }}>
+                    {ad}
+                  </Yazi>
+                  {!mobil && <Yazi style={s.sayac}>{sayi}</Yazi>}
                 </HareketliBas>
               ))}
-            </View>
+            </ScrollView>
             {sekme === 'ilanlar' && tumBenimkiler.length > 0 && (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {[
@@ -339,7 +362,9 @@ export default function Profil() {
                 ))}
               </View>
             )}
-            {sekme === 'ilanlar' && benimkiler.length > 0 ? (
+            {sekme === 'alisverisler' ? (
+              <AlisverisIslemleri />
+            ) : sekme === 'ilanlar' && benimkiler.length > 0 ? (
               <View style={s.ilanListesi}>
                 {benimkiler.map((ilan, sira) => (
                   <View key={ilan.id} style={[s.ilanSatiri, sira > 0 && s.ilanAyirici]}>

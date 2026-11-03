@@ -61,6 +61,7 @@ export function Buton({
   simge,
   disabled,
   style,
+  yaziStili,
   testID,
 }: {
   children: ReactNode;
@@ -70,6 +71,7 @@ export function Buton({
   simge?: ReactNode;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  yaziStili?: TextProps['style'];
   testID?: string;
 }) {
   const { renk } = useTema();
@@ -96,11 +98,14 @@ export function Buton({
     >
       {dugmeSimgesi}
       <Yazi
-        style={{
-          fontFamily: kalin,
-          fontWeight: '700',
-          color: icerikRengi,
-        }}
+        style={[
+          {
+            fontFamily: kalin,
+            fontWeight: '700',
+            color: icerikRengi,
+          },
+          yaziStili,
+        ]}
       >
         {children}
       </Yazi>

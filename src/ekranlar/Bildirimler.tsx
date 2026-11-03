@@ -8,6 +8,8 @@ import Heart from 'lucide-react-native/icons/heart';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Package from 'lucide-react-native/icons/package';
 import Tag from 'lucide-react-native/icons/tag';
+import ShoppingBag from 'lucide-react-native/icons/shopping-bag';
+import Star from 'lucide-react-native/icons/star';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { HesapGerekli } from '../bilesenler/HesapGerekli';
 import { HareketliBas } from '../bilesenler/Hareketli';
@@ -15,6 +17,7 @@ import { Baslik, BosDurum, Buton, Yazi } from '../bilesenler/Temel';
 import { usePazar } from '../durum/Pazar';
 import type { Bildirim } from '../veri/ilanEtkilesimleri';
 import { ilanYolu } from '../veri/ilanlar';
+import { saticiYolu } from '../veri/saticilar';
 import { ortak, useEkran, useTema } from '../tasarim/tema';
 import { IskeletParcasi, YuklemeIskeleti } from '../bilesenler/YuklemeIskeleti';
 
@@ -30,6 +33,14 @@ export default function Bildirimler() {
 
   function ac(bildirim: Bildirim) {
     bildirimOku(bildirim.id);
+    if (bildirim.tur === 'alisveris') {
+      router.push({ pathname: '/profil', params: { bolum: 'alisverisler' } });
+      return;
+    }
+    if (bildirim.tur === 'degerlendirme' && bildirim.saticiId) {
+      router.push(saticiYolu(bildirim.saticiId));
+      return;
+    }
     const ilan = tumIlanlar.find((i) => i.id === bildirim.ilanId);
     if (!ilan) {
       haberVer('Bu ilan artık yayında değil.');
@@ -189,7 +200,11 @@ export default function Bildirimler() {
                     ? Heart
                     : bildirim.tur === 'fiyat'
                       ? Tag
-                      : Package;
+                      : bildirim.tur === 'alisveris'
+                        ? ShoppingBag
+                        : bildirim.tur === 'degerlendirme'
+                          ? Star
+                          : Package;
               return (
                 <HareketliBas
                   key={bildirim.id}

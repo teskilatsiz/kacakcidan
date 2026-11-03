@@ -18,7 +18,7 @@ export function TelefonBilgisiAlanlari({
   disabled?: boolean;
   ilan?: boolean;
 }) {
-  const { renk } = useTema();
+  const { renk, koyu } = useTema();
   const kimlik = useId();
   return (
     <View style={{ gap: 16, minWidth: 0 }}>
@@ -49,6 +49,7 @@ export function TelefonBilgisiAlanlari({
           </Yazi>
         </View>
         <Switch
+          {...(Platform.OS === 'web' ? { activeThumbColor: renk.sabitKoyu } : {})}
           ref={(oge) => {
             // React Native Web nativeID'yi dış kapsayıcıya verir; gerçek form girdisi de adlandırılır.
             if (Platform.OS === 'web' && oge) {
@@ -62,10 +63,11 @@ export function TelefonBilgisiAlanlari({
           value={telefonGoster}
           disabled={disabled}
           onValueChange={(deger) => degistir({ telefon, telefonGoster: deger })}
-          trackColor={{ false: renk.cizgi, true: renk.sari }}
-          thumbColor={renk.sabitKoyu}
-          ios_backgroundColor={renk.cizgi}
-          style={{ flexShrink: 0 }}
+          trackColor={{ false: koyu ? '#767b84' : '#d0d2d5', true: renk.sari }}
+          thumbColor={telefonGoster ? renk.sabitKoyu : renk.murekkep}
+          ios_backgroundColor={koyu ? '#767b84' : '#d0d2d5'}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={{ flexShrink: 0, ...(Platform.OS === 'web' ? { height: 26, width: 52 } : {}) }}
         />
       </View>
     </View>
