@@ -1,14 +1,12 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Link, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import SquareSplitHorizontal from 'lucide-react-native/icons/square-split-horizontal';
 import X from 'lucide-react-native/icons/x';
-import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right';
-import Check from 'lucide-react-native/icons/check';
 import { usePazar } from '../durum/Pazar';
 import { useSonBakilanIlan } from '../durum/useSonBakilanIlan';
-import { fiyatFarki, karsilastirmaSatirlari } from '../veri/ilanKarsilastirma';
-import { ilanBedeli, ilanYolu, para, type Ilan } from '../veri/ilanlar';
+import { karsilastirmaAdaylari } from '../veri/ilanKarsilastirma';
+import { ilanBedeli, type Ilan } from '../veri/ilanlar';
 import { gorselKaynagi } from '../veri/gorseller';
 import { useEkran, useTema } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
@@ -20,6 +18,7 @@ import '../tasarim/karsilastirma.web.css';
 
 // Aynı ilanın önerisi, bu oturumda yeniden açılmaz; karşılaştır düğmesi erişilebilir kalır.
 const gosterilenOneriler = new Set<string>();
+const KarsilastirmaIcerigi = lazy(() => import('./KarsilastirmaIcerigi'));
 
 function IlanOzeti({ ilan, ad, kompakt = false }: { ilan: Ilan; ad: string; kompakt?: boolean }) {
   const { renk } = useTema();
@@ -60,39 +59,60 @@ function IlanOzeti({ ilan, ad, kompakt = false }: { ilan: Ilan; ad: string; komp
 
 export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
   const { renk } = useTema();
-  const { mobil, genislik, yukseklik } = useEkran();
-  const { tumIlanlar, oturum, haberVer } = usePazar();
+  const { mobil, kompakt, yukseklik } = useEkran();
+  const { tumIlanlar, oturum, haberVer, bildirim } = usePazar();
   const { onceki, temizle } = useSonBakilanIlan(ilan, tumIlanlar, oturum?.id);
   const oneriAnahtari = `${oturum?.id ?? 'misafir'}:${ilan.id}`;
   const [acik, setAcik] = useState(false);
   const [oneriAcik, setOneriAcik] = useState(false);
   const [ertelendi, setErtelendi] = useState(() => gosterilenOneriler.has(oneriAnahtari));
-  const [yalnizFarklar, setYalnizFarklar] = useState(false);
+  const [secimler, setSecimler] = useState<[string | undefined, string | undefined]>([ilan.id, undefined]);
+  const elleDegisti = useRef(false);
   const klavyeAcik = useKlavyeAcik();
   const klavye = useRef(klavyeAcik);
   klavye.current = klavyeAcik;
-  const satirlar = useMemo(() => (onceki ? karsilastirmaSatirlari(onceki, ilan) : []), [onceki, ilan]);
+  const bildirimAcik = useRef(!!bildirim);
+  bildirimAcik.current = !!bildirim;
+  const sabitSerit = !kompakt && yukseklik >= 560;
+  useEffect(() => {
+    elleDegisti.current = false;
+    setSecimler([ilan.id, undefined]);
+    setAcik(false);
+    setErtelendi(gosterilenOneriler.has(oneriAnahtari));
+  }, [oneriAnahtari, ilan.id]);
+  useEffect(() => {
+    if (onceki && !elleDegisti.current) setSecimler([ilan.id, onceki.id]);
+  }, [onceki?.id, ilan.id, oneriAnahtari]);
+  const seciliIlanlar = secimler.map((id) =>
+    id === ilan.id ? ilan : tumIlanlar.find((kayit) => kayit.id === id && kayit.yayinDurumu !== 'kaldirildi'),
+  ) as [Ilan | undefined, Ilan | undefined];
+  const secimiDegistir = (sira: 0 | 1, secilen: Ilan) => {
+    const digerId = secimler[sira === 0 ? 1 : 0];
+    if (!karsilastirmaAdaylari(tumIlanlar, ilan, digerId).some((aday) => aday.id === secilen.id)) return;
+    elleDegisti.current = true;
+    setSecimler((once) => (sira === 0 ? [secilen.id, once[1]] : [once[0], secilen.id]));
+  };
 
   useFocusEffect(
     useCallback(() => {
       let zamanlayici: ReturnType<typeof setTimeout> | undefined;
       const oneriyiGoster = () => {
         // Yazarken veya başka bir pencere açıkken kullanıcının odağını bölme.
-        if (klavye.current || !karsilastirmaOnerisiAcilebilir()) {
+        if (klavye.current || bildirimAcik.current || !karsilastirmaOnerisiAcilebilir()) {
           zamanlayici = setTimeout(oneriyiGoster, 400);
           return;
         }
         gosterilenOneriler.add(oneriAnahtari);
         setOneriAcik(true);
       };
-      if (mobil && onceki && !gosterilenOneriler.has(oneriAnahtari))
+      if (kompakt && onceki && !gosterilenOneriler.has(oneriAnahtari))
         zamanlayici = setTimeout(oneriyiGoster, 2500);
       return () => {
         clearTimeout(zamanlayici);
         setOneriAcik(false);
         setAcik(false);
       };
-    }, [mobil, onceki?.id, oneriAnahtari]),
+    }, [kompakt, onceki?.id, oneriAnahtari]),
   );
 
   const oneriyiKapat = () => {
@@ -104,32 +124,29 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
     oneriyiKapat();
     setAcik(true);
   };
-  if (!onceki) return null;
-  const fark = fiyatFarki(onceki, ilan);
-  const farkEtiketi =
-    fark === undefined
-      ? 'Fiyat farkı hesaplanamıyor'
-      : fark === 0
-        ? 'İki ilanın fiyatı aynı'
-        : `Bu ilan ${para(Math.abs(fark))} ${fark > 0 ? 'daha pahalı' : 'daha uygun'}`;
-  const gorunenSatirlar = yalnizFarklar ? satirlar.filter((satir) => satir.farkli) : satirlar;
   return (
-    <View dataSet={{ 'karsilastirma-bileseni': 'true', 'oneri-gorunur': String(!mobil && !ertelendi) }}>
-      {ertelendi || (mobil && gosterilenOneriler.has(oneriAnahtari) && !oneriAcik) ? (
-        <HareketliBas
-          accessibilityRole="button"
-          onPress={karsilastirmayiAc}
-          style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 }}
-        >
-          <SquareSplitHorizontal size={18} color={renk.murekkep} strokeWidth={2.4} />
-          <Yazi style={{ fontSize: 13, fontWeight: '600' }}>Son baktığın ilanla karşılaştır</Yazi>
-        </HareketliBas>
-      ) : !mobil ? (
-        <KarsilastirmaKatmani sabit={genislik >= 1100 && yukseklik >= 560}>
+    <View
+      dataSet={{
+        'karsilastirma-bileseni': 'true',
+        'oneri-gorunur': String(!!onceki && sabitSerit && !ertelendi),
+        'sabit-oneri': String(!!onceki && sabitSerit && !ertelendi),
+      }}
+    >
+      <HareketliBas
+        accessibilityRole="button"
+        accessibilityLabel="İlanları karşılaştır"
+        onPress={karsilastirmayiAc}
+        style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+      >
+        <SquareSplitHorizontal size={18} color={renk.murekkep} strokeWidth={2.4} />
+        <Yazi style={{ fontSize: 13, fontWeight: '600' }}>Karşılaştır</Yazi>
+      </HareketliBas>
+      {!!onceki && sabitSerit && !ertelendi ? (
+        <KarsilastirmaKatmani sabit={sabitSerit}>
           <Giris
             role="region"
             accessibilityLabel="Son baktığın ilanla karşılaştır"
-            dataSet={{ 'karsilastirma-onerisi': 'true' }}
+            dataSet={{ 'karsilastirma-onerisi': 'true', 'karsilastirma-sabit': String(sabitSerit) }}
             style={{
               gap: 14,
               borderWidth: 1,
@@ -209,15 +226,16 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
         </KarsilastirmaKatmani>
       ) : null}
       <Pencere
-        acik={acik || (mobil && oneriAcik)}
+        acik={acik || (kompakt && oneriAcik)}
         kapat={() => {
           oneriyiKapat();
           setAcik(false);
         }}
         baslik={oneriAcik && !acik ? 'İlanları yan yana gör' : 'İlanları karşılaştır'}
         genis={acik}
+        alttan={kompakt}
       >
-        {oneriAcik && !acik ? (
+        {oneriAcik && !acik && onceki ? (
           <View dataSet={{ 'karsilastirma-alt-penceresi': 'true' }} style={{ gap: 16, minWidth: 0 }}>
             <Yazi style={{ color: renk.gri, fontSize: 14, lineHeight: 21 }}>
               Son baktığın ilanla fiyatını ve özelliklerini karşılaştırabilirsin.
@@ -244,118 +262,22 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
             </View>
           </View>
         ) : (
-          <>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: mobil ? 14 : 24 }}>
-              <IlanOzeti ilan={onceki} ad="Önceki ilan" />
-              <IlanOzeti ilan={ilan} ad="Bu ilan" />
-            </View>
-            <View style={{ padding: 14, borderRadius: 10, backgroundColor: renk.zemin, gap: 3 }}>
-              <Yazi style={{ fontWeight: '700', fontSize: 15 }}>{farkEtiketi}</Yazi>
-              <Yazi style={{ color: renk.gri, fontSize: 12, lineHeight: 18 }}>
-                Eksik belirtilen özellikleri ilan sahibine sorabilirsin.
-              </Yazi>
-            </View>
-            <HareketliBas
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: yalnizFarklar }}
-              onPress={() => setYalnizFarklar((deger) => !deger)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 10,
-                minHeight: 44,
-                alignSelf: 'flex-start',
-              }}
-            >
+          <Suspense
+            fallback={
               <View
-                style={{
-                  width: 22,
-                  height: 22,
-                  borderWidth: 1,
-                  borderColor: renk.murekkep,
-                  borderRadius: 5,
-                  backgroundColor: yalnizFarklar ? renk.sari : renk.beyaz,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {yalnizFarklar ? <Check size={16} color={renk.vurguYazi} /> : null}
-              </View>
-              <Yazi style={{ fontSize: 13 }}>Yalnızca farkları göster</Yazi>
-            </HareketliBas>
-            <View
-              role="region"
-              accessibilityLabel="Karşılaştırılan ilanların özellikleri"
-              style={{ minWidth: 0 }}
-            >
-              {gorunenSatirlar.map((satir) => (
-                <View
-                  key={satir.ad}
-                  style={{ borderTopWidth: 1, borderColor: renk.cizgi, paddingVertical: 12, gap: 6 }}
-                >
-                  <Yazi style={{ color: renk.gri, fontSize: 12 }}>{satir.ad}</Yazi>
-                  <View style={{ flexDirection: 'row', gap: mobil ? 14 : 24 }}>
-                    <Yazi
-                      style={{
-                        flex: 1,
-                        minWidth: 0,
-                        fontSize: 13,
-                        lineHeight: 20,
-                        fontWeight: satir.farkli ? '600' : '400',
-                      }}
-                      accessibilityLabel={`Önceki ilan, ${satir.ad}: ${satir.onceki}`}
-                    >
-                      {satir.onceki}
-                    </Yazi>
-                    <Yazi
-                      style={{
-                        flex: 1,
-                        minWidth: 0,
-                        fontSize: 13,
-                        lineHeight: 20,
-                        fontWeight: satir.farkli ? '600' : '400',
-                      }}
-                      accessibilityLabel={`Bu ilan, ${satir.ad}: ${satir.simdiki}`}
-                    >
-                      {satir.simdiki}
-                    </Yazi>
-                  </View>
-                </View>
-              ))}
-              {!gorunenSatirlar.length && (
-                <Yazi style={{ color: renk.gri }}>Belirtilen özellikler aynı.</Yazi>
-              )}
-            </View>
-            <Yazi style={{ color: renk.gri, fontSize: 12, lineHeight: 19 }}>
-              Özellikler ilan sahiplerinin verdiği bilgilerdir. Belirtilmemiş alanlar ürünün kontrol edildiği
-              anlamına gelmez.
-            </Yazi>
-            <Link href={ilanYolu(onceki)} asChild>
-              <HareketliBas
-                accessibilityRole="link"
-                onPress={() => setAcik(false)}
-                style={{
-                  minHeight: 44,
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 8,
-                  borderWidth: 1,
-                  borderColor: renk.cizgi,
-                  borderRadius: 10,
-                }}
-              >
-                <Yazi style={{ fontWeight: '600' }}>Önceki ilana dön</Yazi>
-                <ArrowUpRight size={17} color={renk.murekkep} />
-              </HareketliBas>
-            </Link>
-            <View style={{ borderTopWidth: 1, borderColor: renk.cizgi, paddingTop: 12, gap: 4 }}>
-              <Yazi style={{ color: renk.gri, fontSize: 11, lineHeight: 17 }}>
-                Son baktığın ilanlar 30 gün boyunca bu cihazda tutulur.
-              </Yazi>
-              <HareketliBas
-                accessibilityRole="button"
-                onPress={async () => {
+                accessibilityLabel="Karşılaştırma açılıyor"
+                style={{ height: 240, borderRadius: 10, backgroundColor: renk.zemin }}
+              />
+            }
+          >
+            {acik && (
+              <KarsilastirmaIcerigi
+                baglam={ilan}
+                ilanlar={tumIlanlar}
+                secimler={seciliIlanlar}
+                degistir={secimiDegistir}
+                kapat={() => setAcik(false)}
+                gecmisiTemizle={async () => {
                   setAcik(false);
                   const basarili = await temizle();
                   haberVer(
@@ -364,14 +286,9 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
                       : 'Geçmiş silinemedi. Depolama izinlerini kontrol et.',
                   );
                 }}
-                style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }}
-              >
-                <Yazi style={{ fontSize: 12, textDecorationLine: 'underline' }}>
-                  Göz atma geçmişini temizle
-                </Yazi>
-              </HareketliBas>
-            </View>
-          </>
+              />
+            )}
+          </Suspense>
         )}
       </Pencere>
     </View>

@@ -17,6 +17,17 @@
 .pazar-pencere[data-genis] {
   width: min(760px, calc(var(--pencere-genisligi, 100vw) - 40px));
 }
+.pazar-pencere[data-alttan] {
+  margin: auto auto 0;
+  border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+}
+.pazar-pencere[data-alttan] .pazar-pencere-icerik {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+.pazar-pencere[data-alttan] .pazar-pencere-altlik {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
 .pazar-pencere::backdrop {
   background: #111111a6;
 }

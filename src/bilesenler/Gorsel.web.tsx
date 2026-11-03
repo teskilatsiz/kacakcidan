@@ -6,6 +6,38 @@ import { gorselVaryantlari } from '../veri/gorselVaryantlari';
 import { IskeletParcasi, YuklemeIskeleti } from './YuklemeIskeleti';
 
 const saydamPiksel = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const bekleyenGorseller = new Map<Element, () => void>();
+let gorunurlukGozlemi: IntersectionObserver | undefined;
+
+/** Aynı görünür alanı izleyen kartlar tek gözlemciyi paylaşır. */
+function gorunurluguIzle(eleman: Element, goster: () => void) {
+  if (!gorunurlukGozlemi) {
+    gorunurlukGozlemi = new IntersectionObserver((kayitlar) => {
+      for (const kayit of kayitlar) {
+        if (!kayit.isIntersecting) continue;
+        const guncelle = bekleyenGorseller.get(kayit.target);
+        bekleyenGorseller.delete(kayit.target);
+        gorunurlukGozlemi?.unobserve(kayit.target);
+        guncelle?.();
+      }
+      if (!bekleyenGorseller.size) {
+        gorunurlukGozlemi?.disconnect();
+        gorunurlukGozlemi = undefined;
+      }
+    });
+  }
+  bekleyenGorseller.set(eleman, goster);
+  gorunurlukGozlemi.observe(eleman);
+  return () => {
+    if (bekleyenGorseller.get(eleman) !== goster) return;
+    bekleyenGorseller.delete(eleman);
+    gorunurlukGozlemi?.unobserve(eleman);
+    if (!bekleyenGorseller.size) {
+      gorunurlukGozlemi?.disconnect();
+      gorunurlukGozlemi = undefined;
+    }
+  };
+}
 
 /** Web görseli ilk statik HTML'de de yer alır; kart alanı yüklenmeden ayrılır. */
 export function Gorsel({
@@ -38,20 +70,16 @@ export function Gorsel({
   useEffect(() => {
     const eleman = resim.current;
     if (!eleman) return;
-    if (eleman.complete && eleman.currentSrc) setSonlanan(adres);
+    if (eleman.complete && eleman.currentSrc && eleman.currentSrc !== saydamPiksel) {
+      setSonlanan(adres);
+      return;
+    }
     if (gorunur) return;
     if (typeof IntersectionObserver === 'undefined') {
       setGorunur(true);
       return;
     }
-    const gozlem = new IntersectionObserver((kayitlar) => {
-      if (kayitlar.some((kayit) => kayit.isIntersecting)) {
-        setGorunur(true);
-        gozlem.disconnect();
-      }
-    });
-    gozlem.observe(eleman);
-    return () => gozlem.disconnect();
+    return gorunurluguIzle(eleman, () => setGorunur(true));
   }, [adres, gorunur]);
   const yukleniyor = gorunur && Boolean(uri) && (!adres || sonlanan !== adres);
   const resimElemani = (
@@ -68,6 +96,7 @@ export function Gorsel({
       decoding="async"
       draggable={false}
       onLoad={(olay) => {
+        if (olay.currentTarget.currentSrc === saydamPiksel) return;
         setSonlanan(adres);
         onLoad?.({
           cacheType: 'none',

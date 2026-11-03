@@ -92,7 +92,8 @@
     min-height: 28px !important;
   }
 }
-@media (min-width: 700px) and (max-width: 1099px) {
+@media (min-width: 700px) and (max-width: 1099px),
+  (min-width: 700px) and (max-width: 1439px) and (pointer: coarse) {
   [data-ilan-detay-alani] {
     padding-inline: 24px !important;
   }
@@ -102,12 +103,39 @@
     grid-template-rows: auto minmax(0, 1fr) auto;
   }
   [data-ilan-yan-alani] {
-    max-width: 560px;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.25fr) minmax(250px, 1fr);
+    grid-template-areas: 'satici iletisim' 'satici sikayet';
+    grid-template-rows: auto 1fr;
+    column-gap: 20px !important;
+    row-gap: 8px !important;
     width: 100%;
     margin-top: 8px;
   }
+  [data-ilan-satici-karti] {
+    grid-area: satici;
+  }
+  [data-ilan-iletisim-eylemleri],
+  [data-ilan-masaustu-eylemi] {
+    grid-area: iletisim;
+  }
+  [data-ilan-sikayet-alani] {
+    grid-area: sikayet;
+  }
   [data-ilan-masaustu-eylemi] {
     flex-direction: row !important;
+  }
+  [data-ilan-galeri-alani] .ilan-galeri-ana {
+    height: clamp(320px, 42svh, 460px);
+  }
+  [data-ilan-detay-alani] [role='tabpanel'] {
+    scroll-margin-top: 175px;
+  }
+  [aria-label='İlan numarasını kopyala'] {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
   }
 }
 @media (max-width: 699px) {

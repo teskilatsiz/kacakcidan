@@ -5,7 +5,15 @@ import { sayfaKaydirmasiniKilitle } from './pencereKaydirmasi.web';
 import { useGorunurAlan } from '../tasarim/gorunurAlan';
 import './Pencere.web.css';
 
-export function Pencere({ acik, kapat, baslik, children, altlik, genis = false }: PencereProps) {
+export function Pencere({
+  acik,
+  kapat,
+  baslik,
+  children,
+  altlik,
+  genis = false,
+  alttan = false,
+}: PencereProps) {
   const pencere = useRef<HTMLDialogElement>(null);
   const gorunurAlan = useGorunurAlan(acik);
   const kapatRef = useRef(kapat);
@@ -43,6 +51,7 @@ export function Pencere({ acik, kapat, baslik, children, altlik, genis = false }
       }
       data-genis={genis || undefined}
       data-altlik={!!altlik || undefined}
+      data-alttan={alttan || undefined}
       aria-label={baslik}
       onCancel={(olay) => {
         olay.preventDefault();

@@ -25,10 +25,19 @@ export function VitrinIzgarasi({ ilanlar, araya, arayaSira = 4 }: VitrinIzgarasi
   const kartlar = ilanlar.map((ilan, sira) => (
     <VitrinKarti
       key={ilan.id}
-      ilan={ilan}
+      id={ilan.id}
+      baslik={ilan.baslik}
+      kategori={ilan.kategori}
+      gorsel={ilan.gorsel}
+      durum={ilan.durum}
+      oneCikan={ilan.oneCikan}
+      takas={ilan.takas}
+      konum={ilan.konum}
+      zaman={ilan.zaman}
+      bedel={ilanBedeli(ilan)}
       favori={favoriler.includes(ilan.id)}
       favoriDegistir={favoriDegistir}
-      oncelik={sira === 0 ? 'high' : sira === 1 ? 'normal' : undefined}
+      oncelik={sira < 2 ? 'high' : undefined}
     />
   ));
   if (araya)
@@ -46,17 +55,23 @@ export function VitrinIzgarasi({ ilanlar, araya, arayaSira = 4 }: VitrinIzgarasi
   );
 }
 
+type KartBilgisi = Pick<
+  Ilan,
+  'id' | 'baslik' | 'kategori' | 'gorsel' | 'durum' | 'oneCikan' | 'takas' | 'konum' | 'zaman'
+> & { bedel: string };
+
+// İlan numarası veya satıcı bilgisi yenilendiğinde kartın değişmeyen alanları tekrar çizilmez.
 const VitrinKarti = memo(function VitrinKarti({
-  ilan,
+  bedel,
   favori,
   favoriDegistir,
   oncelik,
+  ...ilan
 }: {
-  ilan: Ilan;
   favori: boolean;
   favoriDegistir: (id: string) => void;
   oncelik?: 'high' | 'normal';
-}) {
+} & KartBilgisi) {
   return (
     <article
       className="vitrin-karti"
@@ -108,7 +123,7 @@ const VitrinKarti = memo(function VitrinKarti({
               </div>
             )}
             <h2 className="vitrin-karti-basligi">{ilan.baslik}</h2>
-            <p className="vitrin-karti-fiyati">{ilanBedeli(ilan)}</p>
+            <p className="vitrin-karti-fiyati">{bedel}</p>
             <div className="vitrin-karti-konumu" data-ilan-konumu="true">
               <span className="vitrin-karti-konum-adi">
                 <svg

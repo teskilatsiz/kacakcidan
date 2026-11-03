@@ -1,6 +1,8 @@
 import { readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { kategoriSayfalari } from '../src/veri/kategoriSayfalari.ts';
+import { blogYazilari } from '../src/veri/blog.ts';
+import { bilgiSayfalari } from '../src/veri/bilgiSayfalari.ts';
 
 const xml = (value) =>
   value.replace(
@@ -42,10 +44,17 @@ export async function aramaDosyalariniYaz({ siteUrl, noindex, klasor = 'dist' })
   }
 
   const kategoriYollari = new Set(kategoriSayfalari.map(({ yol }) => `/kategori/${yol.join('/')}`));
+  const bilgiYollari = new Set([
+    '/',
+    '/nasil-calisir',
+    '/blog',
+    ...Object.values(bilgiSayfalari).map(({ yol }) => yol),
+    ...blogYazilari.map(({ yol }) => `/blog/${yol}`),
+  ]);
   const sayfalar = (await htmlYollari(klasor))
     .filter(
       (adres) =>
-        ['/', '/nasil-calisir'].includes(adres) ||
+        bilgiYollari.has(adres) ||
         kategoriYollari.has(adres) ||
         ((adres.startsWith('/ilan/') || /^\/satici\/satici-[a-z0-9-]+$/.test(adres)) &&
           !['/ilan/yerel', '/satici/yerel'].includes(adres) &&

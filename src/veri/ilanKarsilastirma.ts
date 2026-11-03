@@ -1,5 +1,6 @@
 import type { Ilan } from './ilanlar.ts';
 import { kategoriYapisi } from './kategoriler.ts';
+import { aramaIcinDuzelt } from './arama.ts';
 
 export type GezintiKaydi = { id: string; tarih: number };
 const gecmisSiniri = 20;
@@ -19,6 +20,22 @@ export function karsilastirilabilir(onceki: Ilan, simdiki: Ilan) {
     (yapi.markaGirisi || (!!simdiki.marka && onceki.marka === simdiki.marka)) &&
     (yapi.modelGirisi || (!!simdiki.model && onceki.model === simdiki.model))
   );
+}
+
+/** Elle seçimde de ürün türü korunur; iki alana aynı ilan eklenemez. */
+export function karsilastirmaAdaylari(ilanlar: Ilan[], baglam: Ilan, digerId?: string, arama = '') {
+  if (!baglam.altKategori || ['is-ilanlari', 'hizmetler', 'emlak'].includes(baglam.kategori)) return [];
+  const kelimeler = aramaIcinDuzelt(arama).split(' ').filter(Boolean);
+  return [...new Map([baglam, ...ilanlar].map((ilan) => [ilan.id, ilan])).values()].filter((ilan) => {
+    if (
+      ilan.id === digerId ||
+      ilan.yayinDurumu === 'kaldirildi' ||
+      (ilan.id !== baglam.id && !karsilastirilabilir(ilan, baglam))
+    )
+      return false;
+    const metin = aramaIcinDuzelt(`${ilan.baslik} ${ilan.konum} ${ilan.numara ?? ''}`);
+    return kelimeler.every((kelime) => metin.includes(kelime));
+  });
 }
 
 export function gezintiKaydiniOku(ham: string | null, simdi = Date.now()): GezintiKaydi[] {

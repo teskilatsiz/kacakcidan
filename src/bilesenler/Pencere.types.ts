@@ -7,4 +7,6 @@ export type PencereProps = {
   children: ReactNode;
   altlik?: ReactNode;
   genis?: boolean;
+  /** Tablet gibi geniş ekranlarda da alt kenardan açılan, genişliği sınırlı pencere. */
+  alttan?: boolean;
 };

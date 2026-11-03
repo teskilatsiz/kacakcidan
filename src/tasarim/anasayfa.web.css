@@ -83,46 +83,7 @@
     font-size: 12px !important;
   }
 }
-@media (min-width: 700px) and (max-width: 1099px) {
-  [data-kategori-ana-alan] {
-    padding-inline: 28px !important;
-  }
-  [data-kategori-web-satir] {
-    min-width: 100%;
-    width: max-content;
-  }
-  [data-kategori-web-satir] > [data-kategori-web-karti] {
-    flex: 0 0 148px !important;
-    width: 148px !important;
-  }
-  [data-kategori-web-satir] > [data-kategori-web-tumu] {
-    flex: 0 0 160px !important;
-    width: 160px !important;
-  }
-  [data-kategori-web-kaydirma] {
-    background:
-      linear-gradient(to right, var(--renk-beyaz) 30%, transparent) left / 28px 100% local no-repeat,
-      linear-gradient(to left, var(--renk-beyaz) 30%, transparent) right / 28px 100% local no-repeat,
-      linear-gradient(to right, var(--renk-cizgi), transparent) left / 12px 100% scroll no-repeat,
-      linear-gradient(to left, var(--renk-cizgi), transparent) right / 12px 100% scroll no-repeat;
-  }
-  [data-anasayfa-alani] {
-    padding-inline: 28px !important;
-  }
-}
-@media (min-width: 700px) and (max-width: 1079px) {
-  [data-kesif-yerlesimi='ust'] [data-kesif-bant-icerigi] {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-  }
-  [data-kesif-yerlesimi='ust'] [data-kesif-bant-metni] {
-    flex: none !important;
-  }
-  [data-kesif-yerlesimi='ust'] [data-vurgu='dugme'] {
-    margin-right: 0 !important;
-  }
-}
-@media (max-width: 699px) {
+@media (max-width: 1099px), (max-width: 1439px) and (pointer: coarse) {
   [data-kategori-ana-alan] {
     padding: 19px 20px 20px !important;
     gap: 16px !important;
@@ -190,6 +151,35 @@
   [data-anasayfa-vitrin-basligi] [aria-level='1'] {
     font-size: 27px !important;
     line-height: 35px !important;
+  }
+}
+@media (min-width: 700px) and (max-width: 1099px),
+  (min-width: 700px) and (max-width: 1439px) and (pointer: coarse) {
+  [data-kategori-ana-alan] {
+    padding: 22px 28px 24px !important;
+    gap: 16px !important;
+  }
+  [data-kategori-web-satir] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px !important;
+  }
+  [data-kategori-web-satir] > [data-kategori-web-karti],
+  [data-kategori-web-satir] > [data-kategori-web-tumu] {
+    min-height: 80px !important;
+    height: 80px !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+  [data-kategori-web-satir] [data-kategori-web-adi] {
+    font-size: 14px !important;
+    line-height: 20px !important;
+  }
+  [data-anasayfa-alani] {
+    padding: 4px 28px 32px !important;
+  }
+  [data-anasayfa-vitrin-basligi] [aria-level='1'] {
+    font-size: 30px !important;
+    line-height: 38px !important;
   }
 }
 @media (max-width: 359px) {

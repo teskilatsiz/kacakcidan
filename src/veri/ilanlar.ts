@@ -6,6 +6,7 @@ import type { IlanKaldirmaNedeni } from './ilanYonetimi.ts';
 import type { DurumKaniti } from './urunDurumu.ts';
 import type { GuvenliAlisverisAyari } from './guvenliAlisveris.ts';
 import { modelOzellikleriniUygula } from './modelOzellikleri.ts';
+import type { IlanDurumu } from './ilanDurumu.ts';
 
 export { kategoriler, type Kategori } from './anaKategoriler.ts';
 
@@ -25,7 +26,7 @@ export interface Ilan {
   konum: string;
   zaman: string;
   satici: string;
-  durum: 'İkinci el' | 'Yeni gibi' | 'Sıfır';
+  durum: IlanDurumu;
   aciklama: string;
   oneCikan?: boolean;
   takas?: boolean;
@@ -70,7 +71,7 @@ const vitrinIlanlari: Ilan[] = [
     konum: 'İstanbul, Kadıköy',
     zaman: '3 saat önce',
     satici: 'Berk A.',
-    durum: 'Yeni gibi',
+    durum: 'İkinci el',
     benim: true,
     takas: true,
     aciklama:
@@ -85,7 +86,7 @@ const vitrinIlanlari: Ilan[] = [
     konum: 'İstanbul, Beşiktaş',
     zaman: 'Bugün',
     satici: 'Deniz S.',
-    durum: 'Yeni gibi',
+    durum: 'İkinci el',
     benim: true,
     aciklama:
       '42 numara, birkaç kez giyildi. Taban ve iç astarı temiz. Orijinal kutusuyla teslim edeceğim. Güncel fotoğrafları ilanda görebilirsiniz.',
@@ -142,7 +143,7 @@ const vitrinIlanlari: Ilan[] = [
     konum: 'İstanbul, Üsküdar',
     zaman: 'Dün',
     satici: 'Emre B.',
-    durum: 'Yeni gibi',
+    durum: 'İkinci el',
     takas: true,
     aciklama:
       '13 inç gümüş MacBook Air. 16 GB bellek, 256 GB SSD. İş için kullandığım bilgisayarımı yenilediğim için satıyorum. Pil döngüsü 142. Orijinal adaptörü ve kutusu yanında. Türkçe klavye, tüm tuşları çalışıyor.',
@@ -183,7 +184,7 @@ const vitrinIlanlari: Ilan[] = [
     konum: 'İstanbul, Kadıköy',
     zaman: '2 gün önce',
     satici: 'Eren B.',
-    durum: 'Yeni gibi',
+    durum: 'İkinci el',
     aciklama:
       '256 GB, siyah. S Pen dahil tüm fonksiyonları sorunsuz. Kozmetik olarak temiz. Kutu ve faturası bulunuyor. Kadıköy’de elden teslim.',
   },
@@ -223,7 +224,7 @@ const vitrinIlanlari: Ilan[] = [
     konum: 'Ankara, Yenimahalle',
     zaman: '3 gün önce',
     satici: 'Selin Ç.',
-    durum: 'Yeni gibi',
+    durum: 'İkinci el',
     aciklama:
       'Şeffaf arka tasarımlı Nothing Phone 2. Glyph ışıkları ve tüm işlevleri çalışıyor. Az kullanıldı. Kutusu ve orijinal kablosuyla verilecektir.',
   },
@@ -446,7 +447,7 @@ export function ilanlariFiltrele(
       : sonuc;
 }
 
-export function ilanYolu(ilan: Ilan) {
+export function ilanYolu(ilan: Pick<Ilan, 'id'>) {
   return {
     pathname: '/ilan/[id]' as const,
     params: ilan.id.startsWith('yerel-') ? { id: 'yerel', kayit: ilan.id } : { id: ilan.id },

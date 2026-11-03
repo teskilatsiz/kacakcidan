@@ -8,6 +8,7 @@ import { webStilleriniSatirIcineAl } from './web-stilleri.mjs';
 import { kaynakHaritalariniDuzenle } from './kaynak-haritalari.mjs';
 import { ilanPaylasimGorselleriniYaz } from './ilan-paylasim-gorselleri.mjs';
 import { guvenlikBasliklariniYaz } from './guvenlik-basliklari.mjs';
+import { haritaKaynaklariniHazirla } from './harita-kaynaklari.mjs';
 
 // Node, kabuktaki değişkenleri korur. Önce daha özel .env dosyaları okunur.
 for (const file of ['.env.production.local', '.env.local', '.env.production', '.env']) {
@@ -44,6 +45,7 @@ const env = {
 if (siteUrl) env.EXPO_PUBLIC_SITE_URL = siteUrl;
 
 const require = createRequire(import.meta.url);
+await haritaKaynaklariniHazirla();
 await gorselVaryantlariniYaz();
 await ilanPaylasimGorselleriniYaz();
 const result = spawnSync(

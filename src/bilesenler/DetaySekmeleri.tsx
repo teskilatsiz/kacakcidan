@@ -2,6 +2,7 @@ import { ScrollView } from 'react-native';
 import { HareketliBas } from './Hareketli';
 import { Yazi } from './Temel';
 import { kalin, useTema } from '../tasarim/tema';
+import { haritaVerisiniHazirla } from '../veri/haritaYukleyici';
 
 export type DetaySekmesi = 'aciklama' | 'ozellikler' | 'konum' | 'sorular';
 export type DetaySekmeleriProps = {
@@ -42,6 +43,7 @@ export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: 
             accessibilityRole="tab"
             accessibilityState={{ selected: secili === sekme.id }}
             onPress={() => degistir(sekme.id)}
+            onPressIn={sekme.id === 'konum' ? haritaVerisiniHazirla : undefined}
             style={{
               minHeight: 48,
               flexShrink: 0,

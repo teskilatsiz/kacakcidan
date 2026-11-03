@@ -9,6 +9,31 @@ const degiskenler = (palet: typeof acikRenkler) =>
     .map(([ad, deger]) => `--renk-${ad}:${deger}`)
     .join(';');
 const temaCss = `:root{color-scheme:light;${degiskenler(acikRenkler)}}:root[data-tema=koyu]{color-scheme:dark;${degiskenler(koyuRenkler)}}@media(prefers-color-scheme:dark){:root:not([data-tema=acik]){color-scheme:dark;${degiskenler(koyuRenkler)}}}`;
+// Parça yükleyicisinin izni uygulamadan önce kurulur; ayrı ağ isteği HTML'yi bekletmez.
+const guvenlikBaslat = String.raw`(function () {
+  if (!window.trustedTypes) return;
+  window.trustedTypes.createPolicy('default', {
+    createScriptURL: function (deger) {
+      var adres = new URL(deger, location.href);
+      if (
+        adres.origin !== location.origin || adres.search || adres.hash ||
+        !/^\/_expo\/static\/js\/web\/[a-zA-Z0-9_+\[\].-]+-[a-f0-9]{32}\.js$/.test(adres.pathname)
+      ) throw new TypeError('Betik adresine izin verilmiyor.');
+      return adres.href;
+    },
+    createHTML: function (deger) {
+      if (deger === '') return '';
+      throw new TypeError('HTML metni yerine DOM yöntemlerini kullan.');
+    },
+    createScript: function (deger) {
+      var veri = JSON.parse(deger);
+      if (!veri || Array.isArray(veri) || veri['@context'] !== 'https://schema.org') {
+        throw new TypeError('Betik metnine izin verilmiyor.');
+      }
+      return JSON.stringify(veri).replace(/</g, '\\u003c');
+    }
+  });
+})();`;
 const temaBaslat = `(function(){try{var t=localStorage.getItem('kacakcidan-gorunum');var d=t==='koyu'||(t!=='acik'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.tema=d?'koyu':'acik';document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}})();`;
 const siteAdresi = (process.env.EXPO_PUBLIC_SITE_URL || 'https://kacakcidan.netlify.app').replace(/\/$/, '');
 const siteYapilandirilmisVerisi = JSON.stringify({
@@ -31,7 +56,7 @@ export default function Html({ children, pathname }: PropsWithChildren<{ pathnam
         <meta charSet="utf-8" />
         <meta name="author" content="Teşkilatsız" />
         <meta name="color-scheme" content="light dark" />
-        <script src="/guvenlik.js" />
+        <script dangerouslySetInnerHTML={{ __html: guvenlikBaslat }} />
         <style dangerouslySetInnerHTML={{ __html: temaCss }} />
         <script dangerouslySetInnerHTML={{ __html: temaBaslat }} />
         <meta

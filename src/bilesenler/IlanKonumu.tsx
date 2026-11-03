@@ -4,6 +4,7 @@ import { useEkran, useTema } from '../tasarim/tema';
 import { Yazi } from './Temel';
 import { HaritaGorunumu } from './HaritaGorunumu';
 import type { konumHaritasi as haritaVerisi } from '../veri/konumHaritasi';
+import { haritaVerisiniYukle } from '../veri/haritaYukleyici';
 
 export function IlanKonumu({ konum }: { konum: string }) {
   const { renk } = useTema();
@@ -15,7 +16,7 @@ export function IlanKonumu({ konum }: { konum: string }) {
     let gecerli = true;
     setYukleniyor(true);
     setHata('');
-    import('../veri/konumHaritasi')
+    haritaVerisiniYukle()
       .then(({ konumHaritasi }) => {
         if (gecerli) {
           setBilgi(konumHaritasi(konum));

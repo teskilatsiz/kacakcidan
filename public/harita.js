@@ -30,6 +30,16 @@ function konumuOku() {
   bilgi = yeni;
   document.documentElement.dataset.tema = secenek.get('tema') === 'koyu' ? 'koyu' : 'acik';
   document.getElementById('harita').setAttribute('aria-label', bilgi.etiket.slice(0, 160));
+  // Başlangıç konumunu harita uygulaması sorar; burada konum izni istenmez.
+  var apple = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+  var yolAdresi = new URL(apple ? 'https://maps.apple.com/directions' : 'https://www.google.com/maps/dir/');
+  yolAdresi.searchParams.set('destination', bilgi.merkez.join(','));
+  if (!apple) yolAdresi.searchParams.set('api', '1');
+  var yolTarifi = document.getElementById('yol-tarifi');
+  yolTarifi.href = yolAdresi.href;
+  yolTarifi.title = 'İlanın bulunduğu bölge merkezine yol tarifi';
+  yolTarifi.setAttribute('aria-label', 'Nasıl giderim? ' + bilgi.etiket.slice(0, 160));
+  yolTarifi.hidden = false;
 }
 var harita;
 var boyutIzleyici;
@@ -132,7 +142,7 @@ function yukle() {
     return;
   }
   var betik = document.createElement('script');
-  betik.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+  betik.src = document.getElementById('leaflet-kaynagi').src;
   betik.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
   betik.crossOrigin = 'anonymous';
   betik.onload = baslat;

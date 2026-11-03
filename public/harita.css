@@ -24,6 +24,37 @@ body {
 #harita {
   background: #eceee9;
 }
+.yol-tarifi {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: calc(100% - 80px);
+  padding: 10px 14px;
+  border: 1px solid #17191b1a;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #00000014;
+  background: #ffd12f;
+  color: #17191b;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 20px;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.yol-tarifi svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.yol-tarifi:hover {
+  background: #f5c51e;
+}
 @media (pointer: coarse) {
   #harita {
     touch-action: pan-y pinch-zoom;
@@ -87,6 +118,7 @@ body {
   height: 20px;
 }
 button:focus-visible,
+.yol-tarifi:focus-visible,
 .leaflet-bar a:focus-visible,
 #harita:focus-visible {
   outline: 2px solid #b78c00;

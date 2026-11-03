@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState, type ComponentType } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { Platform, StyleSheet, View, type ViewInstance } from 'react-native';
 import { Link, type Href } from 'expo-router';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
@@ -6,13 +6,12 @@ import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import ChevronUp from 'lucide-react-native/icons/chevron-up';
 import Grid2X2 from 'lucide-react-native/icons/grid-2x2';
 import { kategoriler, type Kategori } from '../veri/ilanlar';
-import { kategoriYapisi } from '../veri/kategoriler';
-import { kategoriAdresi } from '../veri/kategoriSayfalari';
+import { anaKategoriAdresi } from '../veri/anaKategoriAdresi';
+import { kategoriKatalogunuOku, kategoriKatalogunuYukle } from '../veri/kategoriKatalogu';
 import { usePazar } from '../durum/Pazar';
 import { HareketliBas, Giris } from './Hareketli';
 import { Baslik, Yazi } from './Temel';
 import { KategoriSimgesi } from './KategoriSimgesi';
-import { KaydirmaSeridi } from './KaydirmaSeridi';
 import { Pencere } from './Pencere';
 import type { MenuSecimi, Props as KategoriMenuProps } from './KategoriMenuPaneli';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
@@ -20,7 +19,7 @@ import { MenuIskeleti, menuyuErtele } from './ErtelenenMenu';
 
 const ilkKategoriler: Kategori[] = ['otomotiv', 'telefon', 'bilgisayar', 'oyun', 'ev', 'moda', 'koleksiyon'];
 const kategoriMenusu = menuyuErtele<KategoriMenuProps>(() =>
-  import('./KategoriMenuPaneli').then((modul) => ({
+  Promise.all([import('./KategoriMenuPaneli'), kategoriKatalogunuYukle()]).then(([modul]) => ({
     default: modul.KategoriMenuPaneli as ComponentType<KategoriMenuProps>,
   })),
 );
@@ -29,15 +28,17 @@ const kategoriMenusu = menuyuErtele<KategoriMenuProps>(() =>
 export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
   const { renk } = useTema();
   const s = useStiller();
-  const { mobil, bosluk, genislik } = useEkran();
+  const { mobil, kompakt, bosluk, genislik } = useEkran();
   const web = Platform.OS === 'web';
   const { tumIlanlar } = usePazar();
   const [secim, setSecim] = useState<MenuSecimi | null>(null);
+  const [katalog, setKatalog] = useState(kategoriKatalogunuOku);
   const [pencere, setPencere] = useState<'tum' | 'kategori' | null>(null);
   const kok = useRef<ViewInstance>(null);
   const dugmeler = useRef<Record<string, ViewInstance | null>>({});
-  const menuKimligi = useId();
-  const oncekiMobil = useRef(mobil);
+  // Ana sayfada tek menü var; statik düğmeyle sonradan açılan panel aynı kimliği kullanır.
+  const menuKimligi = 'ana-kategori-menusu';
+  const oncekiKompakt = useRef(kompakt);
   const sayilar = useMemo(() => {
     const sonuc = new Map<Kategori, number>();
     for (const ilan of tumIlanlar) sonuc.set(ilan.kategori, (sonuc.get(ilan.kategori) ?? 0) + 1);
@@ -49,14 +50,14 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
   }, [tumunuAc]);
 
   useEffect(() => {
-    if (oncekiMobil.current === mobil) return;
-    oncekiMobil.current = mobil;
+    if (oncekiKompakt.current === kompakt) return;
+    oncekiKompakt.current = kompakt;
     setPencere(null);
     setSecim(null);
-  }, [mobil]);
+  }, [kompakt]);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || mobil || !secim || pencere || typeof document === 'undefined') return;
+    if (Platform.OS !== 'web' || kompakt || !secim || pencere || typeof document === 'undefined') return;
     const disinaBasildi = (olay: PointerEvent) => {
       const alan = kok.current as unknown as HTMLElement | null;
       if (olay.target instanceof Node && !alan?.contains(olay.target)) setSecim(null);
@@ -73,35 +74,48 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
       document.removeEventListener('pointerdown', disinaBasildi);
       document.removeEventListener('keydown', tusBasildi);
     };
-  }, [mobil, secim, pencere]);
+  }, [kompakt, secim, pencere]);
 
   const kategoriSec = (kategori: Kategori) => {
-    if (!mobil && secim?.kategori === kategori && !pencere) {
+    if (!kompakt && secim?.kategori === kategori && !pencere) {
       setSecim(null);
       return;
     }
-    const ilanlar = tumIlanlar.filter((ilan) => ilan.kategori === kategori);
-    const altlar = kategoriYapisi(kategori).altKategoriler;
-    const ilkAlt =
-      [...altlar].sort(
-        (a, b) =>
-          ilanlar.filter((ilan) => ilan.altKategori === b.id).length -
-          ilanlar.filter((ilan) => ilan.altKategori === a.id).length,
-      )[0]?.id ?? '';
-    const markalar = kategoriYapisi(kategori, ilkAlt).markalar;
-    const ilkMarka =
-      [...markalar].sort(
-        (a, b) =>
-          ilanlar.filter((ilan) => ilan.altKategori === ilkAlt && ilan.marka === b.id).length -
-          ilanlar.filter((ilan) => ilan.altKategori === ilkAlt && ilan.marka === a.id).length,
-      )[0]?.id ?? '';
-    setSecim({ kategori, altKategori: mobil ? '' : ilkAlt, marka: mobil ? '' : ilkMarka });
-    setPencere(mobil ? 'kategori' : null);
+    // Panel tıklamaya hemen yanıt verir; katalog, menünün ön yüklemesiyle aynı isteği kullanır.
+    setSecim({ kategori, altKategori: '', marka: '' });
+    setPencere(kompakt ? 'kategori' : null);
+    kategoriMenusu.onYukle();
+    void kategoriKatalogunuYukle()
+      .then((yeni) => {
+        setKatalog(yeni);
+        if (kompakt) return;
+        const ilanlar = tumIlanlar.filter((ilan) => ilan.kategori === kategori);
+        const altlar = yeni.kategoriYapisi(kategori).altKategoriler;
+        const ilkAlt =
+          [...altlar].sort(
+            (a, b) =>
+              ilanlar.filter((ilan) => ilan.altKategori === b.id).length -
+              ilanlar.filter((ilan) => ilan.altKategori === a.id).length,
+          )[0]?.id ?? '';
+        const markalar = yeni.kategoriYapisi(kategori, ilkAlt).markalar;
+        const ilkMarka =
+          [...markalar].sort(
+            (a, b) =>
+              ilanlar.filter((ilan) => ilan.altKategori === ilkAlt && ilan.marka === b.id).length -
+              ilanlar.filter((ilan) => ilan.altKategori === ilkAlt && ilan.marka === a.id).length,
+          )[0]?.id ?? '';
+        setSecim((onceki) =>
+          onceki?.kategori === kategori && !onceki.altKategori && !onceki.marka
+            ? { kategori, altKategori: ilkAlt, marka: ilkMarka }
+            : onceki,
+        );
+      })
+      .catch(() => {});
   };
 
   const kategoriKarti = (kategori: (typeof kategoriler)[number], tumu = false) => {
     const secili = !pencere && secim?.kategori === kategori.id;
-    const kart = web || mobil || tumu;
+    const kart = web || kompakt || tumu;
     return (
       <HareketliBas
         key={kategori.id}
@@ -110,7 +124,7 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
           if (!tumu) dugmeler.current[kategori.id] = eleman;
         }}
         accessibilityState={{ expanded: secili }}
-        aria-controls={!mobil && !tumu ? menuKimligi : undefined}
+        aria-controls={!kompakt && !tumu ? menuKimligi : undefined}
         onPress={() => kategoriSec(kategori.id)}
         onHoverIn={kategoriMenusu.onYukle}
         onPressIn={kategoriMenusu.onYukle}
@@ -129,7 +143,7 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
           web && !tumu
             ? undefined
             : kart
-              ? { width: tumu && !mobil ? '31.5%' : '48.5%' }
+              ? { width: tumu && !mobil ? '31.5%' : mobil ? '48.5%' : '24%' }
               : genislik < 1100
                 ? { width: 148, flex: undefined }
                 : genislik < 1260
@@ -200,7 +214,7 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
       accessibilityState={{ expanded: pencere === 'tum' }}
       onPress={() => setPencere('tum')}
       style={({ hovered }) => [
-        web || mobil ? s.kart : s.tumuSekmesi,
+        web || kompakt ? s.kart : s.tumuSekmesi,
         !web &&
           mobil && {
             height: 68,
@@ -209,13 +223,7 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
             paddingVertical: 6,
             gap: genislik < 360 ? 6 : 8,
           },
-        web
-          ? undefined
-          : mobil
-            ? { width: '48.5%' }
-            : genislik < 1100
-              ? { width: 160, flex: undefined }
-              : undefined,
+        web ? undefined : kompakt ? { width: mobil ? '48.5%' : '24%' } : undefined,
         hovered && { backgroundColor: renk.sari, borderColor: renk.sari },
       ]}
     >
@@ -226,7 +234,7 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
             strokeWidth={1.6}
             color={hovered ? renk.vurguYazi : renk.murekkep}
           />
-          <View style={{ flex: web || mobil ? 1 : undefined, minWidth: 0 }}>
+          <View style={{ flex: web || kompakt ? 1 : undefined, minWidth: 0 }}>
             <Yazi
               dataSet={{ 'kategori-web-adi': 'true' }}
               style={[
@@ -251,13 +259,13 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
                     Diğer
                   </Yazi>
                 </>
-              ) : mobil ? (
+              ) : kompakt ? (
                 'Diğer'
               ) : (
                 'Tüm kategoriler'
               )}
             </Yazi>
-            {(web || mobil) && (
+            {(web || kompakt) && (
               <Yazi
                 dataSet={{ 'kategori-web-adet': 'true' }}
                 style={[s.adet, { lineHeight: 16 }, hovered && { color: renk.vurguYazi }]}
@@ -266,7 +274,7 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
               </Yazi>
             )}
           </View>
-          {(web || mobil) && (
+          {(web || kompakt) && (
             <View dataSet={{ 'kategori-web-ok': 'true' }}>
               <ChevronRight size={14} color={hovered ? renk.vurguYazi : renk.murekkep} />
             </View>
@@ -276,7 +284,7 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
     </HareketliBas>
   );
   const seciliKategori = kategoriler.find((kategori) => kategori.id === secim?.kategori);
-  const seciliYapi = secim ? kategoriYapisi(secim.kategori, secim.altKategori) : null;
+  const seciliYapi = secim ? katalog?.kategoriYapisi(secim.kategori, secim.altKategori) : null;
   const sonucAdi =
     seciliYapi?.markalar.find((marka) => marka.id === secim?.marka)?.ad ??
     seciliYapi?.altKategoriler.find((alt) => alt.id === secim?.altKategori)?.ad ??
@@ -294,13 +302,13 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
           ortak.alan,
           {
             paddingHorizontal: bosluk,
-            paddingTop: mobil ? 19 : 8,
-            paddingBottom: mobil ? 20 : 8,
-            gap: mobil ? 16 : 8,
+            paddingTop: kompakt ? 19 : 8,
+            paddingBottom: kompakt ? 20 : 8,
+            gap: kompakt ? 16 : 8,
           },
         ]}
       >
-        {(web || mobil) && (
+        {(web || kompakt) && (
           <View style={ortak.aralikli} dataSet={{ 'kategori-web-baslik': 'true' }}>
             <Baslik style={{ fontSize: 24, lineHeight: 32 }}>Kategoriler</Baslik>
             <HareketliBas onPress={() => setPencere('tum')} style={s.tumunuGor}>
@@ -316,23 +324,18 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
               {tumuDugmesi}
             </View>
           </View>
-        ) : mobil ? (
+        ) : kompakt ? (
           <View style={s.izgara}>
             {ilkSatir}
             {tumuDugmesi}
           </View>
-        ) : genislik < 1100 ? (
-          <KaydirmaSeridi etiket="İlan kategorileri">
-            {ilkSatir}
-            {tumuDugmesi}
-          </KaydirmaSeridi>
         ) : (
           <View style={s.sekmeler}>
             {ilkSatir}
             {tumuDugmesi}
           </View>
         )}
-        {!mobil && secim && !pencere && (
+        {!kompakt && secim && !pencere && (
           <Giris key={secim.kategori} nativeID={menuKimligi} style={s.megaPanel}>
             <kategoriMenusu.Icerik
               bekleme={<MenuIskeleti kategori />}
@@ -353,7 +356,10 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
         genis
         altlik={
           pencere === 'kategori' && secim ? (
-            <Link href={kategoriAdresi(secim) as Href} asChild>
+            <Link
+              href={(katalog?.kategoriAdresi(secim) ?? anaKategoriAdresi(secim.kategori)) as Href}
+              asChild
+            >
               <HareketliBas vurgu="dugme" onPress={kapat} style={s.sonucButonu}>
                 <Yazi numberOfLines={2} style={{ flex: 1, fontWeight: '700', color: renk.vurguYazi }}>
                   {sonucAdi} ilanlarını gör

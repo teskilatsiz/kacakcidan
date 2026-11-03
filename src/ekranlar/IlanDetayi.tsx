@@ -25,6 +25,7 @@ import { GuvenliAlisveris } from '../bilesenler/GuvenliAlisveris';
 import { SaticiKontrolleri } from '../bilesenler/SaticiKontrolleri';
 import { SaticiIletisimi } from '../bilesenler/SaticiIletisimi';
 import { SaticiOzeti } from '../bilesenler/SaticiBilgisi';
+import { IskeletParcasi, YuklemeIskeleti } from '../bilesenler/YuklemeIskeleti';
 import { saticiKimligi } from '../veri/saticilar';
 import { kisiler, usePazar } from '../durum/Pazar';
 import { kategoriler, para, ilanBedeli } from '../veri/ilanlar';
@@ -80,6 +81,32 @@ export default function IlanDetayi() {
   }, [hazir, id, ilaniGoruntule, oturum?.id]);
   const ilan =
     tumIlanlar.find((i) => i.id === id) ?? (oturum ? eklenenler.find((i) => i.id === id) : undefined);
+  if (!ilan && !hazir)
+    return (
+      <Kabuk>
+        <View
+          dataSet={{ 'ilan-detay-alani': 'true' }}
+          style={[ortak.alan, { maxWidth: 1280, paddingHorizontal: bosluk, paddingVertical: 20, gap: 18 }]}
+        >
+          <YuklemeIskeleti etiket="İlan yükleniyor" style={{ gap: 18 }}>
+            <IskeletParcasi genislik="60%" yukseklik={24} />
+            <View style={{ flexDirection: mobil ? 'column' : 'row', gap: 24 }}>
+              <View style={{ flex: mobil ? undefined : 1.5, gap: 14 }}>
+                <IskeletParcasi yukseklik={mobil ? 300 : 420} />
+                <IskeletParcasi genislik="70%" yukseklik={58} />
+              </View>
+              <View style={{ flex: 1, gap: 16 }}>
+                <IskeletParcasi genislik="55%" yukseklik={30} />
+                <IskeletParcasi genislik="80%" yukseklik={20} />
+                {[0, 1, 2, 3, 4, 5].map((sira) => (
+                  <IskeletParcasi key={sira} yukseklik={26} />
+                ))}
+              </View>
+            </View>
+          </YuklemeIskeleti>
+        </View>
+      </Kabuk>
+    );
   if (!ilan)
     return (
       <Kabuk>
@@ -433,6 +460,7 @@ export default function IlanDetayi() {
             ))}
           </ScrollView>
           <View dataSet={{ 'ilan-ust-eylemleri': 'true' }} style={[ortak.satir, { gap: mobil ? 10 : 14 }]}>
+            <IlanKarsilastirmasi key={ilan.id} ilan={ilan} />
             <FavoriDugmesi
               secili={favoriler.includes(ilan.id)}
               onPress={() => favoriDegistir(ilan.id)}
@@ -495,7 +523,6 @@ export default function IlanDetayi() {
               </View>
             )}
             <IlanGalerisi ilan={ilan} />
-            {hazir && <IlanKarsilastirmasi key={ilan.id} ilan={ilan} />}
           </View>
           {!ozellikSekmesi && (
             <View dataSet={{ 'ilan-ozellik-alani': 'true' }} style={{ minWidth: 0, gap: 12 }}>
@@ -554,7 +581,9 @@ export default function IlanDetayi() {
               <SaticiIletisimi telefon={ilan.telefon} gorunur={ilan.telefonGoster === true} />
               <SaticiKontrolleri />
             </View>
-            <IlanSikayeti ilan={{ ...ilan, benim: ilanBanaAit }} />
+            <View dataSet={{ 'ilan-sikayet-alani': 'true' }}>
+              <IlanSikayeti ilan={{ ...ilan, benim: ilanBanaAit }} />
+            </View>
           </View>
         </View>
 

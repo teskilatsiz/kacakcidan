@@ -17,7 +17,7 @@ import { usePazar } from '../durum/Pazar';
 import { useMedyaAdresi } from '../durum/medyaDeposu';
 import { useTema, temaStilleri } from '../tasarim/tema';
 import { aramaOnerileri, type AramaOnerisi, type AramaKutusuProps } from '../veri/arama';
-import { kategoriAgaci } from '../veri/kategoriler';
+import { kategoriKatalogunuOku, kategoriKatalogunuYukle } from '../veri/kategoriKatalogu';
 import { ilanBedeli, ilanYolu, kategoriler } from '../veri/ilanlar';
 
 type Satir = AramaOnerisi | { id: 'tum-sonuclar'; tur: 'tum'; baslik: string; sorgu: string };
@@ -47,12 +47,13 @@ export function AraKutusu({
   const kutu = useRef<HTMLDivElement>(null);
   const girdi = useRef<HTMLInputElement>(null);
   const [acik, setAcik] = useState(false);
+  const [katalog, setKatalog] = useState(kategoriKatalogunuOku);
   const [aktif, setAktif] = useState(-1);
   const sorgu = deger.trim();
   const ertelenenDeger = useDeferredValue(deger);
   const oneriler = useMemo(
-    () => (acik ? aramaOnerileri(tumIlanlar, kategoriler, kategoriAgaci, ertelenenDeger) : []),
-    [acik, tumIlanlar, ertelenenDeger],
+    () => (acik ? aramaOnerileri(tumIlanlar, kategoriler, katalog?.kategoriAgaci ?? {}, ertelenenDeger) : []),
+    [acik, tumIlanlar, katalog, ertelenenDeger],
   );
   const satirlar: Satir[] = useMemo(
     () =>
@@ -68,8 +69,21 @@ export function AraKutusu({
   const listeId = `arama-${kimlik}`;
 
   useEffect(() => {
+    if (!acik || katalog) return;
+    let etkin = true;
+    void kategoriKatalogunuYukle()
+      .then((yeni) => {
+        if (etkin) setKatalog(yeni);
+      })
+      .catch(() => {});
+    return () => {
+      etkin = false;
+    };
+  }, [acik, katalog]);
+
+  useEffect(() => {
     setAktif(-1);
-  }, [deger]);
+  }, [deger, katalog]);
   useEffect(() => {
     const disariBasildi = (olay: PointerEvent) => {
       if (olay.target instanceof Node && !kutu.current?.contains(olay.target)) {

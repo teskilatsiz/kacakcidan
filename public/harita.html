@@ -6,17 +6,31 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="robots" content="noindex" />
     <title>İlan konumu</title>
+    <link rel="preconnect" href="https://tile.openstreetmap.org" />
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      href="/harita-kaynaklari/leaflet-1.9.4/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin="anonymous"
     />
     <link rel="stylesheet" href="/harita.css" />
+    <script
+      id="leaflet-kaynagi"
+      src="/harita-kaynaklari/leaflet-1.9.4/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin="anonymous"
+      defer
+    ></script>
     <script src="/harita.js" defer></script>
   </head>
   <body>
     <div id="harita" aria-label="İlanın yaklaşık konumu"></div>
+    <a id="yol-tarifi" class="yol-tarifi" target="_blank" rel="noopener noreferrer" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path d="m21 3-7.5 18-3.2-7.3L3 10.5 21 3Z" stroke-linejoin="round" />
+      </svg>
+      <span>Nasıl giderim?</span>
+    </a>
     <div id="bekleme" role="status" aria-label="Harita yükleniyor"><span aria-hidden="true"></span></div>
     <div id="hata" role="alert" hidden>
       <div><span>Harita yüklenemedi.</span><button type="button" id="yeniden-dene">Yeniden dene</button></div>

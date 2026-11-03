@@ -10,7 +10,7 @@ export function HaritaGorunumu({ konum, baslik, yukseklik }: HaritaGorunumuProps
     <iframe
       title={baslik}
       src={adres}
-      loading="lazy"
+      loading="eager"
       referrerPolicy="strict-origin-when-cross-origin"
       style={{ width: '100%', height: yukseklik, display: 'block', border: 0, borderRadius: 8 }}
     />

@@ -48,8 +48,9 @@ export default function Profil() {
     haberVer,
     alisverisler,
   } = usePazar();
-  const { mobil, dar, bosluk } = useEkran();
-  const yanPanel = !dar;
+  const { mobil, kompakt, bosluk } = useEkran();
+  const yanPanel = !kompakt;
+  const yatayProfil = kompakt && !mobil;
   const router = useRouter();
   const { bolum } = useLocalSearchParams<{ bolum?: string }>();
   const [duzenle, setDuzenle] = useState(false);
@@ -208,76 +209,106 @@ export default function Profil() {
       >
         <Baslik buyuk>Hesabım</Baslik>
         <View style={{ flexDirection: yanPanel ? 'row' : 'column', gap: 24, alignItems: 'flex-start' }}>
-          <View style={[s.profilKart, { padding: mobil ? 18 : 22, width: yanPanel ? 290 : '100%' }]}>
-            <View style={[ortak.satir, { minWidth: 0, gap: 14, alignItems: 'flex-start' }]}>
-              <HareketliBas
-                accessibilityLabel="Profil fotoğrafını düzenle"
-                onPress={ac}
-                style={s.fotografDugmesi}
-              >
-                <ProfilResmi ad={profil.ad} fotograf={profil.fotograf} boyut={mobil || yanPanel ? 64 : 76} />
-                <View style={s.kameraRozeti}>
-                  <Camera size={12} color={renk.vurguYazi} />
-                </View>
-              </HareketliBas>
-              <View style={{ flex: 1, minWidth: 0, gap: 7, paddingTop: 3 }}>
-                <Yazi numberOfLines={3} style={s.ad}>
-                  {profil.ad}
-                </Yazi>
-                <View style={[ortak.satir, { gap: 5, minWidth: 0, alignItems: 'flex-start' }]}>
-                  <MapPin size={14} color={renk.gri} style={{ marginTop: 3, flexShrink: 0 }} />
-                  <Yazi numberOfLines={2} style={s.konum}>
-                    {profil.konum || 'Konum belirtilmedi'}
+          <View
+            dataSet={{ 'hesap-profil-karti': 'true' }}
+            style={[
+              s.profilKart,
+              {
+                padding: mobil ? 18 : 22,
+                width: yanPanel ? 290 : '100%',
+                flexDirection: yatayProfil ? 'row' : 'column',
+                gap: yatayProfil ? 28 : 18,
+              },
+            ]}
+          >
+            <View style={{ flex: yatayProfil ? 1.25 : undefined, minWidth: 0, gap: 16 }}>
+              <View style={[ortak.satir, { minWidth: 0, gap: 14, alignItems: 'flex-start' }]}>
+                <HareketliBas
+                  accessibilityLabel="Profil fotoğrafını düzenle"
+                  onPress={ac}
+                  style={s.fotografDugmesi}
+                >
+                  <ProfilResmi
+                    ad={profil.ad}
+                    fotograf={profil.fotograf}
+                    boyut={mobil || yanPanel ? 64 : 76}
+                  />
+                  <View style={s.kameraRozeti}>
+                    <Camera size={12} color={renk.vurguYazi} />
+                  </View>
+                </HareketliBas>
+                <View style={{ flex: 1, minWidth: 0, gap: 7, paddingTop: 3 }}>
+                  <Yazi numberOfLines={3} style={s.ad}>
+                    {profil.ad}
                   </Yazi>
+                  <View style={[ortak.satir, { gap: 5, minWidth: 0, alignItems: 'flex-start' }]}>
+                    <MapPin size={14} color={renk.gri} style={{ marginTop: 3, flexShrink: 0 }} />
+                    <Yazi numberOfLines={2} style={s.konum}>
+                      {profil.konum || 'Konum belirtilmedi'}
+                    </Yazi>
+                  </View>
                 </View>
               </View>
+              {profil.hakkinda.trim() ? (
+                <Yazi style={s.hakkinda}>{profil.hakkinda}</Yazi>
+              ) : (
+                <HareketliBas onPress={ac} style={{ minHeight: 44, justifyContent: 'center' }}>
+                  <Yazi style={{ fontSize: 13, color: renk.gri }}>Kendinden kısaca bahset</Yazi>
+                </HareketliBas>
+              )}
+              <Link href={saticiYolu(oturum.id)} asChild>
+                <HareketliBas
+                  accessibilityRole="link"
+                  style={{
+                    minHeight: 40,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                  }}
+                >
+                  <Yazi style={{ fontSize: 12, color: renk.gri }}>Profilimi görüntüle</Yazi>
+                  <ChevronRight size={16} color={renk.gri} />
+                </HareketliBas>
+              </Link>
             </View>
-            {profil.hakkinda.trim() ? (
-              <Yazi style={s.hakkinda}>{profil.hakkinda}</Yazi>
-            ) : (
-              <HareketliBas onPress={ac} style={{ minHeight: 44, justifyContent: 'center' }}>
-                <Yazi style={{ fontSize: 13, color: renk.gri }}>Kendinden kısaca bahset</Yazi>
+            <View
+              style={{
+                flex: yatayProfil ? 1 : undefined,
+                minWidth: 0,
+                gap: 14,
+                borderLeftWidth: yatayProfil ? 1 : 0,
+                borderColor: renk.cizgi,
+                paddingLeft: yatayProfil ? 28 : 0,
+              }}
+            >
+              <HareketliBas onPress={ac} accessibilityLabel="Profili düzenle" style={s.duzenle}>
+                <Pencil color={renk.murekkep} size={16} />
+                <Yazi style={s.kucukKalin}>Profili düzenle</Yazi>
               </HareketliBas>
-            )}
-            <Link href={saticiYolu(oturum.id)} asChild>
-              <HareketliBas
-                accessibilityRole="link"
-                style={{
-                  minHeight: 40,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 8,
-                }}
-              >
-                <Yazi style={{ fontSize: 12, color: renk.gri }}>Profilimi görüntüle</Yazi>
-                <ChevronRight size={16} color={renk.gri} />
-              </HareketliBas>
-            </Link>
-            <HareketliBas onPress={ac} accessibilityLabel="Profili düzenle" style={s.duzenle}>
-              <Pencil color={renk.murekkep} size={16} />
-              <Yazi style={s.kucukKalin}>Profili düzenle</Yazi>
-            </HareketliBas>
-            <View style={s.ozetSatiri}>
-              <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
-                <Yazi style={s.ozetSayisi}>
-                  {tumBenimkiler.filter((ilan) => ilan.yayinDurumu !== 'kaldirildi').length}
-                </Yazi>
-                <Yazi style={s.ozet}>Yayındaki ilan</Yazi>
+              <View style={s.ozetSatiri}>
+                <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+                  <Yazi style={s.ozetSayisi}>
+                    {tumBenimkiler.filter((ilan) => ilan.yayinDurumu !== 'kaldirildi').length}
+                  </Yazi>
+                  <Yazi style={s.ozet}>Yayındaki ilan</Yazi>
+                </View>
+                <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+                  <Yazi style={s.ozetSayisi}>{kaydedilen.length}</Yazi>
+                  <Yazi style={s.ozet}>Kayıtlı favori</Yazi>
+                </View>
               </View>
-              <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
-                <Yazi style={s.ozetSayisi}>{kaydedilen.length}</Yazi>
-                <Yazi style={s.ozet}>Kayıtlı favori</Yazi>
-              </View>
+              <Link href="/ayarlar" asChild>
+                <HareketliBas accessibilityLabel="Hesap ayarları" style={s.ayarlar}>
+                  <Settings size={18} color={renk.murekkep} />
+                  <Yazi style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: '600' }}>
+                    Hesap ayarları
+                  </Yazi>
+                  <ChevronRight size={16} color={renk.gri} />
+                </HareketliBas>
+              </Link>
+              <CikisDugmesi />
             </View>
-            <Link href="/ayarlar" asChild>
-              <HareketliBas accessibilityLabel="Hesap ayarları" style={s.ayarlar}>
-                <Settings size={18} color={renk.murekkep} />
-                <Yazi style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: '600' }}>Hesap ayarları</Yazi>
-                <ChevronRight size={16} color={renk.gri} />
-              </HareketliBas>
-            </Link>
-            <CikisDugmesi />
           </View>
 
           <View style={[{ gap: 18 }, yanPanel ? { flex: 1, minWidth: 0 } : { width: '100%' }]}>

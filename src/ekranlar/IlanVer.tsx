@@ -46,6 +46,7 @@ import {
 import { ondalikGirdisiniTemizle, sayisalGirdiyiTemizle } from '../veri/formGirdileri';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 import { kategoriler, ilanYolu, ilanBedeli, type Ilan, type Kategori } from '../veri/ilanlar';
+import { ilanDurumlari } from '../veri/ilanDurumu';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
@@ -1037,7 +1038,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                       <View style={{ gap: 10 }}>
                         <Yazi style={s.etiket}>Durumu</Yazi>
                         <View style={s.secenekler}>
-                          {(['İkinci el', 'Yeni gibi', 'Sıfır'] as const).map((deger) => (
+                          {ilanDurumlari.map((deger) => (
                             <Secenek key={deger} secili={durum === deger} onPress={() => setDurum(deger)}>
                               {deger}
                             </Secenek>

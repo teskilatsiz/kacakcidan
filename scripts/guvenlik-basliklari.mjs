@@ -33,9 +33,7 @@ export async function guvenlikBasliklariniYaz(klasor = 'dist') {
           const kaynak = attr.src ?? attr.href;
           if (kaynak) {
             const dosyaYolu = kaynak.split('?')[0];
-            if (
-              !/^\/(?:_expo\/static\/js\/web\/[\w+\[\].-]+-[a-f0-9]{32}\.js|guvenlik\.js)$/.test(dosyaYolu)
-            ) {
+            if (!/^\/_expo\/static\/js\/web\/[\w+\[\].-]+-[a-f0-9]{32}\.js$/.test(dosyaYolu)) {
               throw new Error(`Beklenmeyen betik adresi: ${kaynak}`);
             }
             const icerik = await readFile(path.join(klasor, dosyaYolu.slice(1)));
@@ -106,10 +104,10 @@ export async function guvenlikBasliklariniYaz(klasor = 'dist') {
   // istisnası genişletilmeden kendine ait dar kaynak listesiyle çalışır.
   const haritaCsp = [
     "default-src 'none'",
-    "script-src 'self' https://unpkg.com",
-    "style-src 'self' https://unpkg.com 'unsafe-inline'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https://tile.openstreetmap.org",
-    "connect-src 'self' https://unpkg.com",
+    "connect-src 'self' https://tile.openstreetmap.org",
     "base-uri 'none'",
     "object-src 'none'",
     "frame-ancestors 'self'",

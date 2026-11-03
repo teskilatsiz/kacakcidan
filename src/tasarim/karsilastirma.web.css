@@ -5,12 +5,12 @@
 [data-karsilastirma-simdiki] {
   display: none;
 }
-@media (min-width: 1100px) and (min-height: 560px) {
-  [data-karsilastirma-onerisi] {
+@media (min-height: 560px) {
+  [data-karsilastirma-onerisi][data-karsilastirma-sabit='true'] {
     position: fixed !important;
     bottom: 20px;
     left: 50%;
-    transform: translateX(-50%);
+    translate: -50% 0;
     z-index: 34;
     width: min(1180px, calc(100% - 48px));
     box-shadow: 0 6px 28px #00000012;
@@ -19,14 +19,17 @@
     align-items: center !important;
     gap: 20px !important;
   }
-  [data-karsilastirma-simdiki] {
+  [data-karsilastirma-sabit='true'] [data-karsilastirma-simdiki] {
     display: flex;
   }
-  [data-karsilastirma-mobil-kapat] {
+  [data-karsilastirma-sabit='true'] [data-karsilastirma-mobil-kapat] {
     display: none;
   }
-  [data-ilan-detay-alani]:has([data-karsilastirma-bileseni][data-oneri-gorunur='true']) {
-    padding-bottom: 144px !important;
+  [data-ilan-detay-alani]:has([data-karsilastirma-bileseni][data-sabit-oneri='true']) {
+    padding-bottom: calc(var(--karsilastirma-serit-yuksekligi, 112px) + 40px) !important;
+  }
+  html:not(.pazar-klavye-acik) body:has([data-karsilastirma-katmani]) [data-bildirim] {
+    bottom: calc(var(--karsilastirma-serit-yuksekligi, 112px) + 32px) !important;
   }
 }
 @keyframes karsilastirma-giris {
@@ -37,10 +40,8 @@
     opacity: 1;
   }
 }
-@media (max-width: 699px) {
-  .pazar-pencere[open]:has([data-karsilastirma-alt-penceresi]) {
-    animation: karsilastirma-alt-pencere 220ms ease-out;
-  }
+.pazar-pencere[open][data-alttan]:has([data-karsilastirma-alt-penceresi]) {
+  animation: karsilastirma-alt-pencere 220ms ease-out;
 }
 @keyframes karsilastirma-alt-pencere {
   from {

@@ -6,11 +6,20 @@ import { Giris, HareketliBas, useAzaltilmisHareket } from './Hareketli';
 import type { PencereProps } from './Pencere.types';
 import { KlavyeKaydirma } from './KlavyeKaydirma';
 
-export function Pencere({ acik, kapat, baslik, children, altlik, genis = false }: PencereProps) {
+export function Pencere({
+  acik,
+  kapat,
+  baslik,
+  children,
+  altlik,
+  genis = false,
+  alttan = false,
+}: PencereProps) {
   const { renk } = useTema();
   const s = useStiller();
 
   const { mobil, yukseklik } = useEkran();
+  const altPencere = mobil || alttan;
   const guvenli = useSafeAreaInsets();
   const azalt = useAzaltilmisHareket();
   return (
@@ -19,7 +28,7 @@ export function Pencere({ acik, kapat, baslik, children, altlik, genis = false }
       transparent
       statusBarTranslucent
       navigationBarTranslucent
-      animationType={azalt ? 'none' : 'fade'}
+      animationType={azalt ? 'none' : alttan ? 'slide' : 'fade'}
       onRequestClose={kapat}
     >
       <KeyboardAvoidingView style={s.perde} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -28,8 +37,13 @@ export function Pencere({ acik, kapat, baslik, children, altlik, genis = false }
           pointerEvents="box-none"
           style={[
             s.kapsayici,
-            { paddingTop: guvenli.top + 16 },
-            mobil && { justifyContent: 'flex-end', paddingHorizontal: 0, paddingBottom: 0 },
+            {
+              paddingTop: guvenli.top + 16,
+              paddingLeft: Math.max(24, guvenli.left),
+              paddingRight: Math.max(24, guvenli.right),
+            },
+            altPencere && { justifyContent: 'flex-end', paddingBottom: 0 },
+            mobil && { paddingLeft: 0, paddingRight: 0 },
           ]}
         >
           <Giris
@@ -37,7 +51,7 @@ export function Pencere({ acik, kapat, baslik, children, altlik, genis = false }
             style={[
               s.pencere,
               { maxWidth: genis ? 760 : 480, maxHeight: yukseklik - guvenli.top - 24 },
-              mobil && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+              altPencere && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
             ]}
           >
             {mobil && <View style={s.tutamak} />}

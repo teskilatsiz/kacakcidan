@@ -21,7 +21,7 @@ import Search from 'lucide-react-native/icons/search';
 import Palette from 'lucide-react-native/icons/palette';
 import { usePazar } from '../durum/Pazar';
 import { kategoriler } from '../veri/ilanlar';
-import { kategoriAdresi } from '../veri/kategoriSayfalari';
+import { anaKategoriAdresi } from '../veri/anaKategoriAdresi';
 import { iller, ilceSecenekleri, konumuAyir, konumuBirlestir, ulkeler } from '../veri/konumlar';
 import { kalin, mobilAltMenuYuksekligi, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
@@ -35,6 +35,7 @@ import { TemaSecici } from './TemaSecici';
 import { HesapMenusu } from './HesapMenusu';
 import { CikisOnayi } from './CikisOnayi';
 import { AnlikBildirim } from './AnlikBildirim';
+import { CerezAyarlariDugmesi } from './CerezAyarlariDugmesi';
 import { SAYFA_BASINA_DON, sayfaBasinaDon } from '../tasarim/sayfaOdagi';
 
 export function Logo({ acik = false, kucuk = false }: { acik?: boolean; kucuk?: boolean }) {
@@ -187,7 +188,7 @@ export function UstMenu() {
   const { renk } = useTema();
   const s = useStiller();
 
-  const { mobil, bosluk, genislik } = useEkran();
+  const { kompakt, bosluk, genislik } = useEkran();
   const { profil, favoriler, oturum, okunmamisBildirimSayisi } = usePazar();
   const router = useRouter();
   const { q } = useGlobalSearchParams<{ q?: string }>();
@@ -198,7 +199,7 @@ export function UstMenu() {
   const yol = usePathname();
   const hesapSayfasi = yol === '/giris' || yol === '/kayit';
   const anaSayfa = yol === '/';
-  const ikiSatir = genislik < 1000;
+  const ikiSatir = kompakt;
   const ara = (sorgu = arama) =>
     router.push({ pathname: '/kesfet', params: { q: sorgu.trim(), kategori: '' } });
   const aramaAlani = (
@@ -212,7 +213,7 @@ export function UstMenu() {
       }}
       dataSet={{ 'ust-arama': 'true' }}
     >
-      <AraKutusu deger={arama} degistir={setArama} ara={ara} sade={mobil && anaSayfa} />
+      <AraKutusu deger={arama} degistir={setArama} ara={ara} sade={kompakt && anaSayfa} />
     </View>
   );
   return (
@@ -223,19 +224,24 @@ export function UstMenu() {
         >
           <View
             dataSet={{ 'ust-satir': 'true' }}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: mobil ? 8 : 22 }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: kompakt ? 8 : 22 }}
           >
-            <Logo kucuk={mobil && anaSayfa} />
+            <Logo kucuk={kompakt && anaSayfa} />
             {!hesapSayfasi && (Platform.OS === 'web' || !ikiSatir) && aramaAlani}
             <View
-              style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 'auto', gap: mobil ? 4 : 14 }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginLeft: 'auto',
+                gap: kompakt ? 4 : 14,
+              }}
             >
-              {(Platform.OS === 'web' || !mobil) && (
+              {(Platform.OS === 'web' || !kompakt) && (
                 <View dataSet={{ 'ust-masaustu': 'true' }}>
                   <KonumSecici kisa={Platform.OS !== 'web' && genislik < 1280} />
                 </View>
               )}
-              {(Platform.OS === 'web' || !mobil) && (
+              {(Platform.OS === 'web' || !kompakt) && (
                 <Link href="/favoriler" asChild>
                   <HareketliBas
                     accessibilityLabel={`Favorilerim, ${favoriler.length} ilan`}
@@ -292,7 +298,7 @@ export function UstMenu() {
                   </View>
                 </HareketliBas>
               </Link>
-              {(Platform.OS === 'web' || !mobil) && (
+              {(Platform.OS === 'web' || !kompakt) && (
                 <Link href="/mesajlar" asChild>
                   <HareketliBas
                     accessibilityLabel="Mesajlarım"
@@ -303,7 +309,7 @@ export function UstMenu() {
                   </HareketliBas>
                 </Link>
               )}
-              {(Platform.OS === 'web' || !mobil) && (
+              {(Platform.OS === 'web' || !kompakt) && (
                 <View
                   dataSet={{ 'ust-masaustu': 'true' }}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}
@@ -337,164 +343,170 @@ export function UstMenu() {
           {Platform.OS !== 'web' && ikiSatir && !hesapSayfasi && aramaAlani}
         </View>
       </View>
-      <Pencere acik={menu} kapat={() => setMenu(false)} baslik="Menü">
-        {!oturum ? (
-          <View style={s.menuHesapKarti}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={[s.menuAvatar, { backgroundColor: renk.sari }]}>
-                <UserRound size={20} color={renk.vurguYazi} />
-              </View>
-              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 16 }}>Hesabım</Yazi>
-                <Yazi style={{ fontSize: 12, color: renk.gri }}>
-                  İlanların, favorilerin ve mesajların burada.
-                </Yazi>
-              </View>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <Link href="/giris" asChild>
-                <HareketliBas
-                  onPress={() => setMenu(false)}
-                  style={StyleSheet.flatten([
-                    s.hesapBaglantisi,
-                    { backgroundColor: renk.sari, borderColor: renk.sari },
-                  ])}
-                >
-                  <UserRound size={17} color={renk.vurguYazi} />
-                  <Yazi style={{ fontWeight: '700', color: renk.vurguYazi }}>Giriş yap</Yazi>
-                </HareketliBas>
-              </Link>
-              <Link href="/kayit" asChild>
-                <HareketliBas onPress={() => setMenu(false)} style={s.hesapBaglantisi}>
-                  <Yazi style={{ fontWeight: '600' }}>Hesap oluştur</Yazi>
-                </HareketliBas>
-              </Link>
-            </View>
-          </View>
-        ) : (
-          <Link href="/profil" asChild>
-            <HareketliBas
-              onPress={() => setMenu(false)}
-              style={StyleSheet.flatten([s.menuHesapKarti, s.menuHesap])}
-            >
-              <View style={s.menuAvatar}>
-                {profil.fotograf ? (
-                  <Gorsel
-                    source={{ uri: profil.fotograf }}
-                    style={{ width: 46, height: 46, borderRadius: 14 }}
-                    accessibilityLabel="Profil fotoğrafın"
-                  />
-                ) : (
-                  <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 18 }}>
-                    {profil.ad.slice(0, 1).toLocaleUpperCase('tr')}
+      <Pencere acik={menu} kapat={() => setMenu(false)} baslik="Menü" genis={genislik >= 700}>
+        <View dataSet={{ 'hamburger-menu': 'true' }} style={{ gap: 20, minWidth: 0 }}>
+          {!oturum ? (
+            <View style={s.menuHesapKarti} dataSet={{ 'menu-hesabi': 'true' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={[s.menuAvatar, { backgroundColor: renk.sari }]}>
+                  <UserRound size={20} color={renk.vurguYazi} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                  <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 16 }}>Hesabım</Yazi>
+                  <Yazi style={{ fontSize: 12, color: renk.gri }}>
+                    İlanların, favorilerin ve mesajların burada.
                   </Yazi>
-                )}
+                </View>
               </View>
-              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                <Yazi numberOfLines={1} style={{ fontFamily: kalin, fontWeight: '700', fontSize: 15 }}>
-                  {profil.ad}
-                </Yazi>
-                <Yazi style={{ color: renk.gri, fontSize: 12 }}>Profilimi ve ilanlarımı gör</Yazi>
+              <View dataSet={{ 'menu-uyelik-eylemleri': 'true' }} style={{ flexDirection: 'row', gap: 8 }}>
+                <Link href="/giris" asChild>
+                  <HareketliBas
+                    onPress={() => setMenu(false)}
+                    style={StyleSheet.flatten([
+                      s.hesapBaglantisi,
+                      { backgroundColor: renk.sari, borderColor: renk.sari },
+                    ])}
+                  >
+                    <UserRound size={17} color={renk.vurguYazi} />
+                    <Yazi style={{ fontWeight: '700', color: renk.vurguYazi }}>Giriş yap</Yazi>
+                  </HareketliBas>
+                </Link>
+                <Link href="/kayit" asChild>
+                  <HareketliBas onPress={() => setMenu(false)} style={s.hesapBaglantisi}>
+                    <Yazi style={{ fontWeight: '600' }}>Hesap oluştur</Yazi>
+                  </HareketliBas>
+                </Link>
               </View>
-              <ArrowUpRight size={18} color={renk.gri} />
-            </HareketliBas>
-          </Link>
-        )}
-        <View style={s.menuKisayollar}>
-          {[
-            { href: '/favoriler', ad: 'Favoriler', simge: Heart },
-            { href: '/mesajlar', ad: 'Mesajlar', simge: MessageCircle },
-            { href: '/bildirimler', ad: 'Bildirimler', simge: Bell },
-            { href: '/ayarlar', ad: 'Hesap ayarları', simge: Settings },
-            { href: '/alim-talepleri', ad: 'Alım talepleri', simge: Search },
-          ].map(({ href, ad, simge: Simge }) => (
-            <Link key={href} href={href as '/'} asChild>
-              <HareketliBas onPress={() => setMenu(false)} style={s.menuKisayol}>
-                <Simge size={18} color={renk.murekkep} />
-                <Yazi style={{ flex: 1, minWidth: 0, fontSize: 13 }}>{ad}</Yazi>
-                <ChevronRight size={15} color={renk.gri} />
+            </View>
+          ) : (
+            <Link href="/profil" asChild>
+              <HareketliBas
+                onPress={() => setMenu(false)}
+                style={StyleSheet.flatten([s.menuHesapKarti, s.menuHesap])}
+                dataSet={{ 'menu-hesabi': 'true' }}
+              >
+                <View style={s.menuAvatar}>
+                  {profil.fotograf ? (
+                    <Gorsel
+                      source={{ uri: profil.fotograf }}
+                      style={{ width: 46, height: 46, borderRadius: 14 }}
+                      accessibilityLabel="Profil fotoğrafın"
+                    />
+                  ) : (
+                    <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 18 }}>
+                      {profil.ad.slice(0, 1).toLocaleUpperCase('tr')}
+                    </Yazi>
+                  )}
+                </View>
+                <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                  <Yazi numberOfLines={1} style={{ fontFamily: kalin, fontWeight: '700', fontSize: 15 }}>
+                    {profil.ad}
+                  </Yazi>
+                  <Yazi style={{ color: renk.gri, fontSize: 12 }}>Profilimi ve ilanlarımı gör</Yazi>
+                </View>
+                <ArrowUpRight size={18} color={renk.gri} />
               </HareketliBas>
             </Link>
-          ))}
-        </View>
-        <View style={s.menuTercihler}>
-          <KonumSecici satir />
-          <View style={[s.menuTercihSatiri, s.menuSatirAyirici]}>
-            <Palette size={20} color={renk.murekkep} />
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <TemaSecici kompakt />
-            </View>
-          </View>
-          <Link href="/nasil-calisir" asChild>
-            <HareketliBas
-              onPress={() => setMenu(false)}
-              style={StyleSheet.flatten([s.menuTercihSatiri, s.menuSatirAyirici])}
-            >
-              <CircleHelp size={20} color={renk.murekkep} />
-              <Yazi style={[s.menuSatirBasligi, { flex: 1 }]}>Nasıl çalışır?</Yazi>
-              <ChevronRight size={17} color={renk.gri} />
-            </HareketliBas>
-          </Link>
-        </View>
-        <View style={s.menuBolumBasligi}>
-          <View style={{ gap: 2 }}>
-            <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 16 }}>Kategoriler</Yazi>
-            <Yazi style={{ color: renk.gri, fontSize: 12 }}>İlgilendiğin ürünü bul.</Yazi>
-          </View>
-          <Link href="/kesfet" onPress={() => setMenu(false)}>
-            <Yazi style={{ fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' }}>
-              Tüm ilanlar
-            </Yazi>
-          </Link>
-        </View>
-        <View style={s.menuKategoriler}>
-          {kategoriler.map((k) => {
-            return (
-              <Link key={k.id} href={kategoriAdresi({ kategori: k.id }) as Href} asChild>
-                <HareketliBas
-                  vurgu="kategori"
-                  onPress={() => setMenu(false)}
-                  style={s.menuKategori}
-                  dataSet={{ 'menu-kategori': 'true' }}
-                >
-                  {({ hovered }) => (
-                    <>
-                      <View style={[s.menuKategoriIkon, hovered && { backgroundColor: renk.sari }]}>
-                        <KategoriSimgesi kategori={k.id} dolu={hovered} boyut={20} />
-                      </View>
-                      <Yazi
-                        dataSet={{ 'kategori-yazisi': 'true' }}
-                        numberOfLines={2}
-                        style={{
-                          flex: 1,
-                          minWidth: 0,
-                          fontSize: 12,
-                          lineHeight: 17,
-                          color: hovered ? renk.vurguYazi : renk.murekkep,
-                        }}
-                      >
-                        {k.ad}
-                      </Yazi>
-                    </>
-                  )}
+          )}
+          <View style={s.menuKisayollar} dataSet={{ 'menu-kisayollar': 'true' }}>
+            {[
+              { href: '/favoriler', ad: 'Favoriler', simge: Heart },
+              { href: '/mesajlar', ad: 'Mesajlar', simge: MessageCircle },
+              { href: '/bildirimler', ad: 'Bildirimler', simge: Bell },
+              { href: '/ayarlar', ad: 'Hesap ayarları', simge: Settings },
+              { href: '/alim-talepleri', ad: 'Alım talepleri', simge: Search },
+            ].map(({ href, ad, simge: Simge }) => (
+              <Link key={href} href={href as '/'} asChild>
+                <HareketliBas onPress={() => setMenu(false)} style={s.menuKisayol}>
+                  <Simge size={18} color={renk.murekkep} />
+                  <Yazi style={{ flex: 1, minWidth: 0, fontSize: 13 }}>{ad}</Yazi>
+                  <ChevronRight size={15} color={renk.gri} />
                 </HareketliBas>
               </Link>
-            );
-          })}
+            ))}
+          </View>
+          <View style={s.menuTercihler} dataSet={{ 'menu-tercihler': 'true' }}>
+            <KonumSecici satir />
+            <View style={[s.menuTercihSatiri, s.menuSatirAyirici]}>
+              {genislik < 700 && <Palette size={20} color={renk.murekkep} />}
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <TemaSecici kompakt />
+              </View>
+            </View>
+            <Link href="/nasil-calisir" asChild>
+              <HareketliBas
+                onPress={() => setMenu(false)}
+                style={StyleSheet.flatten([s.menuTercihSatiri, s.menuSatirAyirici])}
+              >
+                <CircleHelp size={20} color={renk.murekkep} />
+                <Yazi style={[s.menuSatirBasligi, { flex: 1 }]}>Nasıl çalışır?</Yazi>
+                <ChevronRight size={17} color={renk.gri} />
+              </HareketliBas>
+            </Link>
+          </View>
+          <View dataSet={{ 'menu-katalog': 'true' }} style={{ gap: 12, minWidth: 0 }}>
+            <View style={s.menuBolumBasligi}>
+              <View style={{ gap: 2 }}>
+                <Yazi style={{ fontFamily: kalin, fontWeight: '700', fontSize: 16 }}>Kategoriler</Yazi>
+                <Yazi style={{ color: renk.gri, fontSize: 12 }}>İlgilendiğin ürünü bul.</Yazi>
+              </View>
+              <Link href="/kesfet" onPress={() => setMenu(false)}>
+                <Yazi style={{ fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' }}>
+                  Tüm ilanlar
+                </Yazi>
+              </Link>
+            </View>
+            <View style={s.menuKategoriler}>
+              {kategoriler.map((k) => {
+                return (
+                  <Link key={k.id} href={anaKategoriAdresi(k.id) as Href} asChild>
+                    <HareketliBas
+                      vurgu="kategori"
+                      onPress={() => setMenu(false)}
+                      style={s.menuKategori}
+                      dataSet={{ 'menu-kategori': 'true' }}
+                    >
+                      {({ hovered }) => (
+                        <>
+                          <View style={[s.menuKategoriIkon, hovered && { backgroundColor: renk.sari }]}>
+                            <KategoriSimgesi kategori={k.id} dolu={hovered} boyut={20} />
+                          </View>
+                          <Yazi
+                            dataSet={{ 'kategori-yazisi': 'true' }}
+                            numberOfLines={2}
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              fontSize: 12,
+                              lineHeight: 17,
+                              color: hovered ? renk.vurguYazi : renk.murekkep,
+                            }}
+                          >
+                            {k.ad}
+                          </Yazi>
+                        </>
+                      )}
+                    </HareketliBas>
+                  </Link>
+                );
+              })}
+            </View>
+          </View>
+          {oturum ? (
+            <HareketliBas
+              accessibilityLabel="Çıkış yap"
+              onPress={() => {
+                setMenu(false);
+                setCikisOnayi(true);
+              }}
+              style={s.menuTercihSatiri}
+              dataSet={{ 'menu-cikis': 'true' }}
+            >
+              <LogOut size={17} color={renk.gri} />
+              <Yazi style={{ color: renk.gri }}>Çıkış yap</Yazi>
+            </HareketliBas>
+          ) : null}
         </View>
-        {oturum ? (
-          <HareketliBas
-            accessibilityLabel="Çıkış yap"
-            onPress={() => {
-              setMenu(false);
-              setCikisOnayi(true);
-            }}
-            style={s.menuTercihSatiri}
-          >
-            <LogOut size={17} color={renk.gri} />
-            <Yazi style={{ color: renk.gri }}>Çıkış yap</Yazi>
-          </HareketliBas>
-        ) : null}
       </Pencere>
       <CikisOnayi acik={cikisOnayi} kapat={() => setCikisOnayi(false)} />
     </>
@@ -516,6 +528,7 @@ export function AltBilgi() {
     { ad: 'İlan ver', yol: '/ilan-ver' },
     { ad: 'Alım talepleri', yol: '/alim-talepleri' },
     { ad: 'Nasıl çalışır?', yol: '/nasil-calisir' },
+    { ad: 'Alışveriş rehberi', yol: '/blog' },
   ];
   const baglanti = (ad: string, yol: string, kategori = false) => (
     <Link key={yol} href={yol as '/'} asChild>
@@ -545,9 +558,7 @@ export function AltBilgi() {
                 Kategoriler
               </Yazi>
               <View style={s.altKategoriBaglantilari}>
-                {kategoriler.map((kategori) =>
-                  baglanti(kategori.ad, kategoriAdresi({ kategori: kategori.id }), true),
-                )}
+                {kategoriler.map((kategori) => baglanti(kategori.ad, anaKategoriAdresi(kategori.id), true))}
               </View>
             </View>
             <View
@@ -572,7 +583,21 @@ export function AltBilgi() {
         </View>
         <View dataSet={{ 'footer-telif': 'true' }} style={[s.altAlt, mobil && s.altAltMobil]}>
           <Yazi style={s.altTelif}>© 2026 Kaçakçıdan</Yazi>
-          <Yazi style={s.altTelif}>İkinci el online ilan ve alışveriş sitesi.</Yazi>
+          <View
+            style={{
+              flexShrink: 1,
+              minWidth: 0,
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              columnGap: 22,
+              rowGap: 0,
+            }}
+          >
+            {baglanti('Gizlilik politikası', '/gizlilik-politikasi')}
+            {baglanti('Kullanım şartları', '/kullanim-sartlari')}
+            <CerezAyarlariDugmesi />
+          </View>
         </View>
       </View>
     </View>
@@ -582,11 +607,11 @@ export function MobilMenu() {
   const { renk } = useTema();
   const s = useStiller();
 
-  const { mobil } = useEkran();
+  const { kompakt } = useEkran();
   const klavyeAcik = useKlavyeAcik();
   const insets = useSafeAreaInsets();
   const yol = usePathname();
-  if ((Platform.OS !== 'web' && !mobil) || klavyeAcik) return null;
+  if ((Platform.OS !== 'web' && !kompakt) || klavyeAcik) return null;
   const baglantilar = [
     { href: '/', ad: 'Ana sayfa', simge: Home },
     { href: '/favoriler', ad: 'Favoriler', simge: Heart },
@@ -661,7 +686,7 @@ export function Kabuk({
   const s = useStiller();
 
   const { bildirim } = usePazar();
-  const { mobil } = useEkran();
+  const { kompakt } = useEkran();
   const yol = usePathname();
   const { kayit, hesap } = useGlobalSearchParams<{ kayit?: string; hesap?: string }>();
   const sayfa =
@@ -686,7 +711,7 @@ export function Kabuk({
         {children}
       </View>
       {altBilgi && <AltBilgi />}
-      {(Platform.OS === 'web' || mobil) && !klavyeAcik && (
+      {(Platform.OS === 'web' || kompakt) && !klavyeAcik && (
         <View
           dataSet={{ 'alt-menu-boslugu': 'true' }}
           style={{ height: mobilAltMenuYuksekligi + (Platform.OS === 'web' ? 0 : insets.bottom) }}
@@ -700,7 +725,7 @@ export function Kabuk({
         flex: 1,
         backgroundColor: renk.beyaz,
         minHeight: '100%',
-        paddingBottom: Platform.OS !== 'web' && !mobil ? insets.bottom : 0,
+        paddingBottom: Platform.OS !== 'web' && !kompakt ? insets.bottom : 0,
       }}
     >
       {Platform.OS !== 'web' && kaydirilabilir ? (
@@ -715,7 +740,7 @@ export function Kabuk({
       {bildirim ? (
         <View
           dataSet={{ bildirim: 'true', 'urun-bildirimi': String(urunSayfasi) }}
-          style={[s.bildirim, { bottom: mobil ? (urunSayfasi ? 150 : 90) : 28 }]}
+          style={[s.bildirim, { bottom: kompakt ? (urunSayfasi ? 150 : 90) : 28 }]}
         >
           <AnlikBildirim mesaj={bildirim} />
         </View>
@@ -889,6 +914,7 @@ const useStiller = temaStilleri((renk) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      gap: 20,
     },
     altAltMobil: { flexDirection: 'column', alignItems: 'flex-start', gap: 4 },
     altTelif: { color: renk.gri, fontSize: 12, lineHeight: 19 },

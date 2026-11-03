@@ -1,10 +1,26 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Buton, Yazi } from './Temel';
 import { useTema } from '../tasarim/tema';
 import { haritaAdresi } from '../veri/haritaAdresi';
 import type { HaritaGorunumuProps } from './HaritaGorunumu.types';
+
+function disBaglantiyiAc(adres: string) {
+  try {
+    const hedef = new URL(adres);
+    if (
+      hedef.protocol !== 'https:' ||
+      !['maps.apple.com', 'www.google.com', 'www.openstreetmap.org'].includes(hedef.hostname)
+    )
+      return;
+    void Linking.openURL(hedef.href).catch(() => {
+      Alert.alert('Bağlantı açılamadı', 'İnternet bağlantını kontrol edip yeniden dene.');
+    });
+  } catch {
+    // WebView'den yalnızca bilinen harita sağlayıcılarının HTTPS adresleri açılır.
+  }
+}
 
 export function HaritaGorunumu({ konum, baslik, yukseklik }: HaritaGorunumuProps) {
   const { renk, koyu } = useTema();
@@ -33,7 +49,7 @@ export function HaritaGorunumu({ konum, baslik, yukseklik }: HaritaGorunumuProps
           renderLoading={() => <ActivityIndicator color={renk.murekkep} />}
           geolocationEnabled={false}
           applicationNameForUserAgent="Kacakcidan/1.0 (+https://kacakcidan.netlify.app)"
-          setSupportMultipleWindows={false}
+          onOpenWindow={({ nativeEvent }) => disBaglantiyiAc(nativeEvent.targetUrl)}
           onError={() => setHata(true)}
           onHttpError={() => setHata(true)}
           onShouldStartLoadWithRequest={({ url }) => {
@@ -45,7 +61,7 @@ export function HaritaGorunumu({ konum, baslik, yukseklik }: HaritaGorunumuProps
             } catch {
               return false;
             }
-            if (url.startsWith('https://')) void Linking.openURL(url).catch(() => {});
+            disBaglantiyiAc(url);
             return false;
           }}
         />

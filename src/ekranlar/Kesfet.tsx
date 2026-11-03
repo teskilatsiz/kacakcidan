@@ -17,6 +17,7 @@ import { KategoriAgaci } from '../bilesenler/KategoriAgaci';
 import { SecimAlani } from '../bilesenler/SecimAlani';
 import { useKesifSecimi } from '../durum/useKesifSecimi';
 import { usePazar } from '../durum/Pazar';
+import { ilanDurumlari } from '../veri/ilanDurumu';
 import {
   ilanlariFiltrele,
   kategoriler,
@@ -240,7 +241,6 @@ export default function Kesfet() {
   const modelAdi = yapi.modeller[secim.marka]?.find((model) => model.id === secim.model)?.ad ?? secim.model;
   const fiyatHatasi = Boolean(enAz && enCok && Number(enAz) > Number(enCok));
   const seciliKonum = useMemo(() => konumuAyir(konum), [konum]);
-  const durumlar = useMemo(() => [...new Set(tumIlanlar.map((ilan) => ilan.durum))], [tumIlanlar]);
 
   function ozellikSec(ad: string, deger: string) {
     const sonraki = { ...ozellikler };
@@ -457,7 +457,7 @@ export default function Kesfet() {
             etiket="Ürünün durumu"
             deger={durum}
             ipucu="Fark etmez"
-            secenekler={durumlar.map((deger) => ({ id: deger, ad: deger }))}
+            secenekler={ilanDurumlari.map((deger) => ({ id: deger, ad: deger }))}
             degistir={setDurum}
           />
         ) : null}

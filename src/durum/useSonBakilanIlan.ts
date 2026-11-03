@@ -1,27 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 import type { Ilan } from '../veri/ilanlar';
 import {
   gezintiKaydiniOku,
   gezintiyeEkle,
   karsilastirilabilir,
   oncekiIlaniBul,
-  type GezintiKaydi,
 } from '../veri/ilanKarsilastirma';
-
-const yazmalar = new Map<string, Promise<unknown>>();
-const oturumGecmisi = new Map<string, GezintiKaydi[]>();
-function sirayaAl<T>(anahtar: string, islem: () => Promise<T>): Promise<T> {
-  const onceki = yazmalar.get(anahtar) ?? Promise.resolve();
-  const siradaki = onceki.catch(() => undefined).then(islem);
-  yazmalar.set(anahtar, siradaki);
-  void siradaki
-    .finally(() => {
-      if (yazmalar.get(anahtar) === siradaki) yazmalar.delete(anahtar);
-    })
-    .catch(() => undefined);
-  return siradaki;
-}
+import { GEZINTI_TEMIZLENDI, gezintiBellegi, gezintiyiSirala } from './sonBakilanDeposu';
 
 /** Yalnız kimlik ve tarih saklanır; hesapların gezinme kayıtları birbirine karışmaz. */
 export function useSonBakilanIlan(ilan: Ilan, ilanlar: Ilan[], hesapId?: string) {
@@ -30,9 +17,13 @@ export function useSonBakilanIlan(ilan: Ilan, ilanlar: Ilan[], hesapId?: string)
   const sonIlanlar = useRef(ilanlar);
   sonIlanlar.current = ilanlar;
   useEffect(() => {
+    const abonelik = DeviceEventEmitter.addListener(GEZINTI_TEMIZLENDI, () => setSonuc(undefined));
+    return () => abonelik.remove();
+  }, []);
+  useEffect(() => {
     let etkin = true;
     const kaydet = async () => {
-      const bellek = oturumGecmisi.get(anahtar);
+      const bellek = gezintiBellegi.get(anahtar);
       let kayitlar = bellek ? gezintiKaydiniOku(JSON.stringify(bellek)) : [];
       if (!bellek) {
         try {
@@ -45,14 +36,14 @@ export function useSonBakilanIlan(ilan: Ilan, ilanlar: Ilan[], hesapId?: string)
       const onceki = oncekiIlaniBul(kayitlar, ilan, sonIlanlar.current);
       if (etkin) setSonuc({ id: ilan.id, anahtar, onceki: onceki?.id });
       const yeni = gezintiyeEkle(kayitlar, ilan.id);
-      oturumGecmisi.set(anahtar, yeni);
+      gezintiBellegi.set(anahtar, yeni);
       try {
         await AsyncStorage.setItem(anahtar, JSON.stringify(yeni));
       } catch {
         /* Oturum kaydı korunur. */
       }
     };
-    void sirayaAl(anahtar, kaydet);
+    void gezintiyiSirala(kaydet);
     return () => {
       etkin = false;
     };
@@ -60,8 +51,8 @@ export function useSonBakilanIlan(ilan: Ilan, ilanlar: Ilan[], hesapId?: string)
 
   const temizle = useCallback(async () => {
     setSonuc(undefined);
-    return sirayaAl(anahtar, async () => {
-      oturumGecmisi.delete(anahtar);
+    return gezintiyiSirala(async () => {
+      gezintiBellegi.delete(anahtar);
       try {
         await AsyncStorage.removeItem(anahtar);
         return true;

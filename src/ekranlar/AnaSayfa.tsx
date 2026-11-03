@@ -35,7 +35,7 @@ const vitrinSirasi = [
 export default function AnaSayfa() {
   const { renk } = useTema();
   const s = useStiller();
-  const { mobil, bosluk, genislik } = useEkran();
+  const { mobil, kompakt, bosluk, genislik } = useEkran();
   const web = Platform.OS === 'web';
   const { tumIlanlar, konum, konumSec } = usePazar();
   const [tumunuAc, setTumunuAc] = useState(0);
@@ -62,9 +62,15 @@ export default function AnaSayfa() {
           source={gorselKaynagi('/gorseller/kategorilerde-kesfet.webp')}
           style={StyleSheet.absoluteFill}
           accessibilityLabel="Ahşap masa üzerinde dizüstü bilgisayar, telefon ve kulaklık"
-          sizes="(max-width: 699px) 40vw, (max-width: 1099px) calc((100vw - 56px) * 0.32), (max-width: 1439px) calc((100vw - 96px) * 0.32), 430px"
+          sizes={kucuk ? '40vw' : '(max-width: 1439px) calc((100vw - 96px) * 0.32), 430px'}
           priority={kucuk ? undefined : 'high'}
-          media={web && !kucuk ? '(min-width: 700px)' : undefined}
+          media={
+            web
+              ? kucuk
+                ? '(max-width: 1099px), (max-width: 1439px) and (pointer: coarse)'
+                : '(min-width: 1440px), (min-width: 1100px) and (pointer: fine), (min-width: 1100px) and (pointer: none)'
+              : undefined
+          }
         />
       </View>
       <View
@@ -132,7 +138,7 @@ export default function AnaSayfa() {
         {web ? (
           <View dataSet={{ 'kesif-yerlesimi': 'ust' }}>{kesifBandi(false)}</View>
         ) : (
-          !mobil && kesifBandi(false)
+          !kompakt && kesifBandi(false)
         )}
         <View dataSet={{ 'anasayfa-vitrin': 'true' }} style={{ gap: mobil ? 16 : 20 }}>
           <View dataSet={{ 'anasayfa-vitrin-basligi': 'true' }} style={[ortak.aralikli, { gap: 12 }]}>
@@ -248,7 +254,7 @@ export default function AnaSayfa() {
         {web ? (
           <View dataSet={{ 'kesif-yerlesimi': 'alt' }}>{kesifBandi(true)}</View>
         ) : (
-          mobil && kesifBandi(true)
+          kompakt && kesifBandi(true)
         )}
       </View>
     </Kabuk>

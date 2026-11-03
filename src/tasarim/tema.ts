@@ -42,19 +42,32 @@ export const ortak = StyleSheet.create({
 const sunucuOlcusu = { width: 1440, height: 900, scale: 1, fontScale: 1 };
 const sunucuEkrani = () => sunucuOlcusu;
 const anlikEkran = () => Dimensions.get('window');
+const dokunmatikSorgusu =
+  Platform.OS === 'web' && typeof window !== 'undefined' ? window.matchMedia('(pointer: coarse)') : null;
+const dokunmatikEkran = () => dokunmatikSorgusu?.matches ?? false;
+const sunucuDokunmatigi = () => false;
+function dokunmatigiIzle(guncelle: () => void) {
+  dokunmatikSorgusu?.addEventListener('change', guncelle);
+  return () => dokunmatikSorgusu?.removeEventListener('change', guncelle);
+}
 function ekraniIzle(guncelle: () => void) {
   const abonelik = Dimensions.addEventListener('change', guncelle);
   return () => abonelik.remove();
 }
 export function useEkran() {
   const { width, height } = useSyncExternalStore(ekraniIzle, anlikEkran, sunucuEkrani);
+  const dokunmatik = useSyncExternalStore(dokunmatigiIzle, dokunmatikEkran, sunucuDokunmatigi);
   const genislik = width || 1440;
+  const kompakt =
+    genislik < 1100 ||
+    (Platform.OS === 'web' ? dokunmatik && genislik < 1440 : Math.min(genislik, height) < 1100);
   return {
     genislik,
     yukseklik: height,
     mobil: genislik < 700,
+    kompakt,
     dar: genislik < 1100,
     tablet: genislik < 960,
-    bosluk: genislik < 700 ? 20 : genislik < 1100 ? 28 : 48,
+    bosluk: genislik < 700 ? 20 : kompakt ? 28 : 48,
   };
 }

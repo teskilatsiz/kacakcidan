@@ -42,7 +42,7 @@ function tumSozcukler(yazi: string, sozcukler: string[]) {
   return sozcukler.every((sozcuk) => yazi.includes(sozcuk));
 }
 
-function ilanKategoriYolu(ilan: Ilan, kategoriBilgileri: KategoriBilgisi[], agac: KategoriAgaci) {
+function ilanKategoriYolu(ilan: Ilan, kategoriBilgileri: KategoriBilgisi[], agac: Partial<KategoriAgaci>) {
   const kategori = kategoriBilgileri.find((secenek) => secenek.id === ilan.kategori);
   const alt = agac[ilan.kategori]?.find((secenek) => secenek.id === ilan.altKategori);
   const marka = alt?.markalar.find((secenek) => secenek.id === ilan.marka);
@@ -52,7 +52,7 @@ function ilanKategoriYolu(ilan: Ilan, kategoriBilgileri: KategoriBilgisi[], agac
   );
 }
 
-function ilanAramaMetni(ilan: Ilan, kategoriBilgileri: KategoriBilgisi[], agac: KategoriAgaci) {
+function ilanAramaMetni(ilan: Ilan, kategoriBilgileri: KategoriBilgisi[], agac: Partial<KategoriAgaci>) {
   return aramaIcinDuzelt(
     [
       ilan.baslik,
@@ -69,7 +69,7 @@ const durakSozcukler = new Set(['ama', 'bir', 'bu', 'da', 'daha', 'de', 'ile', '
 function anahtarKelimeOnerileri(
   liste: Ilan[],
   kategoriBilgileri: KategoriBilgisi[],
-  agac: KategoriAgaci,
+  agac: Partial<KategoriAgaci>,
   sorgu: string,
 ) {
   const sozcukler = sorgu.split(' ');
@@ -137,7 +137,7 @@ function anahtarKelimeOnerileri(
 export function aramaOnerileri(
   liste: Ilan[],
   kategoriBilgileri: KategoriBilgisi[],
-  agac: KategoriAgaci,
+  agac: Partial<KategoriAgaci>,
   sorgu: string,
 ): AramaOnerisi[] {
   const duz = aramaIcinDuzelt(sorgu);

@@ -1,6 +1,7 @@
 import { useTema } from '../tasarim/tema';
 import { useRef } from 'react';
 import type { DetaySekmeleriProps } from './DetaySekmeleri';
+import { haritaVerisiniHazirla } from '../veri/haritaYukleyici';
 
 const tumSekmeler = [
   { id: 'aciklama', ad: 'Açıklama' },
@@ -39,6 +40,9 @@ export function DetaySekmeleri({ secili, degistir, kimlik, ozellikler = true }: 
           aria-controls={`${kimlik}-icerik`}
           tabIndex={secili === sekme.id ? 0 : -1}
           onClick={() => degistir(sekme.id)}
+          onPointerEnter={sekme.id === 'konum' ? haritaVerisiniHazirla : undefined}
+          onPointerDown={sekme.id === 'konum' ? haritaVerisiniHazirla : undefined}
+          onFocus={sekme.id === 'konum' ? haritaVerisiniHazirla : undefined}
           onKeyDown={(olay) => {
             let hedef = sira;
             if (olay.key === 'ArrowRight') hedef = (sira + 1) % sekmeler.length;
