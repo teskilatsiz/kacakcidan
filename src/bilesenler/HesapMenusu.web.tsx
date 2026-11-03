@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type ComponentType } from 'react';
 import UserRound from 'lucide-react-native/icons/user-round';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import { usePazar } from '../durum/Pazar';
@@ -7,9 +7,13 @@ import { useTema } from '../tasarim/tema';
 import { UyelikPenceresi } from './UyelikPenceresi';
 import { CikisOnayi } from './CikisOnayi';
 import { usePathname } from 'expo-router';
+import { MenuIskeleti, menuyuErtele } from './ErtelenenMenu';
+import type { HesapMenusuIcerigiProps } from './HesapMenusuIcerigi';
 
-const HesapMenusuIcerigi = lazy(() =>
-  import('./HesapMenusuIcerigi').then((modul) => ({ default: modul.HesapMenusuIcerigi })),
+const hesapMenusu = menuyuErtele<HesapMenusuIcerigiProps>(() =>
+  import('./HesapMenusuIcerigi').then((modul) => ({
+    default: modul.HesapMenusuIcerigi as ComponentType<HesapMenusuIcerigiProps>,
+  })),
 );
 
 export function HesapMenusu() {
@@ -57,6 +61,9 @@ export function HesapMenusu() {
         aria-controls={kimlik}
         aria-haspopup="dialog"
         onClick={acKapat}
+        onPointerEnter={hesapMenusu.onYukle}
+        onPointerDown={hesapMenusu.onYukle}
+        onFocus={hesapMenusu.onYukle}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -135,13 +142,14 @@ export function HesapMenusu() {
         }}
       >
         {acik && (
-          <Suspense fallback={<span role="status">Menü açılıyor…</span>}>
-            <HesapMenusuIcerigi
-              kapat={kapat}
-              uyelikAc={(kayit) => setUyelik(kayit ? 'kayit' : 'giris')}
-              cikisIste={() => setCikis(true)}
-            />
-          </Suspense>
+          <hesapMenusu.Icerik
+            bekleme={<MenuIskeleti />}
+            ozellikler={{
+              kapat,
+              uyelikAc: (kayit) => setUyelik(kayit ? 'kayit' : 'giris'),
+              cikisIste: () => setCikis(true),
+            }}
+          />
         )}
       </div>
       <UyelikPenceresi

@@ -36,6 +36,7 @@ import { HareketliBas } from '../bilesenler/Hareketli';
 import { kalin, mobilAltMenuYuksekligi, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
 import { ilanPaylasimAdresi } from '../tasarim/seo';
+import { sayisalGirdiyiTemizle } from '../veri/formGirdileri';
 import '../tasarim/ilanDetayi.web.css';
 
 export default function IlanDetayi() {
@@ -626,7 +627,7 @@ export default function IlanDetayi() {
           etiket="Teklifin (TL)"
           value={teklif}
           onChangeText={(s) => {
-            setTeklif(s.replace(/[^0-9]/g, ''));
+            setTeklif(sayisalGirdiyiTemizle(s));
             setHata('');
           }}
           keyboardType="numeric"

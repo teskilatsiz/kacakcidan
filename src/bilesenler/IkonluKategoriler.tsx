@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ComponentType } from 'react';
 import { Platform, StyleSheet, View, type ViewInstance } from 'react-native';
 import { Link, type Href } from 'expo-router';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
@@ -14,12 +14,15 @@ import { Baslik, Yazi } from './Temel';
 import { KategoriSimgesi } from './KategoriSimgesi';
 import { KaydirmaSeridi } from './KaydirmaSeridi';
 import { Pencere } from './Pencere';
-import type { MenuSecimi } from './KategoriMenuPaneli';
+import type { MenuSecimi, Props as KategoriMenuProps } from './KategoriMenuPaneli';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
+import { MenuIskeleti, menuyuErtele } from './ErtelenenMenu';
 
 const ilkKategoriler: Kategori[] = ['otomotiv', 'telefon', 'bilgisayar', 'oyun', 'ev', 'moda', 'koleksiyon'];
-const KategoriMenuPaneli = lazy(() =>
-  import('./KategoriMenuPaneli').then((modul) => ({ default: modul.KategoriMenuPaneli })),
+const kategoriMenusu = menuyuErtele<KategoriMenuProps>(() =>
+  import('./KategoriMenuPaneli').then((modul) => ({
+    default: modul.KategoriMenuPaneli as ComponentType<KategoriMenuProps>,
+  })),
 );
 
 /** Ana sayfadaki kategori seçimi, katalogdaki aynı kategori zincirini kullanır. */
@@ -109,6 +112,9 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
         accessibilityState={{ expanded: secili }}
         aria-controls={!mobil && !tumu ? menuKimligi : undefined}
         onPress={() => kategoriSec(kategori.id)}
+        onHoverIn={kategoriMenusu.onYukle}
+        onPressIn={kategoriMenusu.onYukle}
+        onFocus={kategoriMenusu.onYukle}
         vurgu="kategori"
         style={({ hovered }) => [
           kart ? s.kart : s.sekme,
@@ -328,14 +334,15 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
         )}
         {!mobil && secim && !pencere && (
           <Giris key={secim.kategori} nativeID={menuKimligi} style={s.megaPanel}>
-            <Suspense fallback={<Yazi style={{ padding: 16 }}>Kategoriler yükleniyor…</Yazi>}>
-              <KategoriMenuPaneli
-                secim={secim}
-                degistir={setSecim}
-                mobil={false}
-                tumunuAc={() => setPencere('tum')}
-              />
-            </Suspense>
+            <kategoriMenusu.Icerik
+              bekleme={<MenuIskeleti kategori />}
+              ozellikler={{
+                secim,
+                degistir: setSecim,
+                mobil: false,
+                tumunuAc: () => setPencere('tum'),
+              }}
+            />
           </Giris>
         )}
       </View>
@@ -360,9 +367,10 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
         {pencere === 'tum' ? (
           <View style={s.izgara}>{kategoriler.map((kategori) => kategoriKarti(kategori, true))}</View>
         ) : secim ? (
-          <Suspense fallback={<Yazi style={{ padding: 16 }}>Kategoriler yükleniyor…</Yazi>}>
-            <KategoriMenuPaneli secim={secim} degistir={setSecim} mobil tumunuAc={() => setPencere('tum')} />
-          </Suspense>
+          <kategoriMenusu.Icerik
+            bekleme={<MenuIskeleti kategori mobil />}
+            ozellikler={{ secim, degistir: setSecim, mobil: true, tumunuAc: () => setPencere('tum') }}
+          />
         ) : null}
       </Pencere>
     </View>

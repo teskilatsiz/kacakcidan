@@ -11,15 +11,13 @@ import { HareketliBas } from './Hareketli';
 import { TemaSecici } from './TemaSecici';
 import { Yazi } from './Temel';
 
-export function HesapMenusuIcerigi({
-  kapat,
-  uyelikAc,
-  cikisIste,
-}: {
+export type HesapMenusuIcerigiProps = {
   kapat: () => void;
   uyelikAc?: (kayit: boolean) => void;
   cikisIste: () => void;
-}) {
+};
+
+export function HesapMenusuIcerigi({ kapat, uyelikAc, cikisIste }: HesapMenusuIcerigiProps) {
   const { renk } = useTema();
   const { oturum, profil } = usePazar();
   const router = useRouter();

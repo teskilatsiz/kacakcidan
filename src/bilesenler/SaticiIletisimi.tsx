@@ -13,7 +13,7 @@ export function SaticiIletisimi({ telefon, gorunur }: { telefon?: string; gorunu
   const { renk } = useTema();
   const [hata, setHata] = useState('');
   const [genislik, setGenislik] = useState(0);
-  const dar = genislik > 0 && genislik < 230;
+  const dar = genislik === 0 || genislik < 300;
   const numara = telefonuNormallestir(telefon);
   if (!gorunur || !numara) return null;
   async function ara() {
@@ -33,6 +33,14 @@ export function SaticiIletisimi({ telefon, gorunur }: { telefon?: string; gorunu
       setHata('Numarayı seçip kopyalayabilirsin.');
     }
   }
+  const telefonYazisi = (
+    <Yazi
+      dataSet={{ 'satici-telefon-numarasi': 'true' }}
+      style={{ fontSize: 15, lineHeight: 23, fontWeight: '700', flexShrink: 0 }}
+    >
+      {telefonuGoster(numara).replace(/ /g, '\u00a0')}
+    </Yazi>
+  );
   return (
     <View onLayout={(olay) => setGenislik(olay.nativeEvent.layout.width)} style={{ gap: 7, minWidth: 0 }}>
       <HareketliBas
@@ -41,9 +49,9 @@ export function SaticiIletisimi({ telefon, gorunur }: { telefon?: string; gorunu
         onPress={ara}
         style={{
           minHeight: 48,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 8,
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          gap: 5,
           borderWidth: 1,
           borderColor: renk.cizgi,
           borderRadius: 8,
@@ -51,24 +59,15 @@ export function SaticiIletisimi({ telefon, gorunur }: { telefon?: string; gorunu
           paddingVertical: 10,
         }}
       >
-        <Phone size={16} color={renk.murekkep} style={{ flexShrink: 0 }} />
-        {!dar && <Yazi style={{ fontSize: 12, lineHeight: 19, color: renk.gri, flexShrink: 0 }}>Cep</Yazi>}
-        <Yazi
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.82}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            fontSize: dar ? 12 : 13,
-            lineHeight: 20,
-            fontWeight: '600',
-            textAlign: 'right',
-          }}
-        >
-          {telefonuGoster(numara).replace(/ /g, '\u00a0')}
-        </Yazi>
-        {!dar && <ArrowUpRight size={14} color={renk.gri} style={{ flexShrink: 0 }} />}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+            <Phone size={15} color={renk.gri} style={{ flexShrink: 0 }} />
+            <Yazi style={{ fontSize: 12, lineHeight: 19, color: renk.gri }}>Cep</Yazi>
+          </View>
+          {!dar && telefonYazisi}
+          <ArrowUpRight size={14} color={renk.gri} style={{ flexShrink: 0 }} />
+        </View>
+        {dar && telefonYazisi}
       </HareketliBas>
       {!!hata && (
         <View style={{ gap: 8 }}>

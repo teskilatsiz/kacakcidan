@@ -1,7 +1,8 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { Platform, Switch, View } from 'react-native';
 import { useTema } from '../tasarim/tema';
 import { Alan, Yazi } from './Temel';
+import { telefonGirdisiniBicimlendir } from '../veri/formGirdileri';
 
 export function TelefonBilgisiAlanlari({
   telefon,
@@ -20,20 +21,30 @@ export function TelefonBilgisiAlanlari({
 }) {
   const { renk, koyu } = useTema();
   const kimlik = useId();
+  const [odakta, setOdakta] = useState(false);
+  const gorunenTelefon = telefonGirdisiniBicimlendir(telefon);
   return (
     <View style={{ gap: 16, minWidth: 0 }}>
       <Alan
         nativeID={`iletisim-telefon-${kimlik}`}
         etiket="Cep telefonu (isteğe bağlı)"
         placeholder="0532 123 45 67"
-        value={telefon}
+        value={odakta ? telefon : gorunenTelefon}
+        onFocus={() => {
+          if (telefon !== gorunenTelefon) degistir({ telefon: gorunenTelefon, telefonGoster });
+          setOdakta(true);
+        }}
+        onBlur={() => {
+          setOdakta(false);
+          degistir({ telefon: telefonGirdisiniBicimlendir(telefon), telefonGoster });
+        }}
         onChangeText={(deger) => degistir({ telefon: deger, telefonGoster })}
         keyboardType="phone-pad"
         inputMode="tel"
         autoComplete="tel"
         autoCapitalize="none"
         autoCorrect={false}
-        maxLength={24}
+        maxLength={18}
         editable={!disabled}
         hata={hata}
       />

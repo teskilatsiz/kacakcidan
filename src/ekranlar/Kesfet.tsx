@@ -37,6 +37,7 @@ import { urunKategorisiMi } from '../veri/anaKategoriler';
 import { kategoriAdresi } from '../veri/kategoriSayfalari';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
+import { sayisalGirdiyiTemizle } from '../veri/formGirdileri';
 
 type AktifFiltre = { id: string; ad: string; kaldir: () => void };
 
@@ -372,8 +373,10 @@ export default function Kesfet() {
             <Alan
               etiket="En az (TL)"
               value={enAz}
-              onChangeText={(deger) => setEnAz(deger.replace(/[^0-9]/g, ''))}
+              onChangeText={(deger) => setEnAz(sayisalGirdiyiTemizle(deger))}
               keyboardType="numeric"
+              inputMode="numeric"
+              maxLength={9}
               placeholder="0"
             />
           </View>
@@ -381,8 +384,10 @@ export default function Kesfet() {
             <Alan
               etiket="En çok (TL)"
               value={enCok}
-              onChangeText={(deger) => setEnCok(deger.replace(/[^0-9]/g, ''))}
+              onChangeText={(deger) => setEnCok(sayisalGirdiyiTemizle(deger))}
               keyboardType="numeric"
+              inputMode="numeric"
+              maxLength={9}
               placeholder="Limitsiz"
             />
           </View>

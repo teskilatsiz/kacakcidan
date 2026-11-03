@@ -11,11 +11,13 @@ import { useEkran, useTema } from '../tasarim/tema';
 import {
   alisverisOzeti,
   alisverisParasi,
+  hizmetBedeliYuzdesi,
   kargoBoyutlari,
   kargoBoyutuGecerli,
   paketBoyutunuHesapla,
   type KargoBoyutu,
 } from '../veri/guvenliAlisveris';
+import { ondalikGirdisiniTemizle } from '../veri/formGirdileri';
 
 export function TeslimatAlanlari({
   etkin,
@@ -71,7 +73,7 @@ export function TeslimatAlanlari({
         <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
           <Yazi style={{ fontSize: 14, fontWeight: '700' }}>Param Güvende ile satışa aç</Yazi>
           <Yazi style={{ fontSize: 12, color: renk.gri, lineHeight: 19 }}>
-            Kargo boyutunu seç, alıcının ödeyeceği toplamı gör.
+            {hizmetBedeliYuzdesi} hizmet bedelini alıcı öder. Satış tutarından kesinti yapılmaz.
           </Yazi>
         </View>
         <ShieldCheck size={20} color={renk.murekkep} style={{ flexShrink: 0 }} />
@@ -141,7 +143,7 @@ export function TeslimatAlanlari({
                       maxLength={6}
                       editable={!disabled}
                       onChangeText={(deger) => {
-                        setOlculer((onceki) => ({ ...onceki, [ad]: deger.replace(/[^0-9,.]/g, '') }));
+                        setOlculer((onceki) => ({ ...onceki, [ad]: ondalikGirdisiniTemizle(deger, 2, 6) }));
                         setHesapHatasi('');
                       }}
                     />
@@ -194,7 +196,10 @@ export function TeslimatAlanlari({
             >
               <TutarSatiri ad="Ürün bedeli" tutar={ozet.urunBedeli} />
               <TutarSatiri ad="Kargo (alıcı öder)" tutar={ozet.kargoBedeli} />
-              <TutarSatiri ad="Kaçakçıdan hizmet bedeli (%5)" tutar={ozet.hizmetBedeli} />
+              <TutarSatiri
+                ad={`Kaçakçıdan hizmet bedeli (${hizmetBedeliYuzdesi}, alıcı öder)`}
+                tutar={ozet.hizmetBedeli}
+              />
               <TutarSatiri ad="Alıcının ödeyeceği toplam" tutar={ozet.toplam} vurgulu />
               <Yazi style={{ fontSize: 12, color: renk.gri }}>
                 Satış tutarın: {alisverisParasi(ozet.saticiKazanci)}. Hizmet ve kargo bedeli alıcıya aittir.

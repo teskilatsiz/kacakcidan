@@ -9,7 +9,11 @@ export const kargoBoyutlari = [
 
 export type KargoBoyutu = (typeof kargoBoyutlari)[number]['id'];
 export type GuvenliAlisverisAyari = { etkin: boolean; kargoBoyutu: KargoBoyutu };
-export const hizmetBedeliOrani = 0.05;
+export const hizmetBedeliOrani = 0.02;
+export const hizmetBedeliYuzdesi = new Intl.NumberFormat('tr-TR', {
+  style: 'percent',
+  maximumFractionDigits: 2,
+}).format(hizmetBedeliOrani);
 const paraBicimi = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
 export const alisverisParasi = (tutar: number) => `${paraBicimi.format(tutar)} TL`;
 

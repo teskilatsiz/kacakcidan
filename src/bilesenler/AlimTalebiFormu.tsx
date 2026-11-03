@@ -14,6 +14,7 @@ import {
 import { kategoriYapisi } from '../veri/kategoriler';
 import { iller, ilceSecenekleri, konumuAyir } from '../veri/konumlar';
 import { useTema } from '../tasarim/tema';
+import { ondalikGirdisiniTemizle } from '../veri/formGirdileri';
 
 export function AlimTalebiFormu({
   acik,
@@ -186,7 +187,7 @@ export function AlimTalebiFormu({
               nativeID="alim-talebi-butce"
               etiket="En yüksek bütçe (TL)"
               value={girdi.butce}
-              onChangeText={(deger) => degistir('butce', deger)}
+              onChangeText={(deger) => degistir('butce', ondalikGirdisiniTemizle(deger, 2, 12))}
               inputMode="decimal"
               keyboardType="decimal-pad"
               maxLength={16}

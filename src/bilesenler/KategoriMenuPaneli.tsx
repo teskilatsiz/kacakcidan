@@ -17,7 +17,7 @@ import { KategoriSimgesi } from './KategoriSimgesi';
 import { Yazi } from './Temel';
 
 export type MenuSecimi = { kategori: Kategori; altKategori: string; marka: string };
-type Props = {
+export type Props = {
   secim: MenuSecimi;
   degistir: (secim: MenuSecimi) => void;
   mobil: boolean;

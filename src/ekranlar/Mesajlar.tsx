@@ -25,6 +25,7 @@ import { useGorunurAlan } from '../tasarim/gorunurAlan';
 import { useKlavyeAcik } from '../tasarim/useKlavyeAcik';
 import { IskeletParcasi, YuklemeIskeleti } from '../bilesenler/YuklemeIskeleti';
 import { AlisverisBaslat } from '../bilesenler/AlisverisIslemleri';
+import { sayisalGirdiyiTemizle } from '../veri/formGirdileri';
 
 export default function Mesajlar() {
   const { renk, koyu } = useTema();
@@ -636,7 +637,7 @@ export default function Mesajlar() {
           inputMode="numeric"
           value={teklif}
           onChangeText={(deger) => {
-            setTeklif(deger.replace(/\D/g, ''));
+            setTeklif(sayisalGirdiyiTemizle(deger));
             setTeklifHatasi('');
           }}
           hata={teklifHatasi}

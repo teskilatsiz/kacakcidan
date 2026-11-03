@@ -39,9 +39,11 @@ import {
   alisverisOzeti,
   alisverisParasi,
   guvenliAlisveriseUygun,
+  hizmetBedeliYuzdesi,
   kargoBoyutuGecerli,
   type KargoBoyutu,
 } from '../veri/guvenliAlisveris';
+import { ondalikGirdisiniTemizle, sayisalGirdiyiTemizle } from '../veri/formGirdileri';
 import { ilceSecenekleri, iller, konumuAyir, konumuBirlestir } from '../veri/konumlar';
 import { kategoriler, ilanYolu, ilanBedeli, type Ilan, type Kategori } from '../veri/ilanlar';
 import { urunKategorisiMi } from '../veri/anaKategoriler';
@@ -1018,9 +1020,11 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                             }
                             placeholder="Örn. 25000"
                             keyboardType="decimal-pad"
+                            inputMode="decimal"
+                            autoComplete="off"
                             value={fiyat}
                             onChangeText={(v) => {
-                              setFiyat(v.replace(/[^0-9,]/g, ''));
+                              setFiyat(ondalikGirdisiniTemizle(v, 2, 9));
                               hataSil('fiyat');
                             }}
                             maxLength={12}
@@ -1159,7 +1163,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                                     onChangeText={(v) => {
                                       setOzellikler((onceki) => ({
                                         ...onceki,
-                                        [alan.ad]: v.replace(/[^0-9]/g, ''),
+                                        [alan.ad]: sayisalGirdiyiTemizle(v),
                                       }));
                                       hataSil(alan.ad);
                                     }}
@@ -1334,7 +1338,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                           Param Güvende · {alisverisOzeti(sayisalFiyat, kargoBoyutu)?.kargo.ad}
                         </Yazi>
                         <Yazi style={{ color: renk.gri, fontSize: 12 }}>
-                          Kargo ve %5 hizmet bedeli dahil alıcı toplamı:{' '}
+                          Kargo ve %{hizmetBedeliYuzdesi} hizmet bedeli dahil alıcı toplamı:{' '}
                           {alisverisParasi(alisverisOzeti(sayisalFiyat, kargoBoyutu)?.toplam ?? 0)}
                         </Yazi>
                       </View>
