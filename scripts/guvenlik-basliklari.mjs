@@ -109,7 +109,7 @@ export async function guvenlikBasliklariniYaz(klasor = 'dist') {
     "script-src 'self' https://unpkg.com",
     "style-src 'self' https://unpkg.com 'unsafe-inline'",
     "img-src 'self' data: https://tile.openstreetmap.org",
-    "connect-src 'self'",
+    "connect-src 'self' https://unpkg.com",
     "base-uri 'none'",
     "object-src 'none'",
     "frame-ancestors 'self'",
