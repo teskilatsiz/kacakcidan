@@ -2,7 +2,6 @@ import { useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Keyboard, View } from 'react-native';
 import { Link } from 'expo-router';
 import ArrowLeft from 'lucide-react-native/icons/arrow-left';
-import ArrowUpRight from 'lucide-react-native/icons/arrow-up-right';
 import Check from 'lucide-react-native/icons/check';
 import Plus from 'lucide-react-native/icons/plus';
 import { fiyatFarki, karsilastirmaAdaylari, karsilastirmaSatirlari } from '../veri/ilanKarsilastirma';
@@ -168,27 +167,34 @@ export default function KarsilastirmaIcerigi({
                 }}
               >
                 {ilan ? (
-                  <>
-                    <Gorsel
-                      source={gorselKaynagi(ilan.gorsel)}
-                      sizes="(max-width: 699px) 40vw, 320px"
-                      priority="normal"
-                      style={{ width: '100%', aspectRatio: 1.7, borderRadius: 6 }}
-                      accessibilityLabel={`${ilan.baslik} kapak fotoğrafı`}
-                    />
-                    <Yazi
-                      numberOfLines={2}
-                      style={{ minHeight: 40, fontSize: 13, lineHeight: 20, fontWeight: '600' }}
+                  <Link href={ilanYolu(ilan)} asChild>
+                    <HareketliBas
+                      accessibilityRole="link"
+                      accessibilityLabel={`${sira + 1}. ilan ayrıntılarını aç: ${ilan.baslik}`}
+                      onPress={kapat}
+                      style={{ minWidth: 0, gap: 10, borderRadius: 7 }}
                     >
-                      {ilan.baslik}
-                    </Yazi>
-                    <Yazi style={{ fontSize: mobil ? 16 : 18, lineHeight: 25, fontWeight: '700' }}>
-                      {ilanBedeli(ilan)}
-                    </Yazi>
-                    <Yazi numberOfLines={2} style={{ fontSize: 12, color: renk.gri, lineHeight: 18 }}>
-                      {ilan.konum}
-                    </Yazi>
-                  </>
+                      <Gorsel
+                        source={gorselKaynagi(ilan.gorsel)}
+                        sizes="(max-width: 699px) 40vw, 320px"
+                        priority="normal"
+                        style={{ width: '100%', aspectRatio: 1.7, borderRadius: 6 }}
+                        accessibilityLabel={`${ilan.baslik} kapak fotoğrafı`}
+                      />
+                      <Yazi
+                        numberOfLines={2}
+                        style={{ minHeight: 40, fontSize: 13, lineHeight: 20, fontWeight: '600' }}
+                      >
+                        {ilan.baslik}
+                      </Yazi>
+                      <Yazi style={{ fontSize: mobil ? 16 : 18, lineHeight: 25, fontWeight: '700' }}>
+                        {ilanBedeli(ilan)}
+                      </Yazi>
+                      <Yazi numberOfLines={2} style={{ fontSize: 12, color: renk.gri, lineHeight: 18 }}>
+                        {ilan.konum}
+                      </Yazi>
+                    </HareketliBas>
+                  </Link>
                 ) : (
                   <View
                     style={{
@@ -225,24 +231,6 @@ export default function KarsilastirmaIcerigi({
                 >
                   <Yazi style={{ fontSize: 13, fontWeight: '600' }}>{ilan ? 'Değiştir' : 'İlan ekle'}</Yazi>
                 </HareketliBas>
-                {ilan && (
-                  <Link href={ilanYolu(ilan)} asChild>
-                    <HareketliBas
-                      accessibilityLabel={`${sira + 1}. ilanı aç`}
-                      onPress={kapat}
-                      style={{
-                        minHeight: 44,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 5,
-                      }}
-                    >
-                      <Yazi style={{ fontSize: 12 }}>İlanı gör</Yazi>
-                      <ArrowUpRight size={14} color={renk.murekkep} />
-                    </HareketliBas>
-                  </Link>
-                )}
               </Giris>
             </View>
           );
