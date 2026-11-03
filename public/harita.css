@@ -24,6 +24,11 @@ body {
 #harita {
   background: #eceee9;
 }
+@media (pointer: coarse) {
+  #harita {
+    touch-action: pan-y pinch-zoom;
+  }
+}
 .leaflet-tile-pane {
   filter: saturate(0.55) contrast(0.96);
 }

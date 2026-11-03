@@ -45,9 +45,15 @@ function baslat() {
   if (harita) harita.remove();
   try {
     konumuOku();
+    // Mobilde parmak harita üzerindeyken sayfa kaydırılabilsin. Leaflet 1.x,
+    // sürükleme sürerken iptal edilemeyen touchmove olaylarında da
+    // preventDefault çağırdığı için dokunmatik cihazlarda bu hareketleri kapat.
+    var dokunmatik = window.matchMedia('(pointer: coarse)').matches;
     harita = L.map('harita', {
       scrollWheelZoom: false,
       zoomControl: false,
+      dragging: !dokunmatik,
+      touchZoom: !dokunmatik,
       zoomAnimation: !azHareket,
       fadeAnimation: !azHareket,
       minZoom: 5,
