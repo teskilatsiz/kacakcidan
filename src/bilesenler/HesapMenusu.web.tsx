@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from 'react';
 import UserRound from 'lucide-react-native/icons/user-round';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import { usePazar } from '../durum/Pazar';
 import { useMedyaAdresi } from '../durum/medyaDeposu';
 import { useTema } from '../tasarim/tema';
-import { HesapMenusuIcerigi } from './HesapMenusuIcerigi';
 import { UyelikPenceresi } from './UyelikPenceresi';
 import { CikisOnayi } from './CikisOnayi';
 import { usePathname } from 'expo-router';
+
+const HesapMenusuIcerigi = lazy(() =>
+  import('./HesapMenusuIcerigi').then((modul) => ({ default: modul.HesapMenusuIcerigi })),
+);
 
 export function HesapMenusu() {
   const { renk } = useTema();
@@ -131,11 +134,15 @@ export function HesapMenusu() {
           fontFamily: 'DM Sans, sans-serif',
         }}
       >
-        <HesapMenusuIcerigi
-          kapat={kapat}
-          uyelikAc={(kayit) => setUyelik(kayit ? 'kayit' : 'giris')}
-          cikisIste={() => setCikis(true)}
-        />
+        {acik && (
+          <Suspense fallback={<span role="status">Menü açılıyor…</span>}>
+            <HesapMenusuIcerigi
+              kapat={kapat}
+              uyelikAc={(kayit) => setUyelik(kayit ? 'kayit' : 'giris')}
+              cikisIste={() => setCikis(true)}
+            />
+          </Suspense>
+        )}
       </div>
       <UyelikPenceresi
         acik={uyelik !== null}

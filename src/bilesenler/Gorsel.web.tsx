@@ -104,6 +104,16 @@ export function Gorsel({
           <IskeletParcasi yukseklik="100%" yaricap={0} />
         </YuklemeIskeleti>
       ) : null}
+      {priority === 'high' && !media && !!adres && (
+        <link
+          rel="preload"
+          as="image"
+          href={srcSet ? undefined : adres}
+          imageSrcSet={srcSet}
+          imageSizes={sizes}
+          fetchPriority="high"
+        />
+      )}
       {media ? (
         <>
           {oncelikli && adres && (

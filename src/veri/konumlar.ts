@@ -124,9 +124,7 @@ export type Konum = Readonly<{ il: string; ilce: string }>;
 // İlan ve ilçe kapsamı şu anda Türkiye için tutulur.
 export const ulkeler: readonly KonumSecenegi[] = [{ id: 'TR', ad: 'Türkiye' }];
 export const iller: readonly KonumSecenegi[] = Object.keys(ilceDizini).map((ad) => ({ id: ad, ad }));
-const ilceler = new Map<string, readonly KonumSecenegi[]>(
-  Object.entries(ilceDizini).map(([il, dizi]) => [il, dizi.split('|').map((ad) => ({ id: ad, ad }))]),
-);
+const ilceler = new Map<string, readonly KonumSecenegi[]>();
 const bosSecenekler: readonly KonumSecenegi[] = [];
 
 function karsilastirmaAnahtari(deger: string) {
@@ -147,7 +145,13 @@ const eskiIlceAdlari: Readonly<Record<string, Readonly<Record<string, string>>>>
 
 export function ilceSecenekleri(il: string): readonly KonumSecenegi[] {
   const ilAdi = ilAnahtarlari.get(karsilastirmaAnahtari(il));
-  return (ilAdi && ilceler.get(ilAdi)) || bosSecenekler;
+  if (!ilAdi) return bosSecenekler;
+  const mevcut = ilceler.get(ilAdi);
+  if (mevcut) return mevcut;
+  // Açılışta 973 ilçenin seçenek nesnesini oluşturma; gereken ili bir kez hazırla.
+  const secenekler = ilceDizini[ilAdi]!.split('|').map((ad) => ({ id: ad, ad }));
+  ilceler.set(ilAdi, secenekler);
+  return secenekler;
 }
 
 /** Kaydedilmiş 'İl, İlçe' ve 'İlçe / İl' konumlarını aynı seçimlere taşır. */

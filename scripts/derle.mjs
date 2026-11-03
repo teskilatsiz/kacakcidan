@@ -7,6 +7,7 @@ import { gorselVaryantlariniYaz } from './gorsel-varyantlari.mjs';
 import { webStilleriniSatirIcineAl } from './web-stilleri.mjs';
 import { kaynakHaritalariniDuzenle } from './kaynak-haritalari.mjs';
 import { ilanPaylasimGorselleriniYaz } from './ilan-paylasim-gorselleri.mjs';
+import { guvenlikBasliklariniYaz } from './guvenlik-basliklari.mjs';
 
 // Node, kabuktaki değişkenleri korur. Önce daha özel .env dosyaları okunur.
 for (const file of ['.env.production.local', '.env.local', '.env.production', '.env']) {
@@ -35,6 +36,9 @@ const noindex = !siteUrl || onizleme || Boolean(yerelAdres);
 const env = {
   ...process.env,
   NODE_ENV: 'production',
+  // Web açılışında kullanılmayan kütüphane dışa aktarımları pakete girmez.
+  EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH: '1',
+  EXPO_UNSTABLE_TREE_SHAKING: '1',
   EXPO_PUBLIC_NOINDEX: String(noindex),
 };
 if (siteUrl) env.EXPO_PUBLIC_SITE_URL = siteUrl;
@@ -55,6 +59,7 @@ await cssCiktisiniDuzenle();
 await webStilleriniSatirIcineAl();
 await kaynakHaritalariniDuzenle();
 await aramaDosyalariniYaz({ siteUrl, noindex });
+await guvenlikBasliklariniYaz();
 console.log(
   siteUrl
     ? `Web çıktısı hazır: dist (${noindex ? 'arama motorlarına kapalı önizleme' : siteUrl})`

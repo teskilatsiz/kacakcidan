@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View, type ViewInstance } from 'react-native';
 import { Link, type Href } from 'expo-router';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
@@ -14,10 +14,13 @@ import { Baslik, Yazi } from './Temel';
 import { KategoriSimgesi } from './KategoriSimgesi';
 import { KaydirmaSeridi } from './KaydirmaSeridi';
 import { Pencere } from './Pencere';
-import { KategoriMenuPaneli, type MenuSecimi } from './KategoriMenuPaneli';
+import type { MenuSecimi } from './KategoriMenuPaneli';
 import { kalin, ortak, useEkran, useTema, temaStilleri } from '../tasarim/tema';
 
 const ilkKategoriler: Kategori[] = ['otomotiv', 'telefon', 'bilgisayar', 'oyun', 'ev', 'moda', 'koleksiyon'];
+const KategoriMenuPaneli = lazy(() =>
+  import('./KategoriMenuPaneli').then((modul) => ({ default: modul.KategoriMenuPaneli })),
+);
 
 /** Ana sayfadaki kategori seçimi, katalogdaki aynı kategori zincirini kullanır. */
 export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
@@ -325,12 +328,14 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
         )}
         {!mobil && secim && !pencere && (
           <Giris key={secim.kategori} nativeID={menuKimligi} style={s.megaPanel}>
-            <KategoriMenuPaneli
-              secim={secim}
-              degistir={setSecim}
-              mobil={false}
-              tumunuAc={() => setPencere('tum')}
-            />
+            <Suspense fallback={<Yazi style={{ padding: 16 }}>Kategoriler yükleniyor…</Yazi>}>
+              <KategoriMenuPaneli
+                secim={secim}
+                degistir={setSecim}
+                mobil={false}
+                tumunuAc={() => setPencere('tum')}
+              />
+            </Suspense>
           </Giris>
         )}
       </View>
@@ -355,7 +360,9 @@ export function IkonluKategoriler({ tumunuAc = 0 }: { tumunuAc?: number }) {
         {pencere === 'tum' ? (
           <View style={s.izgara}>{kategoriler.map((kategori) => kategoriKarti(kategori, true))}</View>
         ) : secim ? (
-          <KategoriMenuPaneli secim={secim} degistir={setSecim} mobil tumunuAc={() => setPencere('tum')} />
+          <Suspense fallback={<Yazi style={{ padding: 16 }}>Kategoriler yükleniyor…</Yazi>}>
+            <KategoriMenuPaneli secim={secim} degistir={setSecim} mobil tumunuAc={() => setPencere('tum')} />
+          </Suspense>
         ) : null}
       </Pencere>
     </View>

@@ -31,6 +31,7 @@ export default function Html({ children, pathname }: PropsWithChildren<{ pathnam
         <meta charSet="utf-8" />
         <meta name="author" content="Teşkilatsız" />
         <meta name="color-scheme" content="light dark" />
+        <script src="/guvenlik.js" />
         <style dangerouslySetInnerHTML={{ __html: temaCss }} />
         <script dangerouslySetInnerHTML={{ __html: temaBaslat }} />
         <meta
@@ -56,6 +57,13 @@ export default function Html({ children, pathname }: PropsWithChildren<{ pathnam
         <link
           rel="preload"
           href="/fonts/dm-sans-400.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/dm-sans-600.woff2"
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"
