@@ -32,10 +32,14 @@ export async function guvenlikBasliklariniYaz(klasor = 'dist') {
           const attr = Object.fromEntries(betik.attrs.map(({ name, value }) => [name, value]));
           const kaynak = attr.src ?? attr.href;
           if (kaynak) {
-            if (!/^\/(?:_expo\/static\/js\/web\/[\w+\[\].-]+-[a-f0-9]{32}\.js|guvenlik\.js)$/.test(kaynak)) {
+            const dosyaYolu = kaynak.split('?')[0];
+            if (
+              !/^\/(?:_expo\/static\/js\/web\/[\w+\[\].-]+-[a-f0-9]{32}\.js|guvenlik\.js)$/.test(dosyaYolu)
+            ) {
               throw new Error(`Beklenmeyen betik adresi: ${kaynak}`);
             }
-            const hash = ozet(await readFile(path.join(klasor, kaynak.slice(1))));
+            const icerik = await readFile(path.join(klasor, dosyaYolu.slice(1)));
+            const hash = ozet(icerik);
             izinler.add(hash);
             if (attr.integrity && attr.integrity !== hash) throw new Error(`Betik özeti değişti: ${kaynak}`);
             if (!attr.integrity) {
@@ -45,13 +49,31 @@ export async function guvenlikBasliklariniYaz(klasor = 'dist') {
                 metin: ` integrity="${hash}" crossorigin="anonymous"`,
               });
             }
+            // Expo runtime dosyasının adresi bazı derlemelerde sabit kalırken
+            // içeriği değişebilir. Eski HTML veya tarayıcı önbelleği yeni SRI ile
+            // çakışmasın diye yalnız runtime URL'sini içerik özetiyle sürümle.
+            if (dosyaYolu.startsWith('/_expo/static/js/web/__expo-metro-runtime-')) {
+              const surumluKaynak = `${dosyaYolu}?v=${createHash('sha256').update(icerik).digest('hex')}`;
+              if (kaynak !== surumluKaynak) {
+                const ad = attr.src ? 'src' : 'href';
+                const yer = betik.sourceCodeLocation.attrs[ad];
+                degisiklikler.push({
+                  baslangic: yer.startOffset,
+                  bitis: yer.endOffset,
+                  metin: `${ad}="${surumluKaynak}"`,
+                });
+              }
+            }
           } else if (attr.type !== 'application/ld+json') {
             const metin = betik.childNodes.map((cocuk) => cocuk.value ?? '').join('');
             if (metin) izinler.add(ozet(metin));
           }
         }
         for (const degisiklik of degisiklikler.sort((a, b) => b.baslangic - a.baslangic)) {
-          html = html.slice(0, degisiklik.baslangic) + degisiklik.metin + html.slice(degisiklik.baslangic);
+          html =
+            html.slice(0, degisiklik.baslangic) +
+            degisiklik.metin +
+            html.slice(degisiklik.bitis ?? degisiklik.baslangic);
         }
         await writeFile(yol, html);
         sayfalar.push({ yol: `/${path.relative(klasor, yol).split(path.sep).join('/')}`, izinler });
