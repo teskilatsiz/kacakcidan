@@ -1,5 +1,5 @@
-import { createContext, useContext, useSyncExternalStore } from 'react';
-import { Dimensions, Platform, StyleSheet } from 'react-native';
+import { createContext, useContext } from 'react';
+import { Platform, StyleSheet } from 'react-native';
 
 import { acikRenkler, type Renkler } from './palet';
 export { acikRenkler, koyuRenkler, type Renkler } from './palet';
@@ -39,24 +39,9 @@ export const ortak = StyleSheet.create({
   alan: { width: '100%', maxWidth: 1440, alignSelf: 'center', paddingHorizontal: 48 },
   kart: { backgroundColor: renk.beyaz, borderWidth: 1, borderColor: renk.cizgi, borderRadius: 16 },
 });
-const sunucuOlcusu = { width: 1440, height: 900, scale: 1, fontScale: 1 };
-const sunucuEkrani = () => sunucuOlcusu;
-const anlikEkran = () => Dimensions.get('window');
-const dokunmatikSorgusu =
-  Platform.OS === 'web' && typeof window !== 'undefined' ? window.matchMedia('(pointer: coarse)') : null;
-const dokunmatikEkran = () => dokunmatikSorgusu?.matches ?? false;
-const sunucuDokunmatigi = () => false;
-function dokunmatigiIzle(guncelle: () => void) {
-  dokunmatikSorgusu?.addEventListener('change', guncelle);
-  return () => dokunmatikSorgusu?.removeEventListener('change', guncelle);
-}
-function ekraniIzle(guncelle: () => void) {
-  const abonelik = Dimensions.addEventListener('change', guncelle);
-  return () => abonelik.remove();
-}
+export const EkranBaglami = createContext({ width: 1440, height: 900, dokunmatik: false });
 export function useEkran() {
-  const { width, height } = useSyncExternalStore(ekraniIzle, anlikEkran, sunucuEkrani);
-  const dokunmatik = useSyncExternalStore(dokunmatigiIzle, dokunmatikEkran, sunucuDokunmatigi);
+  const { width, height, dokunmatik } = useContext(EkranBaglami);
   const genislik = width || 1440;
   const kompakt =
     genislik < 1100 ||

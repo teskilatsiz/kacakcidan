@@ -10,6 +10,7 @@ import { SayfaBasligi } from '../src/bilesenler/SayfaBasligi';
 import { SayfaGecisi } from '../src/bilesenler/SayfaGecisi';
 import { KlavyeOdagi } from '../src/bilesenler/KlavyeOdagi';
 import { TemaSaglayici } from '../src/tasarim/TemaSaglayici';
+import { EkranSaglayici } from '../src/tasarim/EkranSaglayici';
 import { useTema } from '../src/tasarim/tema';
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
@@ -58,9 +59,11 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 
 export default function KokDuzen() {
   return (
-    <TemaSaglayici>
-      <UygulamaDuzeni />
-    </TemaSaglayici>
+    <EkranSaglayici>
+      <TemaSaglayici>
+        <UygulamaDuzeni />
+      </TemaSaglayici>
+    </EkranSaglayici>
   );
 }
 
