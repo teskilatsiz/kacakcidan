@@ -60,7 +60,7 @@ function IlanOzeti({ ilan, ad, kompakt = false }: { ilan: Ilan; ad: string; komp
 export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
   const { renk } = useTema();
   const { mobil, kompakt, yukseklik } = useEkran();
-  const { tumIlanlar, oturum, haberVer, bildirim } = usePazar();
+  const { tumIlanlar, favoriler, oturum, haberVer, bildirim } = usePazar();
   const { onceki, temizle } = useSonBakilanIlan(ilan, tumIlanlar, oturum?.id);
   const oneriAnahtari = `${oturum?.id ?? 'misafir'}:${ilan.id}`;
   const [acik, setAcik] = useState(false);
@@ -86,11 +86,12 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
   const seciliIlanlar = secimler.map((id) =>
     id === ilan.id ? ilan : tumIlanlar.find((kayit) => kayit.id === id && kayit.yayinDurumu !== 'kaldirildi'),
   ) as [Ilan | undefined, Ilan | undefined];
-  const secimiDegistir = (sira: 0 | 1, secilen: Ilan) => {
+  const secimiDegistir = (sira: 0 | 1, secilen?: Ilan) => {
     const digerId = secimler[sira === 0 ? 1 : 0];
-    if (!karsilastirmaAdaylari(tumIlanlar, ilan, digerId).some((aday) => aday.id === secilen.id)) return;
+    if (secilen && !karsilastirmaAdaylari(tumIlanlar, ilan, digerId).some((aday) => aday.id === secilen.id))
+      return;
     elleDegisti.current = true;
-    setSecimler((once) => (sira === 0 ? [secilen.id, once[1]] : [once[0], secilen.id]));
+    setSecimler((once) => (sira === 0 ? [secilen?.id, once[1]] : [once[0], secilen?.id]));
   };
 
   useFocusEffect(
@@ -274,6 +275,7 @@ export function IlanKarsilastirmasi({ ilan }: { ilan: Ilan }) {
               <KarsilastirmaIcerigi
                 baglam={ilan}
                 ilanlar={tumIlanlar}
+                favoriler={oturum ? favoriler : []}
                 secimler={seciliIlanlar}
                 degistir={secimiDegistir}
                 kapat={() => setAcik(false)}

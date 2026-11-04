@@ -28,7 +28,9 @@ Uzun adlar ve konumlar kendi alanları içinde kırılır. Dar ekranda işlem d�
 
 ## Karşılaştırma ve yükleme durumları
 
-İlan sayfasındaki Karşılaştır düğmesi her ekran boyutunda görünür. Pencerede iki ilan ayrı ayrı seçilebilir veya değiştirilebilir. Aynı türdeki ilanların fiyatı, konumu ve teknik özellikleri yan yana gösterilir. İlanın görseli ve bilgileri kendi sayfasına bağlantıdır; seçim değiştirme işlemi ayrı düğmededir.
+İlan sayfasındaki Karşılaştır düğmesi her ekran boyutunda görünür. Pencerede iki ilan ayrı ayrı seçilebilir, değiştirilebilir veya çıkarılabilir. Seçim listesinde aynı ürün türündeki favoriler önce gelir; ardından model, marka ve fiyat yakınlığına göre diğer ilanlar sıralanır. Favoriler ayrıca süzülebilir. Diğer alana eklenen ilan listeden çıkarılır; yayından kaldırılmış ilanlar gösterilmez.
+
+Aynı türdeki ilanların fiyatı, konumu ve teknik özellikleri yan yana gösterilir. Bilgisayar parçalarında işlemci ve bellek gibi farklı türler ayrılır; telefonlarda farklı marka ve modeller karşılaştırılabilir. Yalnızca farkları göster seçeneği ortak özellikleri gizler. Webde sütun başlıkları kaydırma sırasında görünür kalır. İlanın görseli ve bilgileri kendi sayfasına bağlantıdır; seçim değiştirme işlemi ayrı düğmededir.
 
 Daha önce bakılmış uyumlu bir ilan varsa karşılaştırma önerisi gösterilebilir. Başka pencere açıkken, klavye kullanılırken veya bildirim görünürken otomatik öneri ertelenir. Kapatılan öneri aynı oturumda aynı ilan için tekrar açılmaz. Masaüstündeki öneri şeridinin yüksekliği ölçülür; bildirimler bunun üzerinde yer alır.
 

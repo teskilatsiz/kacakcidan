@@ -5,6 +5,11 @@
 [data-karsilastirma-simdiki] {
   display: none;
 }
+[data-karsilastirma-sutun-basliklari] {
+  position: sticky !important;
+  top: 0;
+  z-index: 1;
+}
 @media (min-height: 560px) {
   [data-karsilastirma-onerisi][data-karsilastirma-sabit='true'] {
     position: fixed !important;
