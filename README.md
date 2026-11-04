@@ -9,7 +9,7 @@
   <img alt="React Native 0.88" src="https://img.shields.io/badge/React%20Native-0.88-20232A?logo=react&logoColor=61DAFB" />
   <img alt="TypeScript 6" src="https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white" />
   <img alt="Web, iOS ve Android" src="https://img.shields.io/badge/Platformlar-web%2C%20iOS%20ve%20Android-555" />
-  <img alt="MIT lisansı" src="https://img.shields.io/badge/lisans-MIT-17191b" />
+  <img alt="Ticari olmayan lisans" src="https://img.shields.io/badge/lisans-ticari%20olmayan-17191b" />
 </p>
 
 <p align="center">
@@ -95,4 +95,10 @@ Alışveriş ve değerlendirme akışları aynı cihazdaki hesaplar arasında ku
 
 ## Lisans
 
-Kaynak kod [MIT lisansıyla](./LICENSE) yayımlanır. DM Sans yazı tipi kendi [OFL lisansına](./public/fonts/OFL.txt) tabidir.
+Kaçakçıdan’a ait özgün kodun telif hakkı © 2026 Teşkilatsız’dadır ve [PolyForm Noncommercial 1.0.0](./LICENSE) koşullarıyla yayımlanır. Kişisel ve hobi kullanımı gibi ticari olmayan kullanımlara izin verir; ticari kullanım için ayrıca yazılı izin gerekir. Lisans, belirli eğitim, yardım, kamu sağlığı ve kamu kurumlarının kullanımına fon kaynağından bağımsız izin verir.
+
+Reacticx uyarlamaları ve ilçe koordinatları gibi üçüncü taraf içerikler kendi lisanslarında kalır. DM Sans yazı tipi [SIL Open Font License 1.1](./public/fonts/OFL.txt) ile lisanslanmıştır. Bağımlılıkların lisansları da kendi paketlerinde geçerlidir.
+
+Önceki sürümlerde MIT lisansı yayımlandığı için bu değişiklik o sürümler için daha önce verilmiş izinleri geriye dönük olarak kaldırmaz.
+
+Güvenlik açığı bildirimleri için [SECURITY.md](./SECURITY.md) dosyasındaki yolu kullanın.
