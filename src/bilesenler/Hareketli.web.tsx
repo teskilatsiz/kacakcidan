@@ -1,7 +1,7 @@
 import { useTema, temaStilleri } from '../tasarim/tema';
 // Reacticx uyarlamalarının tarayıcı sürümü.
 // Copyright (c) 2026 rit3zh, Reacticx uyarlaması, MIT lisansı.
-import { forwardRef, memo, useEffect, useState } from 'react';
+import { forwardRef, memo, useState } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -13,7 +13,6 @@ import {
   type ViewStyle,
 } from 'react-native';
 import Heart from 'lucide-react-native/icons/heart';
-import { useAzaltilmisHareket } from './HareketTercihi';
 import '../tasarim/hareket.web.css';
 
 export { useAzaltilmisHareket } from './HareketTercihi';
@@ -40,7 +39,6 @@ export const HareketliBas = memo(
   ) {
     const s = useStiller();
 
-    const azHareket = useAzaltilmisHareket();
     const rol = diger.role ?? accessibilityRole;
     const webDurumu = {
       'aria-busy': accessibilityState?.busy,
@@ -63,20 +61,13 @@ export const HareketliBas = memo(
           typeof style === 'function' ? style(durum) : style,
           {
             transform: [
-              { translateY: durum.hovered && vurgu === 'kategori' && !disabled && !azHareket ? -2 : 0 },
+              { translateY: durum.hovered && vurgu === 'kategori' && !disabled ? -2 : 0 },
               {
-                scale:
-                  disabled || azHareket
-                    ? 1
-                    : durum.pressed
-                      ? olcek
-                      : durum.hovered && vurgu === 'dugme'
-                        ? 1.02
-                        : 1,
+                scale: disabled ? 1 : durum.pressed ? olcek : durum.hovered && vurgu === 'dugme' ? 1.02 : 1,
               },
             ],
           },
-          azHareket ? s.durgun : durum.pressed ? s.basma : s.birakma,
+          durum.pressed ? s.basma : s.birakma,
         ]}
       >
         {children}
@@ -117,16 +108,11 @@ export const FavoriDugmesi = memo(function FavoriDugmesi({
   const { renk } = useTema();
   const s = useStiller();
 
-  const azHareket = useAzaltilmisHareket();
   const [nabiz, setNabiz] = useState(0);
-
-  useEffect(() => {
-    if (azHareket) setNabiz(0);
-  }, [azHareket]);
 
   const favoriyiDegistir: NonNullable<PressableProps['onPress']> = (olay) => {
     olay.stopPropagation();
-    if (!azHareket) setNabiz((eski) => eski + 1);
+    setNabiz((eski) => eski + 1);
     onPress(olay);
   };
 
@@ -164,7 +150,6 @@ const useStiller = temaStilleri((renk) =>
       transitionDuration: '180ms',
       transitionTimingFunction: 'ease-out',
     },
-    durgun: { transitionProperty: 'none' },
     favori: {
       width: 40,
       height: 40,
