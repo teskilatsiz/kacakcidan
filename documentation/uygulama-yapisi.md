@@ -1,10 +1,10 @@
 # Uygulama yapısı
 
-## Sorumluluklar
+## Dosyaların görevleri
 
-`app/` adresleri ve sayfa metaverilerini tanımlar. Ekranın içeriği `src/ekranlar/` altında, tekrar kullanılan arayüzler `src/bilesenler/` altında bulunur. Hesap ve ilan işlemleri ekranlardan bağımsız olarak `src/durum/` içinde yürütülür. Kategori ve teknik özellik tanımları `src/veri/` katmanındadır.
+`app/` adresleri ve sayfa metaverilerini tanımlar. Ekran içerikleri `src/ekranlar/`, ortak arayüz bileşenleri `src/bilesenler/` altındadır. Hesap ve ilan işlemleri `src/durum/`, kategori ve teknik özellik tanımları `src/veri/` içinde bulunur.
 
-Aynı bileşenin web ve native davranışı ayrışıyorsa `.web.tsx` sürümü kullanılır. Örneğin web galerisi ve penceresi tarayıcının öğelerini kullanırken native sürüm React Native bileşenlerini kullanır. Böylece her sürüm kendi platformunun araçlarıyla çalışır. Ortak prop tipleri farklı sürümlerin sözleşmesini korur.
+Platform davranışı ayrıştığında `.web.tsx` sürümü kullanılır. Örneğin web penceresi tarayıcının `dialog` öğesini, native pencere React Native bileşenlerini kullanır. Ortak prop tipleri iki sürümün aynı arayüzle kullanılmasını sağlar.
 
 ```mermaid
 flowchart TD
@@ -15,66 +15,55 @@ flowchart TD
   E --> F[Hesap ve ilan işlemleri]
   F --> G[Cihaz deposu]
   B --> H[Kategori ve özellik tanımları]
-  C --> I[Web veya native sürüm]
 ```
 
-Arayüzdeki hesap, satın alma ve mesaj durumları yerel kayıtlarla çalışır. Sunucu eklendiğinde veri erişimi ve yetkilendirme katmanının değişmesi gerekir; bileşendeki bir giriş kontrolü sunucu güvenliği sağlamaz.
+## İlk açılış
 
-## İlk açılış ve kayıtların okunması
+Katalog ilanları statik üretimde bilinir; başlık, kapak görseli ve temel içerik HTML'e yazılır. Kullanıcının eklediği ilanlar cihaz deposu okunduktan sonra bulunabilir. Sağlayıcının `hazir` bilgisi bu ayrımı yapar.
 
-Katalogdaki ilanlar statik üretim sırasında bilinir. Webde ilan başlığı, kapak görseli ve temel içerik HTML içinde hazırdır. Yerel kullanıcının eklediği ilanlar ise ancak cihaz deposu okunduktan sonra bilinebilir. Bunları aynı yükleme durumu gibi ele almak yanlış bir “ilan bulunamadı” ekranına yol açar.
-
-`PazarSaglayici`, kayıt okuma tamamlandığında `hazir` bilgisini yayımlar. Bir ekranın henüz bulunamayan yerel kayıtla gerçekten bulunmayan kaydı ayırması gerekir:
-
-| Durum                         | Ekranın davranışı          |
+| Durum                         | Görünen içerik             |
 | ----------------------------- | -------------------------- |
-| İlan hazır                    | İçeriği göster             |
-| İlan yok, kayıt okuma sürüyor | Gecikmeli iskelet göster   |
-| İlan yok, okuma tamamlandı    | Bulunamadı durumunu göster |
+| İlan hazır                    | İlan içeriği               |
+| İlan yok, kayıt okuma sürüyor | Gecikmeli yükleme iskeleti |
+| İlan yok, okuma tamamlandı    | Bulunamadı ekranı          |
 
-Yerel ilan adresi `/ilan/yerel?kayit=...` biçimindedir. Statik çıktı bu ortak sayfayı içerir. Kullanıcının tarayıcısında oluşmuş bir ilanın başka bir cihazda aynı içerikle bulunacağı varsayılmaz. Katalog ilanlarının bilinen adresleri `generateStaticParams` ile ayrı ayrı üretilir.
+Yerel ilan adresi `/ilan/yerel?kayit=...` biçimindedir. Kayıt yalnız oluşturulduğu cihazda bulunur. Katalog ilanlarının adresleri `generateStaticParams` ile ayrı ayrı üretilir.
 
 İlgili dosyalar: [ilan sayfası](../app/ilan/[id].tsx), [ilan ekranı](../src/ekranlar/IlanDetayi.tsx), [sağlayıcı](../src/durum/PazarSaglayici.tsx).
 
-## Yerel kayıtların tutarlılığı
+## Kayıtlar ve işlemler
 
-Hesap deposunda misafir kaydı, hesaplar ve aktif hesap kimliği ayrıdır. İlan, favori ve mesaj işlemleri aktif kayda uygulanır. Bekleyen yazmalar sıralanır; geç tamamlanan eski bir yazmanın yeni veriyi ezmesi önlenir. Depo okunurken oluşan işlemler de kaybolmaması için sırada tutulur.
+Misafir kaydı, hesaplar ve etkin hesap kimliği ayrı tutulur. İlan, favori ve mesaj işlemleri etkin hesaba uygulanır. Depoya yazmalar sırayla yürütülür; eski bir yazmanın daha yeni kaydı ezmesi önlenir. Kayıtlar okunurken gelen işlemler de sırada tutulur.
 
-Kayıt okuma, doğrulama ve eski biçimleri dönüştürme ekranın işi değildir. `hesapDeposu.ts` bu sınırı yönetir. Ürün durumunun üç seçenekten iki seçeneğe geçmesi buna örnek: eski “Yeni gibi” değeri doğrulama öncesinde “İkinci el”e çevrilir. Eski kayıt tümden reddedilmez; oturum, favoriler ve medyaya ait kimlikler korunur. Yeni oluşturma ve düzenleme işlemleri yalnız tanımlı iki durumu kabul eder.
+Depodan gelen veri kullanılmadan önce doğrulanır ve gerekiyorsa güncel biçime dönüştürülür. Yeni bir alan eklendiğinde eski kayıtların nasıl okunacağı da bu katmanda belirlenir. İlan düzenlenirken ilan kimliği korunur.
 
-İlanın düzenlenmesi kimliğini değiştirmez. Yeni ilan numarası atama ve mevcut numarayı koruma ayrı işlemlerdir. Filtrelenmiş listenin sırası veya görselin dosya adı ilan kimliği olarak kullanılmaz.
+Parolalar tuzlanmış PBKDF2 özetiyle saklanır. Bu işlem cihazdaki kayıtları merkezi bir üyelik hizmetine dönüştürmez. Veri erişiminin sunucuda denetlenmesi, cihazlar arasında eşitleme, ödeme ve teslimat doğrulaması bu deponun kapsamı dışındadır.
 
-Parola açık metin olarak saklanmaz; webde Web Crypto, native tarafta uygun karma hesabı kullanılır. Bununla birlikte, aynı cihazdaki kayıtlar merkezi bir kimlik doğrulama sistemi değildir. Kullanıcı verisine erişimin sunucuda denetlenmesi bu deponun kapsamı dışındadır.
+İlgili dosyalar: [hesap deposu](../src/durum/hesapDeposu.ts), [web parola işlemleri](../src/durum/parola.web.ts), [native parola işlemleri](../src/durum/parola.ts), [ilan etkileşimleri](../src/veri/ilanEtkilesimleri.ts).
 
-İlgili dosyalar: [hesap deposu](../src/durum/hesapDeposu.ts), [durum seçenekleri](../src/veri/ilanDurumu.ts), [parola](../src/durum/parola.web.ts), [ilan etkileşimleri](../src/veri/ilanEtkilesimleri.ts).
+## Sahiplik ve değerlendirmeler
 
-## Türetilen bilgiler ve görünürlük
+Giriş gerektiren işlemler oturuma göre açılır. İlan yönetimi yalnız ilanın sahibine gösterilir; işlem katmanı da sahipliği ve geçerli durumu denetler.
 
-Satıcı puanı, değerlendirme sayısı ve ilan istatistikleri mevcut kayıtlardan hesaplanır. Kayıt bulunmaması olumlu değerlendirme veya doğrulama olarak yorumlanmaz. Değerlendirme hakkı, alışverişteki teslim onaylarıyla ilişkilidir. Aynı alışveriş için ikinci yorum oluşturulamaz; satıcı yoruma yanıt verebilir, alıcının yorumunu silemez.
+Satıcı puanı ve değerlendirme sayısı kayıtlı yorumlardan hesaplanır. Yorum yazabilmek için alışverişte iki tarafın teslim onayı gerekir. Her alışveriş için bir değerlendirme yapılabilir. Satıcı yoruma yanıt verebilir, alıcının yorumunu silemez.
 
-Hesap gerektiren işlemler arayüzde oturuma göre açılır. Favoriye ekleme veya ilan yönetimi giriş gerektirir. İlan sahibine ait düğmeler başka bir hesabın ilanında gösterilmez. İşlem katmanı da sahiplik ve geçerli durum kontrolü yapar; yalnız düğmeyi gizlemeye dayanmaz.
-
-Bu kontroller yerel akışın tutarlılığı içindir. Ayrı cihazlar, eşzamanlı kullanıcılar, gerçek ödeme ve teslimat doğrulaması için sunucu tarafında yeniden kurulmaları gerekir.
+Bu kontroller aynı cihazdaki akışların tutarlılığını sağlar. Çok kullanıcılı bir hizmette yetki ve işlem denetimlerinin sunucuda da kurulması gerekir.
 
 ## Katalog ve model bilgileri
 
-Kategori ağacı, özellik tanımları ve üreticiden gelen sabit model bilgileri farklı sorulara cevap verir. Kategori nerede aranacağını, özellik tanımı hangi bilgilerin sorulacağını, model kaydı hangi değerlerin önceden bilindiğini belirler.
+Kategori ağacı ilanların nerede bulunacağını, özellik tanımları form ve filtrelerde hangi alanların kullanılacağını belirler. Model kayıtları ise üreticiden bilinen sabit değerleri içerir. Kapasite ve renk gibi değişebilen seçenekler ilan sahibine bırakılır.
 
-Tam katalog ilk sayfaya taşınmaz. Ana kategorilerin bağlantıları küçük bir yardımcıyla üretilir; ayrıntılı ağaç gerektiğinde ortak bir Promise üzerinden yüklenir. Aynı anda iki bileşenin katalog istemesi iki ayrı indirme başlatmaz. Başarısız yüklemenin sonraki denemeleri kalıcı olarak zehirlememesi için hata durumunda önbellek sıfırlanır.
+Tam katalog ortak bir yükleyiciden alınır. Eşzamanlı istekler aynı yüklemeyi paylaşır. Yükleme başarısızsa sonraki denemeye izin verilir.
 
-İlgili dosyalar: [katalog yükleyicisi](../src/veri/kategoriKatalogu.ts), [ana kategori adresi](../src/veri/anaKategoriAdresi.ts), [model özellikleri](../src/veri/modelOzellikleri.ts), [özellik tanımları](../src/veri/ozellikler.ts).
+İlgili dosyalar: [katalog yükleyicisi](../src/veri/kategoriKatalogu.ts), [model özellikleri](../src/veri/modelOzellikleri.ts), [özellik tanımları](../src/veri/ozellikler.ts).
 
 ## Paylaşım ve harita
 
-Katalog ilanlarının paylaşım görselleri ve metaverileri derleme sırasında hazırlanır. İlk HTML ile uygulama içi gezinmenin başlıkları aynı bilgiyi kullanır. Ana sayfada zaten hazır metaveriyi yeniden kurmak için bütün güncelleyici yüklenmez; gezinti başladığında yüklenir. Başka bir sayfadan ana sayfaya dönüldüğünde önceki ilanın ürün verisi temizlenir.
+Katalog ilanlarının paylaşım görselleri ve metaverileri derlemede hazırlanır. Uygulama içi gezinmelerde aynı bilgiler kullanılır. Ana sayfaya dönüldüğünde önceki ilanın ürün metaverisi temizlenir.
 
-Harita ayrı bir iframe/WebView içindedir. Uygulama koduyla harita kütüphanesi aynı ilk paketi paylaşmaz. Konum sekmesi açılmadan karo isteği yapılmaz. İşaretçi seçilen ilçe çevresini gösterir; açık adres veya GPS doğruluğu iddia edilmez. “Nasıl giderim?” kullanıcı isteğiyle harici harita hizmetini açar, uygulama kendiliğinden cihaz konum izni istemez.
+Harita ayrı bir iframe veya WebView içinde açılır. İşaretçi seçilen ilçe çevresini gösterir. “Nasıl giderim?” harici harita hizmetini kullanıcı isteğiyle açar; uygulama cihaz konum izni istemez.
 
-## Değişiklik yaparken
-
-- Yeni bir kayıt alanı eklenirse eski verinin nasıl okunacağı da belirlenir. Yalnız TypeScript tipini değiştirmek yetmez.
-- Bir bileşenin web davranışı değişirse native prop sözleşmesi korunur; DOM olayları native bileşene veya `onPress` ham HTML öğesine taşınmaz.
-- Yeni bir dış kaynak, veri aktarımı veya kalıcı kayıt eklenirse gizlilik ve depolama metinleri de güncellenir.
+İlgili dosyalar: [sayfa metaverisi](../src/bilesenler/SayfaMetasi.tsx), [web haritası](../src/bilesenler/HaritaGorunumu.web.tsx), [native harita](../src/bilesenler/HaritaGorunumu.tsx).
 
 ## Kaynaklar
 

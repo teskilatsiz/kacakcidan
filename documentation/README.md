@@ -1,9 +1,9 @@
 # Geliştirme notları
 
-Bu notlarda arayüzün yerleşimi, verinin nasıl yönetildiği ve açılış yükünü azaltmak için alınan kararlar var. Özellik listesi ve çalıştırma komutları [ana README](../README.md) içinde.
+Bu klasörde arayüzün yerleşimi, kayıtların yönetimi ve yükleme davranışı açıklanıyor. Çalıştırma komutları ve özellikler [ana README](../README.md) içinde.
 
-- [Arayüz ve etkileşim](arayuz.md): kategori gezintisi, ekran yerleşimleri, klavye, odak ve hata durumları
-- [Uygulama yapısı](uygulama-yapisi.md): sayfalar, platform ayrımı, kayıtların yaşam döngüsü ve veri sınırları
-- [Performans](performans.md): açılış yükü, görseller, harita ve önbellek
+- [Arayüz ve etkileşim](arayuz.md): kategori gezintisi, ekran düzenleri, formlar ve odak yönetimi
+- [Uygulama yapısı](uygulama-yapisi.md): sayfalar, platform ayrımı ve yerel veriler
+- [Performans](performans.md): kod yükleme, görseller, harita ve önbellek
 
-Kararların yanında ilgili kaynak dosyaları bulunuyor. Uygulamanın davranışı değiştiğinde bu notlar da onunla birlikte güncellenir.
+Her bölümde ilgili kaynak dosyalarının bağlantıları bulunuyor.
