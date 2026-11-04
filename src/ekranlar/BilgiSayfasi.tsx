@@ -1,4 +1,5 @@
-import { View } from 'react-native';
+import { useCallback, useRef } from 'react';
+import { Platform, ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { Link } from 'expo-router';
 import { Kabuk } from '../bilesenler/Kabuk';
 import { Baslik, Yazi } from '../bilesenler/Temel';
@@ -8,10 +9,28 @@ import { GezintiGecmisiDenetimi } from '../bilesenler/CerezTercihleri';
 import { ortak, useEkran, useTema } from '../tasarim/tema';
 import { bilgiSayfalari } from '../veri/bilgiSayfalari';
 
+const sekmeAdlari = {
+  gizlilik: 'Gizlilik',
+  kullanim: 'Kullanım koşulları',
+  cerezler: 'Çerezler',
+};
+
 export default function BilgiSayfasi({ tur }: { tur: keyof typeof bilgiSayfalari }) {
-  const { renk } = useTema();
+  const { renk, koyu } = useTema();
   const { mobil, bosluk } = useEkran();
   const sayfa = bilgiSayfalari[tur];
+  const sekmeler = useRef<ScrollViewInstance>(null);
+  const gezintiGenisligi = useRef(0);
+  const aktifSekme = useRef({ x: 0, width: 0 });
+  const aktifSekmeyiGoster = useCallback(() => {
+    const { x, width } = aktifSekme.current;
+    if (!gezintiGenisligi.current || !width) return;
+    sekmeler.current?.scrollTo({
+      x: Math.max(0, x - Math.max(0, (gezintiGenisligi.current - width) / 2)),
+      animated: false,
+    });
+  }, []);
+
   return (
     <Kabuk>
       <View
@@ -28,41 +47,59 @@ export default function BilgiSayfasi({ tur }: { tur: keyof typeof bilgiSayfalari
       >
         <View
           style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            columnGap: 24,
-            rowGap: 0,
+            minWidth: 0,
             borderBottomWidth: 1,
             borderColor: renk.cizgi,
           }}
           role="navigation"
           accessibilityLabel="Site bilgileri"
         >
-          {Object.entries(bilgiSayfalari).map(([anahtar, bilgi]) => (
-            <Link key={bilgi.yol} href={bilgi.yol as '/'} asChild>
-              <HareketliBas
-                accessibilityState={{ selected: anahtar === tur }}
-                style={{
-                  minHeight: 46,
-                  paddingVertical: 10,
-                  borderBottomWidth: anahtar === tur ? 2 : 0,
-                  borderBottomColor: renk.murekkep,
-                  justifyContent: 'center',
-                  maxWidth: '100%',
-                }}
-              >
-                <Yazi
+          <ScrollView
+            ref={sekmeler}
+            horizontal
+            indicatorStyle={koyu ? 'white' : 'black'}
+            style={{ flexGrow: 0, minWidth: 0 }}
+            contentContainerStyle={{ gap: mobil ? 16 : 24, alignItems: 'stretch' }}
+            onLayout={({ nativeEvent }) => {
+              gezintiGenisligi.current = nativeEvent.layout.width;
+              aktifSekmeyiGoster();
+            }}
+            onContentSizeChange={aktifSekmeyiGoster}
+          >
+            {Object.entries(bilgiSayfalari).map(([anahtar, bilgi]) => (
+              <Link key={bilgi.yol} href={bilgi.yol as '/'} asChild>
+                <HareketliBas
+                  accessibilityRole="link"
+                  accessibilityState={Platform.OS === 'web' ? undefined : { selected: anahtar === tur }}
+                  aria-current={Platform.OS === 'web' && anahtar === tur ? 'page' : undefined}
+                  onLayout={({ nativeEvent }) => {
+                    if (anahtar !== tur) return;
+                    aktifSekme.current = nativeEvent.layout;
+                    aktifSekmeyiGoster();
+                  }}
                   style={{
-                    fontSize: 13,
-                    fontWeight: anahtar === tur ? '700' : '400',
-                    color: anahtar === tur ? renk.murekkep : renk.gri,
+                    minHeight: 48,
+                    flexShrink: 0,
+                    paddingVertical: 10,
+                    borderBottomWidth: 2,
+                    borderBottomColor: anahtar === tur ? renk.murekkep : 'transparent',
+                    justifyContent: 'center',
                   }}
                 >
-                  {bilgi.baslik}
-                </Yazi>
-              </HareketliBas>
-            </Link>
-          ))}
+                  <Yazi
+                    numberOfLines={1}
+                    style={{
+                      fontSize: 13,
+                      fontWeight: anahtar === tur ? '700' : '400',
+                      color: anahtar === tur ? renk.murekkep : renk.gri,
+                    }}
+                  >
+                    {sekmeAdlari[anahtar as keyof typeof bilgiSayfalari]}
+                  </Yazi>
+                </HareketliBas>
+              </Link>
+            ))}
+          </ScrollView>
         </View>
         <View style={{ gap: 12, maxWidth: 760 }}>
           <Baslik buyuk>{sayfa.baslik}</Baslik>
