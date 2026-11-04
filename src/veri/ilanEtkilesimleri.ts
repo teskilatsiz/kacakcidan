@@ -53,12 +53,12 @@ function nesne(veri: unknown): veri is Record<string, unknown> {
 export function etkilesimleriOku(veri: unknown): EtkilesimKaydi {
   const bos = bosEtkilesimKaydi();
   if (!nesne(veri)) return bos;
-  const numaralar: Record<string, string> = {};
+  const numaraKayitlari: [string, string][] = [];
   const kullanilan = new Set<string>();
   if (nesne(veri.ilanNumaralari)) {
     for (const [id, numara] of Object.entries(veri.ilanNumaralari)) {
       if (typeof numara !== 'string' || !/^\d{10,14}$/.test(numara) || kullanilan.has(numara)) continue;
-      numaralar[id] = numara;
+      numaraKayitlari.push([id, numara]);
       kullanilan.add(numara);
     }
   }
@@ -98,7 +98,8 @@ export function etkilesimleriOku(veri: unknown): EtkilesimKaydi {
           ),
       )
     : [];
-  const goruntulenmeler: EtkilesimKaydi['goruntulenmeler'] = {};
+  const numaralar = Object.fromEntries(numaraKayitlari);
+  const goruntulenmeKayitlari: [string, EtkilesimKaydi['goruntulenmeler'][string]][] = [];
   if (nesne(veri.goruntulenmeler)) {
     for (const [id, kayit] of Object.entries(veri.goruntulenmeler)) {
       if (
@@ -108,14 +109,17 @@ export function etkilesimleriOku(veri: unknown): EtkilesimKaydi {
         kayit.sayi < 0
       )
         continue;
-      goruntulenmeler[id] = {
-        sayi: kayit.sayi,
-        sonZiyaretler: nesne(kayit.sonZiyaretler)
-          ? (Object.fromEntries(
-              Object.entries(kayit.sonZiyaretler).filter(([, tarih]) => typeof tarih === 'string'),
-            ) as Record<string, string>)
-          : {},
-      };
+      goruntulenmeKayitlari.push([
+        id,
+        {
+          sayi: kayit.sayi,
+          sonZiyaretler: nesne(kayit.sonZiyaretler)
+            ? (Object.fromEntries(
+                Object.entries(kayit.sonZiyaretler).filter(([, tarih]) => typeof tarih === 'string'),
+              ) as Record<string, string>)
+            : {},
+        },
+      ]);
     }
   }
   return {
@@ -129,17 +133,23 @@ export function etkilesimleriOku(veri: unknown): EtkilesimKaydi {
     ),
     sorular,
     bildirimler,
-    goruntulenmeler,
+    goruntulenmeler: Object.fromEntries(goruntulenmeKayitlari),
   };
 }
 
 export function numaralariTamamla(kayit: EtkilesimKaydi, kimlikler: string[]): EtkilesimKaydi {
   let son = kayit.sonIlanNumarasi;
-  const numaralar = { ...kayit.ilanNumaralari };
-  for (const id of kimlikler) if (!numaralar[id]) numaralar[id] = String(++son);
-  return son === kayit.sonIlanNumarasi
+  const eksikler = [...new Set(kimlikler)].filter((id) => !Object.hasOwn(kayit.ilanNumaralari, id));
+  return eksikler.length === 0
     ? kayit
-    : { ...kayit, ilanNumaralari: numaralar, sonIlanNumarasi: son };
+    : {
+        ...kayit,
+        ilanNumaralari: {
+          ...kayit.ilanNumaralari,
+          ...Object.fromEntries(eksikler.map((id) => [id, String(++son)])),
+        },
+        sonIlanNumarasi: son,
+      };
 }
 
 export function gorunurSorular(sorular: IlanSorusu[], hesapId: string | null, sahipOlduklari: Set<string>) {
@@ -150,7 +160,9 @@ export function gorunurSorular(sorular: IlanSorusu[], hesapId: string | null, sa
 }
 
 export function goruntulemeKaydet(kayit: EtkilesimKaydi, ilanId: string, ziyaretci: string, gun: string) {
-  const onceki = kayit.goruntulenmeler[ilanId] ?? { sayi: 0, sonZiyaretler: {} };
+  const onceki = Object.hasOwn(kayit.goruntulenmeler, ilanId)
+    ? kayit.goruntulenmeler[ilanId]!
+    : { sayi: 0, sonZiyaretler: {} };
   if (onceki.sonZiyaretler[ziyaretci] === gun) return kayit;
   return {
     ...kayit,
