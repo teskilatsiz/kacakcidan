@@ -47,7 +47,7 @@ Web sayfaları derleme sırasında HTML olarak hazırlanır. Tam kategori ağac�
 
 Görsellerin farklı genişlikte WebP kopyaları üretilir. İlk ekrandaki ilan görselleri öncelikli yüklenir, aşağıdaki görseller için tembel yükleme kullanılır. Fotoğrafların yeri önceden ayrılır; küçük önizlemelerde tam boy fotoğraf indirilmez.
 
-Yerleşim ve veri akışına ilişkin ayrıntılar [geliştirme notlarında](./documentation/README.md).
+Yerleşim ve veri akışına ilişkin ayrıntılar [geliştirme notlarında](./docs/README.md).
 
 ## Yerelde çalıştırma
 
@@ -83,7 +83,7 @@ src/tasarim/            Tema, yerleşim, klavye ve hareket davranışları
 src/veri/               Kategoriler, ilanlar ve özellik tanımları
 public/                 Görseller, yazı tipleri ve harita dosyaları
 scripts/                Web çıktısını hazırlayan derleme adımları
-documentation/          Arayüz, uygulama yapısı ve performans notları
+docs/                   Arayüz, uygulama yapısı ve performans notları
 screenshots/            README ekran görüntüleri
 ```
 
