@@ -397,6 +397,81 @@ export default function IlanDetayi() {
     </View>
   );
 
+  const galeriAlani = (
+    <View dataSet={{ 'ilan-galeri-alani': 'true' }} style={{ minWidth: 0, gap: 20 }}>
+      {ilan.yayinDurumu === 'kaldirildi' && (
+        <View style={{ padding: 14, backgroundColor: renk.zemin, borderRadius: 9 }}>
+          <Yazi style={{ fontWeight: '600' }}>Bu ilan yayında değil</Yazi>
+          <Yazi style={s.yardimci}>İlanını hesabından yeniden yayınlayabilirsin.</Yazi>
+        </View>
+      )}
+      <IlanGalerisi ilan={ilan} />
+    </View>
+  );
+  const ozellikAlani = !ozellikSekmesi ? (
+    <View dataSet={{ 'ilan-ozellik-alani': 'true' }} style={{ minWidth: 0, gap: 12 }}>
+      {ozellikTablosu}
+    </View>
+  ) : null;
+  const saticiAlani = (
+    <View dataSet={{ 'ilan-yan-alani': 'true' }} style={{ minWidth: 0, gap: 16 }}>
+      {(web || !mobil) && ilanBanaAit && (
+        <View dataSet={{ 'ilan-masaustu-eylemi': 'true' }}>
+          <Buton onPress={ilanDuzenle} simge={<Pencil size={17} />}>
+            İlanı düzenle
+          </Buton>
+        </View>
+      )}
+      {!ilanBanaAit && (
+        <View dataSet={{ 'ilan-iletisim-eylemleri': 'true' }} style={{ gap: 8, minWidth: 0 }}>
+          <GuvenliAlisveris ilan={ilan} />
+          <View style={{ flexDirection: 'row', gap: 8, minWidth: 0 }}>
+            <Buton
+              onPress={iletisim}
+              simge={<MessageCircle size={17} />}
+              style={{ flex: 1, paddingHorizontal: 8, gap: 6 }}
+              yaziStili={{ fontSize: 13 }}
+            >
+              {iletisimEtiketi}
+            </Buton>
+            {urunIlani && (
+              <Buton
+                ikincil
+                onPress={teklifPenceresiAc}
+                style={{ flex: 1, paddingHorizontal: 8 }}
+                yaziStili={{ fontSize: 13 }}
+              >
+                Teklif yap
+              </Buton>
+            )}
+          </View>
+        </View>
+      )}
+      <View dataSet={{ 'ilan-satici-karti': 'true' }} style={[s.satici, { padding: 14 }]}>
+        <SaticiOzeti
+          satici={satici}
+          rol={
+            ilanBanaAit
+              ? 'Bu ilan sana ait'
+              : isIlani
+                ? 'İşveren'
+                : ilan.kategori === 'hizmetler'
+                  ? 'Hizmet veren'
+                  : ilan.kategori === 'emlak'
+                    ? 'İlan sahibi'
+                    : (ilan.ozellikler?.['Satıcı türü'] ?? 'İlan sahibi')
+          }
+          ilanSayisi={saticininIlanSayisi}
+        />
+        <SaticiIletisimi telefon={ilan.telefon} gorunur={ilan.telefonGoster === true} />
+        <SaticiKontrolleri />
+      </View>
+      <View dataSet={{ 'ilan-sikayet-alani': 'true' }}>
+        <IlanSikayeti ilan={{ ...ilan, benim: ilanBanaAit }} />
+      </View>
+    </View>
+  );
+
   const altEylem =
     (web || mobil) && !klavyeAcik ? (
       <View
@@ -515,76 +590,21 @@ export default function IlanDetayi() {
               <ArrowRight size={14} color={renk.murekkep} style={{ flexShrink: 0 }} />
             </HareketliBas>
           </View>
-          <View dataSet={{ 'ilan-galeri-alani': 'true' }} style={{ minWidth: 0, gap: 20 }}>
-            {ilan.yayinDurumu === 'kaldirildi' && (
-              <View style={{ padding: 14, backgroundColor: renk.zemin, borderRadius: 9 }}>
-                <Yazi style={{ fontWeight: '600' }}>Bu ilan yayında değil</Yazi>
-                <Yazi style={s.yardimci}>İlanını hesabından yeniden yayınlayabilirsin.</Yazi>
+          {web ? (
+            <>
+              <View dataSet={{ 'ilan-medya-ve-satici': 'true' }} style={{ minWidth: 0 }}>
+                {galeriAlani}
+                {saticiAlani}
               </View>
-            )}
-            <IlanGalerisi ilan={ilan} />
-          </View>
-          {!ozellikSekmesi && (
-            <View dataSet={{ 'ilan-ozellik-alani': 'true' }} style={{ minWidth: 0, gap: 12 }}>
-              {ozellikTablosu}
-            </View>
+              {ozellikAlani}
+            </>
+          ) : (
+            <>
+              {galeriAlani}
+              {ozellikAlani}
+              {saticiAlani}
+            </>
           )}
-          <View dataSet={{ 'ilan-yan-alani': 'true' }} style={{ minWidth: 0, gap: 16 }}>
-            {(web || !mobil) && ilanBanaAit && (
-              <View dataSet={{ 'ilan-masaustu-eylemi': 'true' }}>
-                <Buton onPress={ilanDuzenle} simge={<Pencil size={17} />}>
-                  İlanı düzenle
-                </Buton>
-              </View>
-            )}
-            {!ilanBanaAit && (
-              <View dataSet={{ 'ilan-iletisim-eylemleri': 'true' }} style={{ gap: 8, minWidth: 0 }}>
-                <GuvenliAlisveris ilan={ilan} />
-                <View style={{ flexDirection: 'row', gap: 8, minWidth: 0 }}>
-                  <Buton
-                    onPress={iletisim}
-                    simge={<MessageCircle size={17} />}
-                    style={{ flex: 1, paddingHorizontal: 8, gap: 6 }}
-                    yaziStili={{ fontSize: 13 }}
-                  >
-                    {iletisimEtiketi}
-                  </Buton>
-                  {urunIlani && (
-                    <Buton
-                      ikincil
-                      onPress={teklifPenceresiAc}
-                      style={{ flex: 1, paddingHorizontal: 8 }}
-                      yaziStili={{ fontSize: 13 }}
-                    >
-                      Teklif yap
-                    </Buton>
-                  )}
-                </View>
-              </View>
-            )}
-            <View dataSet={{ 'ilan-satici-karti': 'true' }} style={[s.satici, { padding: 14 }]}>
-              <SaticiOzeti
-                satici={satici}
-                rol={
-                  ilanBanaAit
-                    ? 'Bu ilan sana ait'
-                    : isIlani
-                      ? 'İşveren'
-                      : ilan.kategori === 'hizmetler'
-                        ? 'Hizmet veren'
-                        : ilan.kategori === 'emlak'
-                          ? 'İlan sahibi'
-                          : (ilan.ozellikler?.['Satıcı türü'] ?? 'İlan sahibi')
-                }
-                ilanSayisi={saticininIlanSayisi}
-              />
-              <SaticiIletisimi telefon={ilan.telefon} gorunur={ilan.telefonGoster === true} />
-              <SaticiKontrolleri />
-            </View>
-            <View dataSet={{ 'ilan-sikayet-alani': 'true' }}>
-              <IlanSikayeti ilan={{ ...ilan, benim: ilanBanaAit }} />
-            </View>
-          </View>
         </View>
 
         <View style={{ gap: 20 }}>

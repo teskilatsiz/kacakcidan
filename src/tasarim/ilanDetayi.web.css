@@ -15,6 +15,9 @@
 [data-ilan-web-baslik] {
   min-width: 0;
 }
+[data-ilan-medya-ve-satici] {
+  display: contents !important;
+}
 [data-ilan-galeri-alani] {
   grid-area: galeri;
   min-width: 0;
@@ -99,28 +102,17 @@
   }
   [data-ilan-ust-yerlesimi] {
     grid-template-columns: minmax(0, 1.25fr) minmax(250px, 1fr);
-    grid-template-areas: 'galeri fiyat' 'galeri ozellikler' 'bilgiler bilgiler';
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'galeri fiyat' 'galeri ozellikler';
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  [data-ilan-medya-ve-satici] {
+    display: flex !important;
+    grid-area: galeri;
+    gap: 16px;
   }
   [data-ilan-yan-alani] {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1.25fr) minmax(250px, 1fr);
-    grid-template-areas: 'satici iletisim' 'satici sikayet';
-    grid-template-rows: auto 1fr;
-    column-gap: 20px !important;
-    row-gap: 8px !important;
+    display: flex !important;
     width: 100%;
-    margin-top: 8px;
-  }
-  [data-ilan-satici-karti] {
-    grid-area: satici;
-  }
-  [data-ilan-iletisim-eylemleri],
-  [data-ilan-masaustu-eylemi] {
-    grid-area: iletisim;
-  }
-  [data-ilan-sikayet-alani] {
-    grid-area: sikayet;
   }
   [data-ilan-masaustu-eylemi] {
     flex-direction: row !important;
