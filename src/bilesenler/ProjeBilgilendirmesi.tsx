@@ -12,13 +12,11 @@ export function ProjeBilgilendirmesi() {
     <Pencere acik={acik} kapat={() => setAcik(false)} baslik="Bilgilendirme">
       <View style={{ gap: 14 }}>
         <Yazi style={{ fontSize: 15, lineHeight: 24 }}>
-          Kaçakçıdan, arayüz ve işleyişi denemek için hazırlanmış bir yazılım projesidir; gerçek bir alışveriş
-          pazaryeri olarak işletilmez.
+          Kaçakçıdan şu an gerçek alışveriş yapılabilen bir site değil; bir pazaryeri projesi.
         </Yazi>
         <Yazi style={{ fontSize: 14, lineHeight: 22, color: renk.gri }}>
-          İlanlar ve profiller demo içeriğidir. Hesap ve ilan kayıtları bu cihazda tutulur; başka
-          kullanıcılara yayımlanmaz. Mesaj, soru-cevap, teklif, param güvende, ödeme ve kargo adımları gerçek
-          bir işlem başlatmaz.
+          İlanlar ve profiller örnek içerik. Hesap ve ilan bilgilerin bu cihazda kalır, başka kullanıcılara
+          yayımlanmaz. Mesaj, teklif, param güvende, ödeme ve kargo adımları gerçek bir işlem başlatmaz.
         </Yazi>
         <Buton onPress={() => setAcik(false)} style={{ alignSelf: 'stretch', marginTop: 4 }}>
           Anladım, devam et

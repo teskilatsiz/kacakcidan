@@ -59,52 +59,51 @@ export const bilgiSayfalari: Record<'gizlilik' | 'kullanim' | 'cerezler', BilgiS
   kullanim: {
     yol: '/kullanim-sartlari',
     baslik: 'Kullanım şartları',
-    ozet: 'İlan verirken, iletişim kurarken ve alışverişe hazırlanırken geçerli olan kurallar.',
+    ozet: 'Kaçakçıdan projesini kullanırken bilmen gerekenler.',
     bolumler: [
       {
         baslik: 'Hizmetin kapsamı',
         paragraflar: [
-          'Kaçakçıdan, arayüz ve işleyişi denemek için hazırlanmış bir yazılım projesidir; gerçek bir elektronik ticaret pazaryeri olarak işletilmez. Ekranlardaki ilanlar, profiller, değerlendirmeler ve mesajlar demo içeriğidir; gerçek bir satıcıyı, ürünü, stoğu veya işlemi doğrulamaz.',
-          'Hesap, ilan ve mesaj kayıtları kullandığın cihazda tutulur; başka kullanıcılara veya farklı cihazlara yayınlanmaz. İlan verme ve düzenleme ekranları gerçek bir ilanı yayına almaz.',
-          'Mesajlaşma, soru-cevap, teklif, alım talebi ve param güvende adımları arayüz denemesidir. Bu adımlar satış sözleşmesi kurmaz, ürün ayırtmaz, ödeme almaz, para saklamaz ve kargo siparişi oluşturmaz. Kart veya banka bilgisi girme.',
-          'Demo içeriğindeki profil puanı, telefon bilgisi veya değerlendirme kimlik, ürün orijinalliği ya da alışveriş güvenliği doğrulaması değildir.',
+          'Kaçakçıdan şu an gerçek alışveriş yapılabilen bir site değil; pazaryeri arayüzünü denemek için hazırlanmış bir proje. İlanlar, profiller, değerlendirmeler ve mesajlar örnektir; gerçek bir satıcıyı veya ürünü doğrulamaz.',
+          'Hesap, ilan ve mesaj bilgileri kullandığın cihazda saklanır. Başka kullanıcılara yayımlanmaz; ilan verme ve düzenleme ekranları ilanı internette yayımlamaz.',
+          'Mesaj, soru-cevap, teklif ve alım talebi ekranları gerçek bir satıcıya ulaşmaz. param güvende, ödeme ve kargo adımları da işlem başlatmaz. Kart veya banka bilgisi girme.',
+          'Profil puanları, telefon bilgileri ve değerlendirmeler doğrulanmış kullanıcı, ürün ya da alışveriş bilgisi sayılmaz.',
         ],
       },
       {
         baslik: 'Hesap ve iletişim',
         paragraflar: [
-          'Yalnızca kullanma hakkın olan ad, fotoğraf ve iletişim bilgilerini gir. Başkasının kimliğine bürünme. Parolanı ve doğrulama kodlarını paylaşma. Başkasının cihazını kullanıyorsan oturumunu kapat; tarayıcı verilerinin temizlenmesinin kayıtlarını kaldıracağını unutma.',
-          'Mesajlar, sorular ve değerlendirmeler ilanla ilgili olmalıdır. Hakaret, tehdit, ayrımcılık, istenmeyen reklam ve kişisel bilgileri izinsiz yayınlama kabul edilmez. Alışveriş yaparken yaşın veya hukuki ehliyetin gerektiriyorsa yasal temsilcinin yardımını al.',
+          'Yalnızca kullanma hakkın olan ad, fotoğraf ve iletişim bilgilerini gir; başkasının kimliğini kullanma. Parolanı veya doğrulama kodlarını paylaşma. Bu projedeki kayıtlar cihazında tutulur; tarayıcı ya da uygulama verilerini silmek kayıtları da kaldırabilir.',
+          'Mesaj ve değerlendirmelerini ilanla ilgili tut. Hakaret, tehdit, ayrımcılık, istenmeyen reklam veya başkasının kişisel bilgilerini izinsiz paylaşma. Gerçek alışverişlerde yaşın ya da hukuki ehliyetin için gerekiyorsa yasal temsilcinden destek al.',
         ],
       },
       {
         baslik: 'İlan verirken',
         paragraflar: [
-          'İlanı uygun kategoriye yerleştir. Marka, model, fiyat, konum ve teknik özellikleri kontrol et. İkinci el üründeki kusurları, değişen parçaları ve eksik aksesuarları açıklamaya yaz; fotoğraflarda gizleme. Yalnızca kendine ait veya kullanma iznin olan görselleri yükle.',
-          'Çalıntı, sahte, yasaklı, üçüncü kişilerin haklarını ihlal eden veya satışı özel izne bağlı olup gerekli izni bulunmayan ürün ve hizmetler için ilan verme. Silah, yasa dışı madde, kişisel veri, hesap ve kimlik belgesi satışı amacıyla uygulamayı kullanma. İş ve emlak ilanlarında ilgili mevzuata ve yetki gerekliliklerine uy.',
-          'Satılan veya artık geçerli olmayan ilanını yayından kaldır. Şüpheli bir ilanı ilgili bildirim seçeneğiyle işaretleyebilirsin. Bu arayüzdeki bildirim kaydı, yetkili mercilere yapılan başvurunun yerine geçmez.',
+          'İlanı doğru kategoriye koy; marka, model, fiyat, konum ve özellikleri kontrol et. İkinci el üründeki kusurları ve eksik parçaları açıklamada belirt. Yalnızca kullanma iznin olan fotoğrafları yükle.',
+          'Çalıntı, sahte veya yasaklı ürünler için ilan verme. Başkasının haklarını ihlal eden ya da özel izin gerektiren ürünleri gerekli iznin olmadan listeleme. Silah, yasa dışı madde, kişisel veri, hesap veya kimlik belgesi satışı için uygulamayı kullanma. İş ve emlak ilanlarında ilgili kurallara uy.',
+          'Artık geçerli olmayan ilanı kaldır. Şüpheli ilanları uygulamadaki bildirim seçeneğiyle işaretleyebilirsin; bu işlem yetkili mercilere başvurunun yerini tutmaz.',
         ],
       },
       {
         baslik: 'Ödeme, kargo ve teslim',
         paragraflar: [
-          'Bu proje üzerinden gerçek ödeme, para aktarımı, emanet/korumalı ödeme veya kargo işlemi yapılamaz. param güvende adıyla görünen ekranlar ve ücret hesapları yalnızca arayüz denemesidir; bir ödeme kuruluşunun ya da kargo şirketinin hizmet taahhüdü değildir. Kart veya banka bilgisi girme.',
-          'Ürünü ve satıcıyı kontrol etmeden kapora gönderme. Harici bir bağlantının üzerinde Kaçakçıdan yazması o bağlantının bu siteye ait olduğunu göstermez. Kart şifreni, banka parolanı ve tek kullanımlık kodlarını kimseyle paylaşma. Teslimi ve ödemeyi taraflarla açıkça kararlaştır.',
+          'Bu proje ödeme veya kargo hizmeti sunmaz. param güvende ekranı ve ücretler yalnızca arayüzde görünür; ödeme kuruluşu ya da kargo şirketi adına verilmiş bir hizmet sözü değildir. Kart veya banka bilgisi girme.',
+          'Bu projeden bağımsız bir alışveriş yaparken ürünü ve satıcıyı kontrol et. Kart şifreni, banka parolanı veya tek kullanımlık kodlarını kimseyle paylaşma; ödeme ve teslim koşullarını karşı tarafla önceden netleştir.',
         ],
       },
       {
         baslik: 'Değerlendirmeler ve içerikler',
         paragraflar: [
-          'Değerlendirmeyi yalnızca kendi alışveriş deneyimin hakkında yaz. Gerçekleşmemiş bir alışveriş için puan verme, başka hesaplarla puanı değiştirmeye çalışma. İlanla ve teslimle ilgili somut ayrıntıları anlat; karşı tarafın kişisel bilgilerini paylaşma.',
-          'Kendi içeriğin üzerindeki hakların sende kalır. Fotoğraf veya metin yüklemen, başkasına ait bir içeriği kullanma hakkı vermez. Blogdaki yazılar genel bilgilendirme içindir; ürün incelemesinin, uzman görüşünün veya hukuki değerlendirmenin yerine geçmez.',
+          'Değerlendirme özelliğini kullanırken yalnızca kendi alışveriş deneyimini anlat. Gerçekleşmemiş bir alışveriş için puan verme; karşı tarafın kişisel bilgilerini paylaşma.',
+          'Yüklediğin metin ve fotoğrafların hakları sende kalır. Başkasına ait içerikleri kullanmak için izin almalısın. Blog yazıları genel bilgi verir; uzman veya hukuki görüş yerine geçmez.',
         ],
       },
       {
         baslik: 'Kayıtlar ve güncellemeler',
         paragraflar: [
-          'Tarayıcı veya uygulama verilerini silmek cihazdaki kayıtları kaldırabilir. Kayıtlarının başka bir cihazda bulunacağını varsayma. Ağ veya harita hizmetindeki kesintiler bazı alanların açılmasını geciktirebilir.',
-          'Bu metin projenin mevcut demo işleyişini açıklar; gerçek bir ticari hizmet başlatıldığı anlamına gelmez. İleride gerçek hizmet sunulursa kullanım koşulları, veri işleme ve ilgili yükümlülükler o hizmetin gerçek işleyişine göre ayrıca düzenlenmelidir. Buradaki açıklamalar kanundan doğan hakları ortadan kaldırmaz.',
-          'Elektronik ticaret mevzuatı hakkında genel bilgi için Ticaret Bakanlığının güncel kaynaklarını inceleyebilirsin. Teknik bildirimleri GitHub üzerinden iletirken herkese açık alana özel bilgi ekleme.',
+          'Tarayıcı veya uygulama verilerini silersen cihazındaki kayıtlar da silinebilir. Kayıtlar başka bir cihaza aktarılmaz. Ağ ya da harita hizmetindeki kesintiler bazı bölümlerin açılmasını etkileyebilir.',
+          'Bu şartlar projenin şu anki işleyişini anlatır. Buradaki açıklamalar yasal haklarını ortadan kaldırmaz.',
         ],
       },
     ],
