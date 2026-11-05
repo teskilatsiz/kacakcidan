@@ -81,12 +81,7 @@ export const blogYazilari: BlogYazisi[] = [
         ],
       },
     ],
-    kaynaklar: [
-      {
-        ad: 'sahibinden.com: İlan verme ipuçları',
-        adres: 'https://yardim.sahibinden.com/hc/tr/articles/115004672353-İlan-Verme-İpuçları-Nelerdir',
-      },
-    ],
+    kaynaklar: [],
   },
   {
     yol: 'alisveriste-supheli-baglantilar',
@@ -121,11 +116,6 @@ export const blogYazilari: BlogYazisi[] = [
         ad: 'Ticaret Bakanlığı: Dijital mecralardaki dolandırıcılık girişimleri',
         adres:
           'https://ticaret.gov.tr/haberler/ticaret-bakanligi-sosyal-medya-ve-dijital-mecralardaki-dolandiricilik-girisimlerine-karsi-vatandaslari-uyariyor',
-      },
-      {
-        ad: 'sahibinden.com: Güvenli alışveriş ipuçları',
-        adres:
-          'https://yardim.sahibinden.com/hc/tr/articles/8402707984924-S-Param-Güvende-ile-Güvenli-Alışveriş-İpuçları',
       },
     ],
   },

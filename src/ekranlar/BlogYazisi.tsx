@@ -56,12 +56,14 @@ export default function BlogYazisi() {
             ))}
           </View>
         ))}
-        <View style={{ paddingTop: 20, borderTopWidth: 1, borderColor: renk.cizgi, gap: 3 }}>
-          <Baslik style={{ fontSize: 18 }}>Kaynaklar ve ilgili bilgiler</Baslik>
-          {yazi.kaynaklar.map(({ ad, adres }) => (
-            <BilgiBaglantisi key={adres} ad={ad} adres={adres} />
-          ))}
-        </View>
+        {yazi.kaynaklar.length > 0 && (
+          <View style={{ paddingTop: 20, borderTopWidth: 1, borderColor: renk.cizgi, gap: 3 }}>
+            <Baslik style={{ fontSize: 18 }}>Kaynaklar ve ilgili bilgiler</Baslik>
+            {yazi.kaynaklar.map(({ ad, adres }) => (
+              <BilgiBaglantisi key={adres} ad={ad} adres={adres} />
+            ))}
+          </View>
+        )}
       </View>
     </Kabuk>
   );
