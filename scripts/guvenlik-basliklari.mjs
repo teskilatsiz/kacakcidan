@@ -112,7 +112,7 @@ export async function guvenlikBasliklariniYaz(klasor = 'dist') {
     "object-src 'none'",
     "frame-ancestors 'self'",
   ].join('; ');
-  const kurallar = [];
+  const kurallar = ['/*\n  X-Robots-Tag: noindex, nofollow'];
   for (const sayfa of sayfalar) {
     const adresler = new Set([sayfa.yol, sayfa.yol === '/index.html' ? '/' : sayfa.yol.slice(0, -5)]);
     for (const adres of adresler) {

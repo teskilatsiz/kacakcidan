@@ -56,6 +56,7 @@ export default function Html({ children, pathname }: PropsWithChildren<{ pathnam
         <meta charSet="utf-8" />
         <meta name="author" content="Teşkilatsız" />
         <meta name="color-scheme" content="light dark" />
+        <meta name="robots" content="noindex, nofollow" />
         <script dangerouslySetInnerHTML={{ __html: guvenlikBaslat }} />
         <style dangerouslySetInnerHTML={{ __html: temaCss }} />
         <script dangerouslySetInnerHTML={{ __html: temaBaslat }} />

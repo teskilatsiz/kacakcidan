@@ -30,17 +30,12 @@ if (adayAdres) {
   siteUrl = url.origin;
 }
 
-const onizleme = Boolean(process.env.CONTEXT && process.env.CONTEXT !== 'production');
-const yerelAdres = siteUrl && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(new URL(siteUrl).hostname);
-const noindex = !siteUrl || onizleme || Boolean(yerelAdres);
-
 const env = {
   ...process.env,
   NODE_ENV: 'production',
   // Web açılışında kullanılmayan kütüphane dışa aktarımları pakete girmez.
   EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH: '1',
   EXPO_UNSTABLE_TREE_SHAKING: '1',
-  EXPO_PUBLIC_NOINDEX: String(noindex),
 };
 if (siteUrl) env.EXPO_PUBLIC_SITE_URL = siteUrl;
 
@@ -60,10 +55,6 @@ if (result.status !== 0) process.exit(result.status ?? 1);
 await cssCiktisiniDuzenle();
 await webStilleriniSatirIcineAl();
 await kaynakHaritalariniDuzenle();
-await aramaDosyalariniYaz({ siteUrl, noindex });
+await aramaDosyalariniYaz();
 await guvenlikBasliklariniYaz();
-console.log(
-  siteUrl
-    ? `Web çıktısı hazır: dist (${noindex ? 'arama motorlarına kapalı önizleme' : siteUrl})`
-    : 'Web çıktısı hazır: dist (yayın adresi ayarlanmadığından indeksleme kapalı)',
-);
+console.log('Web çıktısı hazır: dist (arama motorlarında listelenmez)');

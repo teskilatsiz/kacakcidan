@@ -143,7 +143,15 @@ export default function BilgiSayfasi({ tur }: { tur: keyof typeof bilgiSayfalari
                 adres="https://www.kvkk.gov.tr/Icerik/7353/Cerez-Uygulamalari-Hakkinda-Rehber"
               />
             )}
-            {tur === 'kullanim' && <BilgiBaglantisi ad="Alışveriş rehberi" adres="/blog" />}
+            {tur === 'kullanim' && (
+              <>
+                <BilgiBaglantisi
+                  ad="Ticaret Bakanlığı: Elektronik ticaret mevzuatı"
+                  adres="https://www.ticaret.gov.tr/ic-ticaret/mevzuat/elektronik-ticaret"
+                />
+                <BilgiBaglantisi ad="Alışveriş rehberi" adres="/blog" />
+              </>
+            )}
             <BilgiBaglantisi
               ad="Teknik sorun bildir (GitHub)"
               adres="https://github.com/teskilatsiz/kacakcidan/issues"

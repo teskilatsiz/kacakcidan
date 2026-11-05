@@ -99,8 +99,7 @@ export function SayfaBasligi() {
     type,
   } = ilanPaylasimGorseli(bilgi.kisisel ? undefined : ilan);
   const adres = `${siteAdresi}${bilgi.yol}`;
-  const noindex = bilgi.kisisel || process.env.EXPO_PUBLIC_NOINDEX === 'true';
-  const robotlar = noindex ? 'noindex, follow' : 'index, follow';
+  const robotlar = 'noindex, nofollow';
   const urunVerisi = ilanUrunVerisi(ilan);
   const urunMetni = urunVerisi ? JSON.stringify(urunVerisi) : '';
 

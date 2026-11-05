@@ -249,7 +249,7 @@ export function sayfaMetasi(
     title: baslik,
     description: aciklama,
     applicationName: 'Kaçakçıdan',
-    robots: { index: !kisisel && process.env.EXPO_PUBLIC_NOINDEX !== 'true', follow: true },
+    robots: { index: false, follow: false },
     alternates: { canonical: adres },
     openGraph: {
       title: paylasimBasligi,

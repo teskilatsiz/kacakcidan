@@ -64,8 +64,10 @@ export const bilgiSayfalari: Record<'gizlilik' | 'kullanim' | 'cerezler', BilgiS
       {
         baslik: 'Hizmetin kapsamı',
         paragraflar: [
-          'Kaçakçıdan; ürün, otomobil, emlak, iş ve hizmet ilanlarını incelemek ve ilan bilgilerini yönetmek için bir arayüz sunar. Hesap, ilan ve mesaj kayıtları kullandığın cihazda tutulur. Burada oluşturulan yerel bir ilan diğer kullanıcılara veya farklı cihazlara otomatik olarak yayınlanmaz.',
-          'İlan bilgilerinin doğruluğu, ürünü satma yetkisi ve taraflar arasında kararlaştırılan koşullar ilan sahibinin ve alıcının sorumluluğundadır. Bir profil puanı, telefon bilgisi veya değerlendirme tek başına kimlik, ürün orijinalliği ya da alışveriş garantisi değildir.',
+          'Kaçakçıdan, arayüz ve işleyişi denemek için hazırlanmış bir yazılım projesidir; gerçek bir elektronik ticaret pazaryeri olarak işletilmez. Ekranlardaki ilanlar, profiller, değerlendirmeler ve mesajlar demo içeriğidir; gerçek bir satıcıyı, ürünü, stoğu veya işlemi doğrulamaz.',
+          'Hesap, ilan ve mesaj kayıtları kullandığın cihazda tutulur; başka kullanıcılara veya farklı cihazlara yayınlanmaz. İlan verme ve düzenleme ekranları gerçek bir ilanı yayına almaz.',
+          'Mesajlaşma, soru-cevap, teklif, alım talebi ve Param Güvende adımları arayüz denemesidir. Bu adımlar satış sözleşmesi kurmaz, ürün ayırtmaz, ödeme almaz, para saklamaz ve kargo siparişi oluşturmaz. Kart veya banka bilgisi girme.',
+          'Demo içeriğindeki profil puanı, telefon bilgisi veya değerlendirme kimlik, ürün orijinalliği ya da alışveriş güvenliği doğrulaması değildir.',
         ],
       },
       {
@@ -86,7 +88,7 @@ export const bilgiSayfalari: Record<'gizlilik' | 'kullanim' | 'cerezler', BilgiS
       {
         baslik: 'Ödeme, kargo ve teslim',
         paragraflar: [
-          'Kaçakçıdan para tahsil etmez, kart bilgisi istemez ve para saklama hizmeti sunmaz. Param Güvende adıyla görünen talep adımları gerçek bir ödeme veya kargo sözleşmesi oluşturmaz. Ekranda görünen ücret hesabı, bir ödeme kuruluşunun ya da kargo şirketinin hizmet taahhüdü değildir.',
+          'Bu proje üzerinden gerçek ödeme, para aktarımı, emanet/korumalı ödeme veya kargo işlemi yapılamaz. Param Güvende adıyla görünen ekranlar ve ücret hesapları yalnızca arayüz denemesidir; bir ödeme kuruluşunun ya da kargo şirketinin hizmet taahhüdü değildir. Kart veya banka bilgisi girme.',
           'Ürünü ve satıcıyı kontrol etmeden kapora gönderme. Harici bir bağlantının üzerinde Kaçakçıdan yazması o bağlantının bu siteye ait olduğunu göstermez. Kart şifreni, banka parolanı ve tek kullanımlık kodlarını kimseyle paylaşma. Teslimi ve ödemeyi taraflarla açıkça kararlaştır.',
         ],
       },
@@ -101,7 +103,8 @@ export const bilgiSayfalari: Record<'gizlilik' | 'kullanim' | 'cerezler', BilgiS
         baslik: 'Kayıtlar ve güncellemeler',
         paragraflar: [
           'Tarayıcı veya uygulama verilerini silmek cihazdaki kayıtları kaldırabilir. Kayıtlarının başka bir cihazda bulunacağını varsayma. Ağ veya harita hizmetindeki kesintiler bazı alanların açılmasını geciktirebilir.',
-          'İşleyiş değiştikçe bu şartlar güncellenir. Bu metin kanundan doğan, sözleşmeyle kaldırılamayan haklarını sınırlamaz. Teknik bildirimleri GitHub üzerinden iletebilirsin; herkese açık bildirimlere özel bilgi ekleme.',
+          'Bu metin projenin mevcut demo işleyişini açıklar; gerçek bir ticari hizmet başlatıldığı anlamına gelmez. İleride gerçek hizmet sunulursa kullanım koşulları, veri işleme ve ilgili yükümlülükler o hizmetin gerçek işleyişine göre ayrıca düzenlenmelidir. Buradaki açıklamalar kanundan doğan hakları ortadan kaldırmaz.',
+          'Elektronik ticaret mevzuatı hakkında genel bilgi için Ticaret Bakanlığının güncel kaynaklarını inceleyebilirsin. Teknik bildirimleri GitHub üzerinden iletirken herkese açık alana özel bilgi ekleme.',
         ],
       },
     ],

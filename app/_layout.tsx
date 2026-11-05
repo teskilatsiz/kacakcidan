@@ -12,6 +12,7 @@ import { KlavyeOdagi } from '../src/bilesenler/KlavyeOdagi';
 import { TemaSaglayici } from '../src/tasarim/TemaSaglayici';
 import { EkranSaglayici } from '../src/tasarim/EkranSaglayici';
 import { useTema } from '../src/tasarim/tema';
+import { ProjeBilgilendirmesi } from '../src/bilesenler/ProjeBilgilendirmesi';
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const koyu = useColorScheme() === 'dark';
@@ -89,6 +90,7 @@ function UygulamaDuzeni() {
         <SayfaBasligi />
         <SayfaGecisi />
         <KlavyeOdagi />
+        <ProjeBilgilendirmesi />
         {Platform.OS === 'web' ? (
           <View style={{ flex: 1 }} dataSet={{ uygulama: 'true' }}>
             {icerik}
