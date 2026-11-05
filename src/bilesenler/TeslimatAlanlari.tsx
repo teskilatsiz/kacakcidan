@@ -71,7 +71,7 @@ export function TeslimatAlanlari({
           {etkin ? <Check size={16} color={renk.sabitKoyu} /> : null}
         </View>
         <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
-          <Yazi style={{ fontSize: 14, fontWeight: '700' }}>Param Güvende ile satışa aç</Yazi>
+          <Yazi style={{ fontSize: 14, fontWeight: '700' }}>param güvende ile satışa aç</Yazi>
           <Yazi style={{ fontSize: 12, color: renk.gri, lineHeight: 19 }}>
             {hizmetBedeliYuzdesi} hizmet bedelini alıcı öder. Satış tutarından kesinti yapılmaz.
           </Yazi>
@@ -172,7 +172,7 @@ export function TeslimatAlanlari({
                   }
                   if (!sonuc.boyut) {
                     setHesapHatasi(
-                      'Bu paket kargolu satış için uygun değil. Param Güvende seçimini kapatıp elden teslim edebilirsin.',
+                      'Bu paket kargolu satış için uygun değil. param güvende seçimini kapatıp elden teslim edebilirsin.',
                     );
                     return;
                   }

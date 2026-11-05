@@ -9,7 +9,7 @@ export function ProjeBilgilendirmesi() {
   const { renk } = useTema();
 
   return (
-    <Pencere acik={acik} kapat={() => setAcik(false)} baslik="Proje demosu">
+    <Pencere acik={acik} kapat={() => setAcik(false)} baslik="Bilgilendirme">
       <View style={{ gap: 14 }}>
         <Yazi style={{ fontSize: 15, lineHeight: 24 }}>
           Kaçakçıdan, arayüz ve işleyişi denemek için hazırlanmış bir yazılım projesidir; gerçek bir alışveriş
@@ -17,7 +17,7 @@ export function ProjeBilgilendirmesi() {
         </Yazi>
         <Yazi style={{ fontSize: 14, lineHeight: 22, color: renk.gri }}>
           İlanlar ve profiller demo içeriğidir. Hesap ve ilan kayıtları bu cihazda tutulur; başka
-          kullanıcılara yayımlanmaz. Mesaj, soru-cevap, teklif, Param Güvende, ödeme ve kargo adımları gerçek
+          kullanıcılara yayımlanmaz. Mesaj, soru-cevap, teklif, param güvende, ödeme ve kargo adımları gerçek
           bir işlem başlatmaz.
         </Yazi>
         <Buton onPress={() => setAcik(false)} style={{ alignSelf: 'stretch', marginTop: 4 }}>

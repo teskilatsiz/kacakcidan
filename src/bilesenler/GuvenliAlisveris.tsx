@@ -55,7 +55,7 @@ export function GuvenliAlisveris({ ilan, kompakt = false }: { ilan: Ilan; kompak
     const kisi = kisiler.find((kayit) => kayit.ilanId === ilan.id)?.id ?? `ilan-${ilan.id}`;
     mesajGonder(
       kisi,
-      `Merhaba, ${ilan.baslik} ilanını Param Güvende ile satın almak istiyorum. Toplam tutar: ${alisverisParasi(ozet.toplam)}. İlan hâlâ satılık mı?`,
+      `Merhaba, ${ilan.baslik} ilanını param güvende ile satın almak istiyorum. Toplam tutar: ${alisverisParasi(ozet.toplam)}. İlan hâlâ satılık mı?`,
     );
     setAcik(false);
     haberVer('Satın alma talebin görüşmeye eklendi.');
@@ -77,7 +77,7 @@ export function GuvenliAlisveris({ ilan, kompakt = false }: { ilan: Ilan; kompak
         }}
         yaziStili={{ fontSize: 13, lineHeight: 20, flexShrink: 1 }}
       >
-        {kompakt ? 'Satın al' : 'Param Güvende ile satın al'}
+        {kompakt ? 'Satın al' : 'param güvende ile satın al'}
       </Buton>
       <Pencere
         acik={acik}

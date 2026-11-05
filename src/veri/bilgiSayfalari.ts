@@ -66,7 +66,7 @@ export const bilgiSayfalari: Record<'gizlilik' | 'kullanim' | 'cerezler', BilgiS
         paragraflar: [
           'Kaçakçıdan, arayüz ve işleyişi denemek için hazırlanmış bir yazılım projesidir; gerçek bir elektronik ticaret pazaryeri olarak işletilmez. Ekranlardaki ilanlar, profiller, değerlendirmeler ve mesajlar demo içeriğidir; gerçek bir satıcıyı, ürünü, stoğu veya işlemi doğrulamaz.',
           'Hesap, ilan ve mesaj kayıtları kullandığın cihazda tutulur; başka kullanıcılara veya farklı cihazlara yayınlanmaz. İlan verme ve düzenleme ekranları gerçek bir ilanı yayına almaz.',
-          'Mesajlaşma, soru-cevap, teklif, alım talebi ve Param Güvende adımları arayüz denemesidir. Bu adımlar satış sözleşmesi kurmaz, ürün ayırtmaz, ödeme almaz, para saklamaz ve kargo siparişi oluşturmaz. Kart veya banka bilgisi girme.',
+          'Mesajlaşma, soru-cevap, teklif, alım talebi ve param güvende adımları arayüz denemesidir. Bu adımlar satış sözleşmesi kurmaz, ürün ayırtmaz, ödeme almaz, para saklamaz ve kargo siparişi oluşturmaz. Kart veya banka bilgisi girme.',
           'Demo içeriğindeki profil puanı, telefon bilgisi veya değerlendirme kimlik, ürün orijinalliği ya da alışveriş güvenliği doğrulaması değildir.',
         ],
       },
@@ -88,7 +88,7 @@ export const bilgiSayfalari: Record<'gizlilik' | 'kullanim' | 'cerezler', BilgiS
       {
         baslik: 'Ödeme, kargo ve teslim',
         paragraflar: [
-          'Bu proje üzerinden gerçek ödeme, para aktarımı, emanet/korumalı ödeme veya kargo işlemi yapılamaz. Param Güvende adıyla görünen ekranlar ve ücret hesapları yalnızca arayüz denemesidir; bir ödeme kuruluşunun ya da kargo şirketinin hizmet taahhüdü değildir. Kart veya banka bilgisi girme.',
+          'Bu proje üzerinden gerçek ödeme, para aktarımı, emanet/korumalı ödeme veya kargo işlemi yapılamaz. param güvende adıyla görünen ekranlar ve ücret hesapları yalnızca arayüz denemesidir; bir ödeme kuruluşunun ya da kargo şirketinin hizmet taahhüdü değildir. Kart veya banka bilgisi girme.',
           'Ürünü ve satıcıyı kontrol etmeden kapora gönderme. Harici bir bağlantının üzerinde Kaçakçıdan yazması o bağlantının bu siteye ait olduğunu göstermez. Kart şifreni, banka parolanı ve tek kullanımlık kodlarını kimseyle paylaşma. Teslimi ve ödemeyi taraflarla açıkça kararlaştır.',
         ],
       },

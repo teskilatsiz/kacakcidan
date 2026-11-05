@@ -1336,7 +1336,7 @@ function IlanFormu({ ilan, hesapId }: { ilan?: Ilan; hesapId: string }) {
                           <Duzenle onPress={() => adimaGit(3)} etiket="Kargo bilgilerini düzenle" />
                         </View>
                         <Yazi style={{ fontSize: 13 }}>
-                          Param Güvende · {alisverisOzeti(sayisalFiyat, kargoBoyutu)?.kargo.ad}
+                          param güvende · {alisverisOzeti(sayisalFiyat, kargoBoyutu)?.kargo.ad}
                         </Yazi>
                         <Yazi style={{ color: renk.gri, fontSize: 12 }}>
                           Kargo ve %{hizmetBedeliYuzdesi} hizmet bedeli dahil alıcı toplamı:{' '}
